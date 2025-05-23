@@ -14,6 +14,7 @@
             --accent-color: #bbbbbb;
             --line-color: #222222;
             --progress-bar-fill: #555555;
+            --email-color: #9370DB; /* MediumPurple */
         }
 
         html, body {
@@ -21,7 +22,7 @@
             width: 100%;
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Crucial to prevent accidental scrolling of the entire page */
+            overflow: hidden;
             box-sizing: border-box;
         }
 
@@ -37,10 +38,10 @@
         }
 
         .container {
-            width: 90%; /* Use percentage for width */
-            max-width: 950px; /* Max width to prevent it from getting too wide on large screens */
-            max-height: 95vh; /* Increased max-height to give more vertical room */
-            padding: 3vh 3vw; /* Slightly reduced padding to save space */
+            width: 90%;
+            max-width: 950px;
+            max-height: 95vh;
+            padding: 3vh 3vw;
             border: 1px solid var(--line-color);
             box-shadow: 0 0 70px rgba(255, 255, 255, 0.07);
             position: relative;
@@ -50,20 +51,20 @@
             backdrop-filter: blur(5px);
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Center content vertically */
+            justify-content: center;
             align-items: center;
-            overflow-y: auto; /* Allow internal scrolling if absolutely necessary, but try to avoid */
-            scrollbar-width: none; /* Hide scrollbar for Firefox */
-            -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
 
         .container::-webkit-scrollbar {
-            display: none; /* Hide scrollbar for Chrome/Safari/Opera */
+            display: none;
         }
 
         h1 {
             font-family: 'Inter', sans-serif;
-            font-size: clamp(2em, 5vw, 4em); /* More aggressive min size for heading */
+            font-size: clamp(2em, 5vw, 4em);
             margin-bottom: 0.1em;
             letter-spacing: -0.05em;
             color: var(--accent-color);
@@ -78,21 +79,21 @@
             width: 60%;
             height: 2px;
             background-color: var(--accent-color);
-            margin: 1vh auto 0; /* Reduced margin */
+            margin: 1vh auto 0;
         }
 
         p {
             font-family: 'Inter', sans-serif;
-            font-size: clamp(0.8em, 1.3vw, 1.15em); /* More aggressive min size for paragraphs */
-            line-height: 1.5; /* Slightly tighter line height */
-            margin-bottom: 1.2vh; /* Reduced margin */
+            font-size: clamp(0.8em, 1.3vw, 1.15em);
+            line-height: 1.5;
+            margin-bottom: 1.2vh;
             color: var(--text-color);
             font-weight: 300;
         }
 
         .version {
             font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(1.4em, 3vw, 2.2em); /* More aggressive min size for version */
+            font-size: clamp(1.4em, 3vw, 2.2em);
             font-weight: 700;
             color: var(--accent-color);
             margin-top: 1.5vh;
@@ -103,12 +104,12 @@
 
         .schedule {
             width: 90%;
-            margin: 2vh auto; /* Reduced margin */
+            margin: 2vh auto;
             border: 1px solid var(--accent-color);
-            padding: 1vh 2vw; /* Reduced padding */
+            padding: 1vh 2vw;
             background-color: rgba(255, 255, 255, 0.05);
             font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(0.75em, 1vw, 0.9em); /* More aggressive min size for schedule text */
+            font-size: clamp(0.75em, 1vw, 0.9em);
             color: var(--accent-color);
             text-align: left;
             position: relative;
@@ -117,8 +118,8 @@
         }
 
         .schedule h3 {
-            margin: 0 0 0.8vh 0; /* Reduced margin */
-            font-size: clamp(0.9em, 1.2vw, 1.05em); /* More aggressive min size for schedule heading */
+            margin: 0 0 0.8vh 0;
+            font-size: clamp(0.9em, 1.2vw, 1.05em);
             color: var(--text-color);
             font-weight: 400;
             text-align: center;
@@ -126,9 +127,9 @@
         }
 
         .schedule p {
-            margin: 0.4vh 0; /* Very tight margin for schedule paragraphs */
+            margin: 0.4vh 0;
             font-size: inherit;
-            line-height: 1.3; /* Tighter line height for schedule paragraphs */
+            line-height: 1.3;
             color: var(--text-color);
         }
 
@@ -136,7 +137,7 @@
             width: 100%;
             height: 8px;
             background-color: var(--line-color);
-            margin-top: 1.2vh; /* Reduced margin */
+            margin-top: 1.2vh;
             position: relative;
             overflow: hidden;
             border-radius: 4px;
@@ -153,16 +154,16 @@
         .schedule-dates {
             display: flex;
             justify-content: space-between;
-            font-size: clamp(0.65em, 0.8vw, 0.75em); /* More aggressive min size for dates */
+            font-size: clamp(0.65em, 0.8vw, 0.75em);
             color: var(--accent-color);
-            margin-top: 0.8vh; /* Reduced margin */
+            margin-top: 0.8vh;
         }
 
         .small-print {
             font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(0.75em, 1vw, 0.9em); /* More aggressive min size for small print */
+            font-size: clamp(0.75em, 1vw, 0.9em);
             color: var(--accent-color);
-            margin-top: 2vh; /* Reduced margin */
+            margin-top: 2vh;
             opacity: 0.7;
             line-height: 1.4;
         }
@@ -181,6 +182,29 @@
             z-index: 1;
         }
 
+        .contact-email {
+            position: fixed; /* Fixed position relative to viewport */
+            bottom: 20px; /* Adjust as needed */
+            right: 20px; /* Adjust as needed */
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(0.7em, 1vw, 0.9em);
+            color: var(--text-color);
+            z-index: 10; /* Ensure it's above other elements */
+            text-align: right;
+            line-height: 1.4;
+        }
+
+        .contact-email a {
+            color: var(--email-color); /* Purple color */
+            text-decoration: underline;
+            cursor: pointer; /* Indicate it's clickable */
+            transition: color 0.3s ease;
+        }
+
+        .contact-email a:hover {
+            color: #d1b1ff; /* Lighter purple on hover */
+        }
+
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(30px); }
@@ -191,29 +215,27 @@
             from { width: 0%; }
             to { width: var(--current-progress); }
         }
-
-        /* No specific media queries, relying entirely on clamp() and vh/vw for scaling */
     </style>
 </head>
 <body>
     <div class="background-grid"></div>
     <div class="container">
-        <h1>4simpleproblems</h1>
+        <h1>System Offline</h1>
         <p>The website <span style="color: var(--accent-color); font-family: 'JetBrains Mono', monospace;">4simpleproblems.github.io</span> is temporarily offline as we prepare for a significant upgrade.</p>
         <p>We're undertaking a **major redesign and comprehensive update** to bring you an entirely new experience. This isn't just an aesthetic refresh; it's a complete rebuild, focusing on enhanced functionality and a streamlined user interface.</p>
         <div class="version">Version 4.0 Incoming</div>
-        <p>Expect a refined aesthetic, a focus on clarity and precision, and exciting new interactive modules. We're developing a new section that will provide **dynamic challenges and creative explorations**, designed to engage and stimulate your mind beyond traditional fun.</p>
+        <p>Expect a refined aesthetic, a focus on clarity and precision, and exciting new interactive modules. We're developing a new section that will provide **dynamic challenges and creative explorations**, designed to engage and stimulate your mind beyond traditional learning.</p>
 
         <div class="schedule">
             <h3>Redesign & Development Schedule</h3>
-            <p><strong>Start:</strong> May 23rd, 2025</p>
-            <p><strong>Target:</strong> August 23rd, 2025</p>
+            <p><strong>Start:</strong> <span id="startDate">May 23rd, 2025</span></p>
+            <p><strong>Target:</strong> <span id="endDate">August 23rd, 2025</span></p>
             <div class="progress-bar-container">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
             <div class="schedule-dates">
-                <span>May 23</span>
-                <span>August 23</span>
+                <span id="startShortDate">May 23</span>
+                <span id="endShortDate">August 23</span>
             </div>
         </div>
 
@@ -221,22 +243,25 @@
         <p class="small-print">Thank you for your understanding. The future is almost here.</p>
     </div>
 
+    <div class="contact-email">
+        Have a suggestion? <br>
+        <a href="#" id="emailLink">4sp.suggestions@gmail.com</a>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get current date and format for consistency
+            const currentYear = new Date().getFullYear();
+            const startYear = 2025;
+            const endYear = 2025; // Keeping this fixed to 2025 as per instruction
+
+            document.getElementById('startDate').textContent = `May 23rd, ${startYear}`;
+            document.getElementById('endDate').textContent = `August 23rd, ${endYear}`;
+            document.getElementById('startShortDate').textContent = `May 23`; // Year not needed for short date
+            document.getElementById('endShortDate').textContent = `August 23`; // Year not needed for short date
+
+            const startDate = new Date(`${startYear}-05-23T00:00:00`);
+            const endDate = new Date(`${endYear}-08-23T23:59:59`);
             const now = new Date();
-            const year = now.getFullYear(); // Use current year for dynamic schedule calculation
-
-            const startDate = new Date(`${year}-05-23T00:00:00`);
-            const endDate = new Date(`${year}-08-23T23:59:59`);
-
-            // Adjust start/end dates for the *next* year if current date is past August 23rd of current year
-            if (now > endDate && now.getFullYear() === year) {
-                // If current date is past this year's end date, assume next year's schedule
-                startDate.setFullYear(year + 1);
-                endDate.setFullYear(year + 1);
-            }
-            // If current date is before this year's start date, it will use this year's dates (which are in the future)
 
             const totalDuration = endDate.getTime() - startDate.getTime();
             const elapsedDuration = now.getTime() - startDate.getTime();
@@ -250,11 +275,31 @@
                 progress = (elapsedDuration / totalDuration) * 100;
             }
 
-            // Ensure progress is within 0-100 range
             progress = Math.max(0, Math.min(100, progress));
 
             const progressBar = document.getElementById('progressBar');
             progressBar.style.setProperty('--current-progress', progress + '%');
+
+            // Copy email to clipboard functionality
+            const emailLink = document.getElementById('emailLink');
+            const emailAddress = '4sp.suggestions@gmail.com';
+
+            emailLink.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default link behavior
+
+                navigator.clipboard.writeText(emailAddress).then(() => {
+                    // Optional: Provide visual feedback to the user
+                    const originalText = emailLink.textContent;
+                    emailLink.textContent = 'Copied!';
+                    setTimeout(() => {
+                        emailLink.textContent = originalText;
+                    }, 1500);
+                }).catch(err => {
+                    console.error('Failed to copy email: ', err);
+                    // Fallback for older browsers or if clipboard API fails
+                    prompt("Copy the email address:", emailAddress);
+                });
+            });
         });
     </script>
 </body>
