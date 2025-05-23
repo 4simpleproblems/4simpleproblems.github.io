@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4simpleproblems.github.io - Undergoing Major Redesign (v4.0)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background-color: #000000;
+            --text-color: #ffffff;
+            --accent-color: #bbbbbb;
+            --line-color: #222222;
+            --progress-bar-fill: #555555;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Crucial to prevent accidental scrolling of the entire page */
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .container {
+            width: 90%; /* Use percentage for width */
+            max-width: 950px; /* Max width to prevent it from getting too wide on large screens */
+            max-height: 95vh; /* Increased max-height to give more vertical room */
+            padding: 3vh 3vw; /* Slightly reduced padding to save space */
+            border: 1px solid var(--line-color);
+            box-shadow: 0 0 70px rgba(255, 255, 255, 0.07);
+            position: relative;
+            z-index: 2;
+            animation: fadeIn 2s ease-out forwards;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center content vertically */
+            align-items: center;
+            overflow-y: auto; /* Allow internal scrolling if absolutely necessary, but try to avoid */
+            scrollbar-width: none; /* Hide scrollbar for Firefox */
+            -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+        }
+
+        .container::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for Chrome/Safari/Opera */
+        }
+
+        h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(2em, 5vw, 4em); /* More aggressive min size for heading */
+            margin-bottom: 0.1em;
+            letter-spacing: -0.05em;
+            color: var(--accent-color);
+            font-weight: 700;
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 60%;
+            height: 2px;
+            background-color: var(--accent-color);
+            margin: 1vh auto 0; /* Reduced margin */
+        }
+
+        p {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(0.8em, 1.3vw, 1.15em); /* More aggressive min size for paragraphs */
+            line-height: 1.5; /* Slightly tighter line height */
+            margin-bottom: 1.2vh; /* Reduced margin */
+            color: var(--text-color);
+            font-weight: 300;
+        }
+
+        .version {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(1.4em, 3vw, 2.2em); /* More aggressive min size for version */
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-top: 1.5vh;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+
+        .schedule {
+            width: 90%;
+            margin: 2vh auto; /* Reduced margin */
+            border: 1px solid var(--accent-color);
+            padding: 1vh 2vw; /* Reduced padding */
+            background-color: rgba(255, 255, 255, 0.05);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(0.75em, 1vw, 0.9em); /* More aggressive min size for schedule text */
+            color: var(--accent-color);
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+
+        .schedule h3 {
+            margin: 0 0 0.8vh 0; /* Reduced margin */
+            font-size: clamp(0.9em, 1.2vw, 1.05em); /* More aggressive min size for schedule heading */
+            color: var(--text-color);
+            font-weight: 400;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .schedule p {
+            margin: 0.4vh 0; /* Very tight margin for schedule paragraphs */
+            font-size: inherit;
+            line-height: 1.3; /* Tighter line height for schedule paragraphs */
+            color: var(--text-color);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--line-color);
+            margin-top: 1.2vh; /* Reduced margin */
+            position: relative;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: var(--progress-bar-fill);
+            border-radius: 4px;
+            animation: fillProgressBar 2s ease-out forwards;
+        }
+
+        .schedule-dates {
+            display: flex;
+            justify-content: space-between;
+            font-size: clamp(0.65em, 0.8vw, 0.75em); /* More aggressive min size for dates */
+            color: var(--accent-color);
+            margin-top: 0.8vh; /* Reduced margin */
+        }
+
+        .small-print {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(0.75em, 1vw, 0.9em); /* More aggressive min size for small print */
+            color: var(--accent-color);
+            margin-top: 2vh; /* Reduced margin */
+            opacity: 0.7;
+            line-height: 1.4;
+        }
+
+        .background-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(to right, var(--line-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--line-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.08;
+            z-index: 1;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fillProgressBar {
+            from { width: 0%; }
+            to { width: var(--current-progress); }
+        }
+
+        /* No specific media queries, relying entirely on clamp() and vh/vw for scaling */
+    </style>
+</head>
+<body>
+    <div class="background-grid"></div>
+    <div class="container">
+        <h1>System Offline</h1>
+        <p>The website <span style="color: var(--accent-color); font-family: 'JetBrains Mono', monospace;">4simpleproblems.github.io</span> is temporarily offline as we prepare for a significant upgrade.</p>
+        <p>We're undertaking a **major redesign and comprehensive update** to bring you an entirely new experience. This isn't just an aesthetic refresh; it's a complete rebuild, focusing on enhanced functionality and a streamlined user interface.</p>
+        <div class="version">Version 4.0 Incoming</div>
+        <p>Expect a refined aesthetic, a focus on clarity and precision, and exciting new interactive modules. We're developing a new section that will provide **dynamic challenges and creative explorations**, designed to engage and stimulate your mind beyond traditional learning.</p>
+
+        <div class="schedule">
+            <h3>Redesign & Development Schedule</h3>
+            <p><strong>Start:</strong> May 23rd, 2025</p>
+            <p><strong>Target:</strong> August 23rd, 2025</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="schedule-dates">
+                <span>May 23</span>
+                <span>August 23</span>
+            </div>
+        </div>
+
+        <p>Our goal is to have the new site **live by the end of summer**, perfectly timed for the start of the school year. We appreciate your patience as we work to deliver an even better platform.</p>
+        <p class="small-print">Thank you for your understanding. The future is almost here.</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get current date and format for consistency
+            const now = new Date();
+            const year = now.getFullYear(); // Use current year for dynamic schedule calculation
+
+            const startDate = new Date(`${year}-05-23T00:00:00`);
+            const endDate = new Date(`${year}-08-23T23:59:59`);
+
+            // Adjust start/end dates for the *next* year if current date is past August 23rd of current year
+            if (now > endDate && now.getFullYear() === year) {
+                // If current date is past this year's end date, assume next year's schedule
+                startDate.setFullYear(year + 1);
+                endDate.setFullYear(year + 1);
+            }
+            // If current date is before this year's start date, it will use this year's dates (which are in the future)
+
+            const totalDuration = endDate.getTime() - startDate.getTime();
+            const elapsedDuration = now.getTime() - startDate.getTime();
+
+            let progress = 0;
+            if (now.getTime() >= endDate.getTime()) {
+                progress = 100; // Completed or past due
+            } else if (now.getTime() <= startDate.getTime()) {
+                progress = 0; // Not started yet
+            } else {
+                progress = (elapsedDuration / totalDuration) * 100;
+            }
+
+            // Ensure progress is within 0-100 range
+            progress = Math.max(0, Math.min(100, progress));
+
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.setProperty('--current-progress', progress + '%');
+        });
+    </script>
+</body>
+</html>
