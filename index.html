@@ -1,323 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4SP V4 DEV</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --background-color: #000000;
-            --text-color: #ffffff;
-            --accent-color: #bbbbbb;
-            --line-color: #222222;
-            --progress-bar-fill: #555555;
-            --email-color: #9370DB; /* MediumPurple */
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>4SP V4 DEV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --background-color: #000000;
+      --text-color: #ffffff;
+      --accent-color: #bbbbbb;
+      --line-color: #222222;
+      --progress-bar-fill: #888888;     /* lighter */
+      --progress-bar-glow: #9370DB;     /* glow color */
+      --email-color: #9370DB;           /* MediumPurple */
+    }
 
-        html, body {
-            height: 100%;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            box-sizing: border-box;
-        }
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            position: relative;
-        }
+    .container {
+      width: 90%;
+      max-width: 950px;
+      max-height: 95vh;
+      padding: 3vh 3vw;
+      border: 1px solid var(--line-color);
+      box-shadow: 0 0 70px rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 2;
+      animation: fadeIn 2s ease-out forwards;
+      background-color: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .container::-webkit-scrollbar {
+      display: none;
+    }
 
-        .container {
-            width: 90%;
-            max-width: 950px;
-            max-height: 95vh;
-            padding: 3vh 3vw;
-            border: 1px solid var(--line-color);
-            box-shadow: 0 0 70px rgba(255, 255, 255, 0.07);
-            position: relative;
-            z-index: 2;
-            animation: fadeIn 2s ease-out forwards;
-            background-color: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow-y: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
+    h1 {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(2em, 5vw, 4em);
+      margin-bottom: 0.1em;
+      letter-spacing: -0.05em;
+      color: var(--accent-color);
+      font-weight: 700;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    h1::after {
+      content: '';
+      display: block;
+      width: 60%;
+      height: 2px;
+      background-color: var(--accent-color);
+      margin: 1vh auto 0;
+    }
 
-        .container::-webkit-scrollbar {
-            display: none;
-        }
+    p {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.8em, 1.3vw, 1.15em);
+      line-height: 1.5;
+      margin-bottom: 1.2vh;
+      color: var(--text-color);
+      font-weight: 300;
+    }
 
-        h1 {
-            font-family: 'Inter', sans-serif;
-            font-size: clamp(2em, 5vw, 4em);
-            margin-bottom: 0.1em;
-            letter-spacing: -0.05em;
-            color: var(--accent-color);
-            font-weight: 700;
-            text-transform: uppercase;
-            line-height: 1.1;
-        }
+    .version {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(1.4em, 3vw, 2.2em);
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-top: 1.5vh;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
 
-        h1::after {
-            content: '';
-            display: block;
-            width: 60%;
-            height: 2px;
-            background-color: var(--accent-color);
-            margin: 1vh auto 0;
-        }
+    .schedule {
+      width: 90%;
+      margin: 2vh auto;
+      border: 1px solid var(--accent-color);
+      padding: 1vh 2vw;
+      background-color: rgba(255, 255, 255, 0.05);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(0.75em, 1vw, 0.9em);
+      color: var(--accent-color);
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      border-radius: 4px;
+    }
+    .schedule h3 {
+      margin: 0 0 0.8vh 0;
+      font-size: clamp(0.9em, 1.2vw, 1.05em);
+      color: var(--text-color);
+      font-weight: 400;
+      text-align: center;
+      line-height: 1.2;
+    }
+    .schedule p {
+      margin: 0.4vh 0;
+      font-size: inherit;
+      line-height: 1.3;
+      color: var(--text-color);
+    }
 
-        p {
-            font-family: 'Inter', sans-serif;
-            font-size: clamp(0.8em, 1.3vw, 1.15em);
-            line-height: 1.5;
-            margin-bottom: 1.2vh;
-            color: var(--text-color);
-            font-weight: 300;
-        }
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background-color: var(--line-color);
+      margin-top: 1.2vh;
+      position: relative;
+      overflow: hidden;
+      border-radius: 4px;
+    }
 
-        .version {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(1.4em, 3vw, 2.2em);
-            font-weight: 700;
-            color: var(--accent-color);
-            margin-top: 1.5vh;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            line-height: 1.2;
-        }
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background-color: var(--progress-bar-fill);
+      border-radius: 4px;
+      box-shadow:
+        0 0 10px var(--progress-bar-glow),
+        0 0 16px var(--progress-bar-glow),
+        0 0 24px var(--progress-bar-glow),
+        inset 0 0 10px var(--progress-bar-glow);
+      animation:
+        fillProgressBar 2s ease-out forwards,
+        glowPulse 1.5s ease-in-out infinite alternate;
+    }
 
-        .schedule {
-            width: 90%;
-            margin: 2vh auto;
-            border: 1px solid var(--accent-color);
-            padding: 1vh 2vw;
-            background-color: rgba(255, 255, 255, 0.05);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(0.75em, 1vw, 0.9em);
-            color: var(--accent-color);
-            text-align: left;
-            position: relative;
-            overflow: hidden;
-            border-radius: 4px;
-        }
+    .schedule-dates {
+      display: flex;
+      justify-content: space-between;
+      font-size: clamp(0.65em, 0.8vw, 0.75em);
+      color: var(--accent-color);
+      margin-top: 0.8vh;
+    }
 
-        .schedule h3 {
-            margin: 0 0 0.8vh 0;
-            font-size: clamp(0.9em, 1.2vw, 1.05em);
-            color: var(--text-color);
-            font-weight: 400;
-            text-align: center;
-            line-height: 1.2;
-        }
+    .small-print {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(0.75em, 1vw, 0.9em);
+      color: var(--accent-color);
+      margin-top: 2vh;
+      opacity: 0.7;
+      line-height: 1.4;
+    }
 
-        .schedule p {
-            margin: 0.4vh 0;
-            font-size: inherit;
-            line-height: 1.3;
-            color: var(--text-color);
-        }
+    .background-grid {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-image:
+        linear-gradient(to right, var(--line-color) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--line-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      opacity: 0.08;
+      z-index: 1;
+    }
 
-        .progress-bar-container {
-            width: 100%;
-            height: 8px;
-            background-color: var(--line-color);
-            margin-top: 1.2vh;
-            position: relative;
-            overflow: hidden;
-            border-radius: 4px;
-        }
+    .contact-email {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(0.7em, 1vw, 0.9em);
+      color: var(--text-color);
+      z-index: 10;
+      text-align: right;
+      line-height: 1.4;
+    }
+    .contact-email a {
+      color: var(--email-color);
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    .contact-email a:hover {
+      color: #d1b1ff;
+    }
 
-        .progress-bar {
-            height: 100%;
-            width: 0;
-            background-color: var(--progress-bar-fill);
-            border-radius: 4px;
-            animation: fillProgressBar 2s ease-out forwards;
-        }
+    .go-v3 {
+      position: fixed;
+      bottom: 60px;  /* 40px above suggestion box */
+      right: 20px;
+      background-color: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--line-color);
+      border-radius: 4px;
+      padding: 0.5em 1em;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(0.8em, 1vw, 1em);
+      color: var(--text-color);
+      z-index: 10;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .go-v3 a {
+      display: inline-block;
+      margin-top: 0.25em;
+      color: var(--accent-color);
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    .go-v3 a:hover {
+      color: #d1b1ff;
+    }
 
-        .schedule-dates {
-            display: flex;
-            justify-content: space-between;
-            font-size: clamp(0.65em, 0.8vw, 0.75em);
-            color: var(--accent-color);
-            margin-top: 0.8vh;
-        }
-
-        .small-print {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(0.75em, 1vw, 0.9em);
-            color: var(--accent-color);
-            margin-top: 2vh;
-            opacity: 0.7;
-            line-height: 1.4;
-        }
-
-        .background-grid {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:
-                linear-gradient(to right, var(--line-color) 1px, transparent 1px),
-                linear-gradient(to bottom, var(--line-color) 1px, transparent 1px);
-            background-size: 50px 50px;
-            opacity: 0.08;
-            z-index: 1;
-        }
-
-        .contact-email {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(0.7em, 1vw, 0.9em);
-            color: var(--text-color);
-            z-index: 10;
-            text-align: right;
-            line-height: 1.4;
-        }
-
-        .contact-email a {
-            color: var(--email-color);
-            text-decoration: underline;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .contact-email a:hover {
-            color: #d1b1ff;
-        }
-
-        /* “Go to V3” pinned bottom-right, styled like the suggestion box */
-        .go-v3 {
-            position: fixed;
-            bottom: 60px;  /* 40px above suggestion box (20px inset + 20px spacing) */
-            right: 20px;
-            background-color: rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--line-color);
-            border-radius: 4px;
-            padding: 0.5em 1em;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: clamp(0.8em, 1vw, 1em);
-            color: var(--text-color);
-            z-index: 10;
-            text-align: center;
-            line-height: 1.3;
-        }
-
-        .go-v3 a {
-            display: inline-block;
-            margin-top: 0.25em;
-            color: var(--accent-color);
-            text-decoration: underline;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .go-v3 a:hover {
-            color: #d1b1ff;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fillProgressBar {
-            from { width: 0%; }
-            to { width: var(--current-progress); }
-        }
-    </style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fillProgressBar {
+      from { width: 0%; }
+      to   { width: var(--current-progress); }
+    }
+    @keyframes glowPulse {
+      from {
+        box-shadow:
+          0 0 4px var(--progress-bar-glow),
+          0 0 12px var(--progress-bar-glow),
+          inset 0 0 3px var(--progress-bar-glow);
+      }
+      to {
+        box-shadow:
+          0 0 12px var(--progress-bar-glow),
+          0 0 24px var(--progress-bar-glow),
+          inset 0 0 6px var(--progress-bar-glow);
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="background-grid"></div>
-    <div class="container">
-        <h1>System Offline</h1>
-        <p>The website <span style="color: var(--accent-color); font-family: 'JetBrains Mono', monospace;">4simpleproblems.github.io</span> is temporarily offline as we prepare for a significant upgrade.</p>
-        <p>We're undertaking a <strong>major redesign and comprehensive update</strong> to bring you an entirely new experience. This isn't just an aesthetic refresh; it's a complete rebuild, focusing on enhanced functionality and a streamlined user interface.</p>
-        <div class="version">Version 4.0 Incoming</div>
-        <p>Expect a refined aesthetic, a focus on clarity and precision, and exciting new interactive modules. We're developing a new section that will provide <strong>dynamic challenges and creative explorations</strong>, designed to engage and stimulate your mind beyond traditional learning.</p>
+  <div class="background-grid"></div>
+  <div class="container">
+    <h1>System Offline</h1>
+    <p>The website <span style="color: var(--accent-color); font-family: 'JetBrains Mono', monospace;">4simpleproblems.github.io</span> is temporarily offline as we prepare for a significant upgrade.</p>
+    <p>We're undertaking a <strong>major redesign and comprehensive update</strong> to bring you an entirely new experience. This isn't just an aesthetic refresh; it's a complete rebuild, focusing on enhanced functionality and a streamlined user interface.</p>
+    <div class="version">Version 4.0 Incoming</div>
+    <p>Expect a refined aesthetic, a focus on clarity and precision, and exciting new interactive modules. We're developing a new section that will provide <strong>dynamic challenges and creative explorations</strong>, designed to engage and stimulate your mind beyond traditional learning.</p>
 
-        <div class="schedule">
-            <h3>Redesign & Development Schedule</h3>
-            <p><strong>Start:</strong> <span id="startDate">May 23rd, 2025</span></p>
-            <p><strong>Target:</strong> <span id="endDate">August 23rd, 2025</span></p>
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-            <div class="schedule-dates">
-                <span id="startShortDate">May 23</span>
-                <span id="endShortDate">August 23</span>
-            </div>
-        </div>
-
-        <p>Our goal is to have the new site <strong>live by the end of summer</strong>, perfectly timed for the start of the school year. We appreciate your patience as we work to deliver an even better platform.</p>
-        <p class="small-print">Thank you for your understanding. The future is almost here.</p>
+    <div class="schedule">
+      <h3>Redesign & Development Schedule</h3>
+      <p><strong>Start:</strong> <span id="startDate">May 23rd, 2025</span></p>
+      <p><strong>Target:</strong> <span id="endDate">August 23rd, 2025</span></p>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="schedule-dates">
+        <span id="startShortDate">May 23</span>
+        <span id="endShortDate">August 23</span>
+      </div>
     </div>
 
-    <!-- Go to V3 link -->
-    <div class="go-v3">
-        Want to go to V3?<br>
-        <a href="https://4simpleproblems.github.io/v3/" id="v3Link">4SP – V3</a>
-    </div>
+    <p>Our goal is to have the new site <strong>live by the end of summer</strong>, perfectly timed for the start of the school year. We appreciate your patience as we work to deliver an even better platform.</p>
+    <p class="small-print">Thank you for your understanding. The future is almost here.</p>
+  </div>
 
-    <!-- Suggestion box -->
-    <div class="contact-email">
-        Have a suggestion?<br>
-        <a href="#" id="emailLink">4sp.suggestions@gmail.com</a>
-    </div>
+  <!-- Go to V3 link -->
+  <div class="go-v3">
+    Want to go to V3?<br>
+    <a href="https://4simpleproblems.github.io/v3/" id="v3Link">4SP – V3</a>
+  </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const startYear = 2025, endYear = 2025;
-            document.getElementById('startDate').textContent = `May 23rd, ${startYear}`;
-            document.getElementById('endDate').textContent   = `August 23rd, ${endYear}`;
-            document.getElementById('startShortDate').textContent = `May 23`;
-            document.getElementById('endShortDate').textContent   = `August 23`;
+  <!-- Suggestion box -->
+  <div class="contact-email">
+    Have a suggestion?<br>
+    <a href="#" id="emailLink">4sp.suggestions@gmail.com</a>
+  </div>
 
-            const startDate = new Date(`${startYear}-05-23T00:00:00`);
-            const endDate   = new Date(`${endYear}-08-23T23:59:59`);
-            const now       = new Date();
-            const total     = endDate - startDate;
-            const elapsed   = now - startDate;
-            let progress    = now >= endDate ? 100
-                            : now <= startDate ? 0
-                            : (elapsed / total) * 100;
-            progress = Math.max(0, Math.min(100, progress));
-            document.getElementById('progressBar')
-                    .style.setProperty('--current-progress', progress + '%');
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const startYear = 2025, endYear = 2025;
+      document.getElementById('startDate').textContent      = `May 23rd, ${startYear}`;
+      document.getElementById('endDate').textContent        = `August 23rd, ${endYear}`;
+      document.getElementById('startShortDate').textContent = `May 23`;
+      document.getElementById('endShortDate').textContent   = `August 23`;
 
-            // Copy-to-clipboard for suggestion email
-            const emailLink    = document.getElementById('emailLink');
-            const emailAddress = '4sp.suggestions@gmail.com';
-            emailLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                navigator.clipboard.writeText(emailAddress)
-                  .then(() => {
-                    const orig = emailLink.textContent;
-                    emailLink.textContent = 'Copied!';
-                    setTimeout(() => emailLink.textContent = orig, 1500);
-                  })
-                  .catch(() => prompt("Copy the email address:", emailAddress));
-            });
-        });
-    </script>
+      const startDate = new Date(`${startYear}-05-23T00:00:00`);
+      const endDate   = new Date(`${endYear}-08-23T23:59:59`);
+      const now       = new Date();
+      const total     = endDate - startDate;
+      const elapsed   = now - startDate;
+      let progress    = now >= endDate ? 100
+                      : now <= startDate ? 0
+                      : (elapsed / total) * 100;
+      progress = Math.max(0, Math.min(100, progress));
+      document.getElementById('progressBar')
+        .style.setProperty('--current-progress', progress + '%');
+
+      // Copy-to-clipboard for suggestion email
+      const emailLink    = document.getElementById('emailLink');
+      const emailAddress = '4sp.suggestions@gmail.com';
+      emailLink.addEventListener('click', e => {
+        e.preventDefault();
+        navigator.clipboard.writeText(emailAddress)
+          .then(() => {
+            const orig = emailLink.textContent;
+            emailLink.textContent = 'Copied!';
+            setTimeout(() => emailLink.textContent = orig, 1500);
+          })
+          .catch(() => prompt("Copy the email address:", emailAddress));
+      });
+    });
+  </script>
 </body>
 </html>
