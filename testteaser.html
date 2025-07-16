@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>4SP - In Development</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@300;400;600&display=swap"
+        rel="stylesheet"
+    />
+    <style>
+        /*
+          V4 Teaser - Style Update (Bridging V3 and V4)
+
+          This stylesheet has been updated to align the teaser page with the existing V3 design language,
+          while preserving the "in-development" theme. It transitions from the original dark mode to the
+          light-theme gradient background used across the V3 dashboard pages.
+
+          Fonts ('Montserrat' and 'Open Sans') are now applied consistently with the other pages.
+          The main content card, header, and action links have been restyled to reflect the components
+          (white cards, purple accents, button styles) from the Countdown, Settings, and Requests pages,
+          creating a more cohesive user experience before the full V4 launch.
+        */
+        :root {
+            /* V3-Aligned Color Palette */
+            --bg-main-start: #f0f2f5;
+            --bg-main-end: #e8eaf0;
+            --bg-surface: #ffffff;
+            --bg-surface-alt: #f8f9fa;
+
+            /* Text Colors */
+            --text-primary: #333333;
+            --text-secondary: #555555;
+
+            /* Accent & Brand Colors */
+            --primary-purple: #6720bd;
+            --darker-purple: #5a1aa8;
+            --progress-bar-color: #8a2be2;
+            --progress-bar-glow-color: rgba(103, 32, 189, 0.4);
+
+            /* Links & Borders */
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --shadow-hover-color: rgba(103, 32, 189, 0.2);
+        }
+
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, var(--bg-main-start) 0%, var(--bg-main-end) 100%);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        /* Header (Aligned with V3 Dashboard Header) */
+        .main-header {
+            width: 100%;
+            background-color: var(--bg-surface);
+            padding: 15px 0;
+            box-shadow: 0 4px 20px var(--shadow-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .main-header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .main-header .logo img {
+            height: 40px;
+        }
+
+        /* Main Content Container (Styled like V3 Cards) */
+        .content-card {
+            background-color: var(--bg-surface);
+            border-radius: 16px;
+            box-shadow: 0 6px 30px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            max-width: 800px;
+            margin: 100px auto 50px auto;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            animation: fadeIn 1.5s ease-out forwards;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            max-height: calc(100vh - 150px);
+        }
+
+        .content-card::-webkit-scrollbar {
+            display: none;
+        }
+
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(2em, 5vw, 3.5em);
+            margin-bottom: 0.2em;
+            font-weight: 700;
+            text-transform: uppercase;
+            line-height: 1.1;
+            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--darker-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* This title element doesn't exist in the provided teaser HTML but is kept for potential future use */
+        .dashboard-title {
+             margin: 0; font-size: 2.0em; font-weight: bold; background: linear-gradient(135deg, #6720bd 0%, #8a2be2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        h1::after {
+            content: "";
+            display: block;
+            width: 60%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-purple), transparent);
+            margin: 10px auto 30px auto;
+        }
+
+        p {
+            font-family: 'Open Sans', sans-serif;
+            font-size: clamp(0.9em, 1.3vw, 1.1em);
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            font-weight: 400;
+            max-width: 90%;
+        }
+
+        p strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .version {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(1.4em, 3vw, 2em);
+            font-weight: 700;
+            color: var(--primary-purple);
+            margin-top: 30px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+
+        .schedule {
+            width: 90%;
+            margin: 30px auto;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            background-color: var(--bg-surface-alt);
+            font-family: 'Open Sans', sans-serif;
+            font-size: clamp(0.85em, 1vw, 1em);
+            color: var(--text-primary);
+            text-align: left;
+            border-radius: 12px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        .schedule h3 {
+            margin: 0 0 15px 0;
+            font-size: clamp(1em, 1.3vw, 1.15em);
+            color: var(--primary-purple);
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.2;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .schedule p {
+            margin: 8px 0;
+            font-size: inherit;
+            line-height: 1.4;
+            color: var(--text-secondary);
+            text-align: left;
+            max-width: 100%;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background-color: #e0e0e0;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 6px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--primary-purple), var(--progress-bar-color));
+            border-radius: 6px;
+            box-shadow: 0 0 8px var(--progress-bar-glow-color);
+            animation:
+                fillProgressBar 2s ease-out forwards,
+                glowPulse 1.5s ease-in-out infinite alternate;
+        }
+
+        .schedule-dates {
+            display: flex;
+            justify-content: space-between;
+            font-size: clamp(0.75em, 0.9vw, 0.9em);
+            color: var(--text-secondary);
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .small-print {
+            font-family: 'Open Sans', sans-serif;
+            font-size: clamp(0.8em, 1vw, 1em);
+            color: var(--text-secondary);
+            margin-top: 30px;
+            opacity: 0.8;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+
+        /* Go-Links section - Restyled to match V3 buttons */
+        .go-links {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10;
+            animation: slideInUp 1.2s ease-out;
+        }
+
+        .go-link-box a {
+            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--darker-purple) 100%);
+            border: none;
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            font-weight: 600;
+            text-decoration: none;
+            display: block;
+            box-shadow: 0 4px 15px var(--shadow-color);
+        }
+
+        .go-link-box a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px var(--shadow-hover-color);
+        }
+
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fillProgressBar {
+            from { width: 0%; }
+            to { width: var(--current-progress); }
+        }
+
+        @keyframes glowPulse {
+            from { box-shadow: 0 0 5px var(--progress-bar-glow-color); }
+            to { box-shadow: 0 0 15px var(--progress-bar-glow-color); }
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+             .main-header .container { flex-direction: column; gap: 10px; }
+             .main-header .logo { text-align: center; }
+            
+            .content-card {
+                margin: 80px 20px 50px 20px;
+                padding: 30px 20px;
+                max-height: calc(100vh - 130px);
+            }
+
+            .go-links {
+                flex-direction: row;
+                left: 50%;
+                transform: translateX(-50%);
+                width: calc(100% - 40px);
+                bottom: 20px;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .go-link-box a {
+                flex: 1;
+                text-align: center;
+            }
+
+            h1 { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <div class="logo">
+                <a href="#"><img src="../images/logo-dark.png" alt="4SP Logo"></a>
+            </div>
+        </div>
+    </header>
+
+    <div class="content-card">
+        <h1>Development in Progress</h1>
+        <p>
+            <span style="color: var(--primary-purple); font-family: 'Montserrat', sans-serif; font-weight: 600;">4simpleproblems.github.io</span>
+            is undergoing a complete rebuild for the upcoming V4 release.
+        </p>
+        <p>
+            This isn't just an aesthetic refresh; it's a <strong>major redesign and comprehensive update</strong> to bring you an entirely new experience, focusing on enhanced functionality and a streamlined user interface.
+        </p>
+        <div class="version">Version 4.0 Incoming</div>
+        <p>
+            It will include
+            <strong>security, creativity, and connection</strong> designed to engage
+            and stimulate your mind for the boring school hours.
+        </p>
+
+        <div class="schedule">
+            <h3>Redesign &amp; Development Schedule</h3>
+            <p><strong>Start:</strong> <span id="startDate">May 23rd, 2025</span></p>
+            <p><strong>Target:</strong> <span id="endDate">August 23rd, 2025</span></p>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="schedule-dates">
+                <span id="startShortDate">May 23</span>
+                <span id="endShortDate">August 23</span>
+            </div>
+        </div>
+
+        <p>
+            Our goal is to have the new site <strong>live by the end of summer</strong>,
+            perfectly timed for the start of the school year. We appreciate your patience.
+        </p>
+        <p class="small-print">
+            The future is almost here.
+        </p>
+    </div>
+
+    <div class="go-links">
+        <div class="go-link-box go-v1">
+            <a href="https://4simpleproblems.github.io/v1/" id="v1Link">Access V1</a>
+        </div>
+        <div class="go-link-box go-v3">
+            <a href="https://4simpleproblems.github.io/v3/" id="v3Link">Access V3</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // This script dynamically calculates the progress of the development timeline.
+
+            // --- Configuration ---
+            const startYear = 2025;
+            const endYear = 2025;
+
+            // --- Element References ---
+            const startDateEl = document.getElementById("startDate");
+            const endDateEl = document.getElementById("endDate");
+            const startShortDateEl = document.getElementById("startShortDate");
+            const endShortDateEl = document.getElementById("endShortDate");
+            const progressBarEl = document.getElementById("progressBar");
+
+            // --- Update Displayed Dates ---
+            if (startDateEl) startDateEl.textContent = `May 23rd, ${startYear}`;
+            if (endDateEl) endDateEl.textContent = `August 23rd, ${endYear}`;
+            if (startShortDateEl) startShortDateEl.textContent = `May 23`;
+            if (endShortDateEl) endShortDateEl.textContent = `August 23`;
+
+            // --- Progress Calculation ---
+            const startDate = new Date(`${startYear}-05-23T00:00:00`);
+            const endDate = new Date(`${endYear}-08-23T23:59:59`);
+            const now = new Date();
+
+            const totalDuration = endDate - startDate;
+            const elapsedTime = now - startDate;
+
+            let progressPercentage;
+
+            if (now >= endDate) {
+                progressPercentage = 100; // Project is complete
+            } else if (now <= startDate) {
+                progressPercentage = 0;   // Project hasn't started
+            } else {
+                progressPercentage = (elapsedTime / totalDuration) * 100;
+            }
+
+            // Ensure progress is within the 0-100 range
+            progressPercentage = Math.max(0, Math.min(100, progressPercentage));
+
+            // --- Apply Progress to CSS Variable ---
+            // The CSS animation 'fillProgressBar' uses this variable to set its 'to' state.
+            if (progressBarEl) {
+                progressBarEl.style.setProperty("--current-progress", progressPercentage + "%");
+            }
+        });
+    </script>
+</body>
+</html>
