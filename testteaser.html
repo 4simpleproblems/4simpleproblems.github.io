@@ -1,178 +1,303 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4SP Website Redesign</title>
-    
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>4SP - In Development</title>
     <style>
-        /* --- General Body & Font Styling --- */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-            margin: 0;
-            background-color: #f4f4f9;
-            color: #333;
-            line-height: 1.6;
+        /*
+          Style Refresh:
+          This version simplifies the layout by integrating all elements into a single
+          scrolling column. The "Go Links" are no longer fixed to the corner but
+          appear naturally after the main content. The core purple theme and dark
+          mode aesthetic are preserved, with subtle adjustments to shadows and spacing
+          for a cleaner, more modern feel.
+        */
+
+        /* --- Font Definitions --- */
+        @font-face {
+            font-family: 'PrimaryFont'; /* Using your primaryfont.woff */
+            src: url('../fonts/primaryfont.woff') format('woff');
+            font-display: swap;
         }
 
-        /* --- Header & Navigation Bar Styling --- */
-        .top-bar {
+        @font-face {
+            font-family: 'SecondaryFont'; /* Using your secondaryfont.woff */
+            src: url('../fonts/secondaryfont.woff') format('woff');
+            font-display: swap;
+        }
+
+        /* --- Core Variables --- */
+        :root {
+            --bg-main: #101010;
+            --bg-surface: #1d1d1d;
+            --bg-surface-alt: #2b2b2b;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --primary-purple: #6720bd;
+            --darker-purple: #5a1aa8;
+            --border-color: #333333;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --shadow-glow: rgba(103, 32, 189, 0.2);
+            --progress-bar-color: #8a2be2;
+            --progress-bar-glow-color: rgba(103, 32, 189, 0.6);
+            --v1-link-color: #1e90ff;
+            --v3-link-color: #ff8c00;
+        }
+
+        /* --- Global & Body --- */
+        html {
+            box-sizing: border-box;
+        }
+
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+
+        body {
+            font-family: 'SecondaryFont', system-ui, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* --- Main Content Card --- */
+        .content-card {
+            background-color: var(--bg-surface);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px var(--shadow-color), 0 0 50px var(--shadow-glow);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+        }
+
+        h1 {
+            font-family: 'PrimaryFont', sans-serif;
+            font-size: clamp(2.5em, 5vw, 3em);
+            font-weight: 700;
+            margin: 0 0 1rem 0;
+            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--darker-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        p {
+            font-size: clamp(1em, 2vw, 1.1em);
+            line-height: 1.7;
+            color: var(--text-secondary);
+            margin: 0 0 1.5rem 0;
+        }
+        
+        p.intro {
+            color: var(--text-primary);
+            font-size: clamp(1.1em, 2.5vw, 1.25em);
+            margin-bottom: 2rem;
+        }
+
+        p strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* --- Schedule & Progress Bar --- */
+        .schedule {
+            width: 100%;
+            margin: 2rem auto;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            background-color: var(--bg-surface-alt);
+            border-radius: 12px;
+        }
+
+        .schedule h3 {
+            margin: 0 0 15px 0;
+            font-family: 'PrimaryFont', sans-serif;
+            font-size: 1.15em;
+            color: var(--primary-purple);
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background-color: #333;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0; /* Set by JS */
+            background: linear-gradient(90deg, var(--primary-purple), var(--progress-bar-color));
+            border-radius: 6px;
+            box-shadow: 0 0 10px var(--progress-bar-glow-color);
+            animation: fillProgressBar 2s ease-out forwards, glowPulse 1.5s ease-in-out infinite alternate;
+        }
+        
+        .schedule-dates {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 1rem 2rem;
-            background-color: #ffffff;
-            border-bottom: 1px solid #e0e0e0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            padding: 0 2px;
         }
 
-        /* --- Logo Styling (Size, Link, and Color Effect) --- */
-        .logo-img {
-            /* Set a specific height to make the logo bigger. Adjust this value as needed.
-              The width will scale automatically to maintain the aspect ratio.
-            */
-            height: 60px; 
-            width: auto;
-            vertical-align: middle; /* Aligns the logo nicely with other items */
 
-            /*
-              Apply CSS filters to change the color.
-              - grayscale(100%) removes all color.
-              - brightness(30%) darkens the image. Adjust between 0% (black) and 100% (original).
-            */
-            filter: grayscale(100%) brightness(30%);
-
-            /* Add a subtle transition for a smooth effect on hover */
-            transition: filter 0.3s ease-in-out;
+        /* --- Redirect Links --- */
+        .go-links {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 700px;
+            margin-top: 30px;
+            animation: fadeIn 1s ease-out 0.2s;
+            animation-fill-mode: backwards;
         }
 
-        .logo-img:hover {
-            /* Make the logo slightly less dark on hover to show interactivity */
-            filter: grayscale(100%) brightness(50%);
-        }
-        
-        /* --- Main Content Styling --- */
-        main {
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        /* --- Redesigned Teaser Section Styling 🚀 --- */
-        .teaser-section {
+        .go-link-box {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
             text-align: center;
-            padding: 3rem 1rem;
+            font-family: 'SecondaryFont', sans-serif;
+            font-size: 1em;
+            color: var(--text-secondary);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
         }
 
-        .teaser-section h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: #2c3e50;
+        .go-link-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+            border-color: var(--primary-purple);
+        }
+
+        .go-link-box a {
+            font-family: 'PrimaryFont', sans-serif;
+            font-weight: 700;
+            text-decoration: none;
+            display: block;
+            margin-top: 0.25em;
+            transition: color 0.3s ease;
         }
         
-        .teaser-section .subtitle {
-            font-size: 1.2rem;
-            max-width: 600px;
-            margin: 0 auto 3rem auto;
-            color: #7f8c8d;
+        .go-v1 a { color: var(--v1-link-color); }
+        .go-v3 a { color: var(--v3-link-color); }
+
+        .go-link-box a:hover {
+            color: var(--primary-purple);
         }
 
-        .teaser-grid {
-            display: grid;
-            /* Creates a responsive grid. Columns will be at least 280px wide, 
-               and they will grow to fill the available space. */
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem; /* Space between the cards */
-        }
-        
-        .teaser-card {
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 2rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        @media (min-width: 600px) {
+            .go-links {
+                flex-direction: row;
+            }
+            .go-link-box {
+                flex: 1;
+            }
         }
 
-        .teaser-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .teaser-card .icon {
-            width: 50px;
-            height: 50px;
-            margin-bottom: 1rem;
-            color: #3498db; /* Icon color */
+        @keyframes fillProgressBar {
+            from { width: 0%; }
+            to { width: var(--current-progress); }
         }
 
-        .teaser-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: #2c3e50;
+        @keyframes glowPulse {
+            from { box-shadow: 0 0 5px var(--progress-bar-glow-color); }
+            to { box-shadow: 0 0 15px var(--progress-bar-glow-color); }
         }
-
-        /* --- Footer Styling --- */
-        .site-footer {
-            text-align: center;
-            padding: 2rem;
-            background-color: #2c3e50;
-            color: #ecf0f1;
-            margin-top: 3rem;
-        }
-
     </style>
 </head>
 <body>
+    <div class="content-card">
+        <h1>Development In Progress</h1>
+        <p class="intro">
+            We're building something new. The old site is being retired to make way for <strong>Version 4.0</strong>.
+        </p>
 
-    <header class="top-bar">
-        <div class="logo">
-             <a href="../images/logo.png">
-                <img src="../images/logo.png" alt="4SP Logo" class="logo-img">
-            </a>
-        </div>
-        <nav class="main-nav">
-            </nav>
-    </header>
-
-    <main>
-        
-        <section class="teaser-section">
-            <h2>Core Principles</h2>
-            <p class="subtitle">We build robust and elegant solutions founded on principles of innovation, efficiency, and unwavering quality.</p>
-            
-            <div class="teaser-grid">
-                <div class="teaser-card">
-                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                    <h3>Innovation</h3>
-                    <p>We leverage cutting-edge technology and creative thinking to solve complex problems and deliver future-proof results.</p>
-                </div>
-
-                <div class="teaser-card">
-                     <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    <h3>Efficiency</h3>
-                    <p>Our agile processes and optimized workflows ensure your project is delivered on time, on budget, and with maximum impact.</p>
-                </div>
-
-                <div class="teaser-card">
-                     <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                    </svg>
-                    <h3>Quality</h3>
-                    <p>From the initial concept to final deployment, we uphold the highest standards of craftsmanship and reliability in all our work.</p>
-                </div>
+        <div class="schedule">
+            <h3>Development Timeline</h3>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
             </div>
-        </section>
+            <div class="schedule-dates">
+                <span id="startDate">May 23, 2025</span>
+                <span id="endDate">August 23, 2025</span>
+            </div>
+        </div>
 
-    </main>
+        <p>
+            The new platform focuses on security, creativity, and connection. We appreciate your patience and look forward to launching by the end of summer.
+        </p>
+    </div>
 
-    <footer class="site-footer">
-        <p>&copy; 2025 4SP. All Rights Reserved.</p>
-    </footer>
+    <div class="go-links">
+        <div class="go-link-box go-v1">
+            Looking for the old site?
+            <a href="https://4simpleproblems.github.io/v1/" id="v1Link">Access Version 1</a>
+        </div>
+        <div class="go-link-box go-v3">
+            Or the previous version?
+            <a href="https://4simpleproblems.github.io/v3/" id="v3Link">Access Version 3</a>
+        </div>
+    </div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // This script dynamically calculates and displays the progress of the development timeline.
+
+            const progressBarEl = document.getElementById("progressBar");
+            const startDateEl = document.getElementById("startDate");
+            const endDateEl = document.getElementById("endDate");
+
+            // --- Configuration ---
+            const startDate = new Date("2025-05-23T00:00:00");
+            const endDate = new Date("2025-08-23T23:59:59");
+            const now = new Date();
+
+            // --- Update Displayed Dates (Optional - they are hardcoded but this could override) ---
+            const options = { month: 'long', day: 'numeric', year: 'numeric' };
+            if (startDateEl) startDateEl.textContent = startDate.toLocaleDateString('en-US', options);
+            if (endDateEl) endDateEl.textContent = endDate.toLocaleDateString('en-US', options);
+            
+            // --- Progress Calculation ---
+            const totalDuration = endDate - startDate;
+            const elapsedTime = now - startDate;
+            
+            let progressPercentage = (elapsedTime / totalDuration) * 100;
+            // Ensure progress is within the 0-100 range
+            progressPercentage = Math.max(0, Math.min(100, progressPercentage));
+
+            // --- Apply Progress to CSS Variable ---
+            if (progressBarEl) {
+                progressBarEl.style.setProperty("--current-progress", progressPercentage + "%");
+            }
+        });
+    </script>
 </body>
 </html>
