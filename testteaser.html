@@ -11,18 +11,6 @@
         rel="stylesheet"
     />
     <style>
-        /*
-          V4 Teaser - Style Update (Bridging V3 and V4)
-
-          This stylesheet has been updated to align the teaser page with the existing V3 design language,
-          while preserving the "in-development" theme. It transitions from the original dark mode to the
-          light-theme gradient background used across the V3 dashboard pages.
-
-          Fonts ('Montserrat' and 'Open Sans') are now applied consistently with the other pages.
-          The main content card, header, and action links have been restyled to reflect the components
-          (white cards, purple accents, button styles) from the Countdown, Settings, and Requests pages,
-          creating a more cohesive user experience before the full V4 launch.
-        */
         :root {
             /* V3-Aligned Color Palette */
             --bg-main-start: #f0f2f5;
@@ -33,6 +21,7 @@
             /* Text Colors */
             --text-primary: #333333;
             --text-secondary: #555555;
+            --text-subtle: #999999; /* NEW: Color for subtle text */
 
             /* Accent & Brand Colors */
             --primary-purple: #6720bd;
@@ -67,7 +56,7 @@
             position: relative;
         }
 
-        /* Header (Aligned with V3 Dashboard Header) */
+        /* Header */
         .main-header {
             width: 100%;
             background-color: var(--bg-surface);
@@ -92,7 +81,7 @@
             height: 40px;
         }
 
-        /* Main Content Container (Styled like V3 Cards) */
+        /* Main Content Container */
         .content-card {
             background-color: var(--bg-surface);
             border-radius: 16px;
@@ -129,11 +118,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-        }
-        
-        /* This title element doesn't exist in the provided teaser HTML but is kept for potential future use */
-        .dashboard-title {
-             margin: 0; font-size: 2.0em; font-weight: bold; background: linear-gradient(135deg, #6720bd 0%, #8a2be2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
 
         h1::after {
@@ -234,6 +218,31 @@
             width: 100%;
         }
 
+        /* --- NEW: Poetic Teaser Section --- */
+        .future-whispers {
+            width: 100%;
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .future-whispers blockquote {
+            font-family: 'Open Sans', sans-serif;
+            font-style: italic;
+            font-size: 0.9em;
+            color: var(--text-subtle);
+            margin: 0;
+            line-height: 1.5;
+            max-width: 80%;
+            border-left: 2px solid var(--border-color);
+            padding-left: 15px;
+            text-align: left;
+        }
+
         .small-print {
             font-family: 'Open Sans', sans-serif;
             font-size: clamp(0.8em, 1vw, 1em);
@@ -244,7 +253,7 @@
             max-width: 90%;
         }
 
-        /* Go-Links section - Restyled to match V3 buttons */
+        /* Go-Links section */
         .go-links {
             position: fixed;
             bottom: 20px;
@@ -276,7 +285,6 @@
             transform: translateY(-3px);
             box-shadow: 0 8px 25px var(--shadow-hover-color);
         }
-
 
         /* Animations */
         @keyframes fadeIn {
@@ -333,7 +341,7 @@
     <header class="main-header">
         <div class="container">
             <div class="logo">
-                <a href="#"><img src="../images/logo-dark.png" alt="4SP Logo"></a>
+                <a href="#"><img src="images/logo-dark.png" alt="4SP Logo"></a>
             </div>
         </div>
     </header>
@@ -366,13 +374,15 @@
                 <span id="endShortDate">August 23</span>
             </div>
         </div>
+        
+        <div class="future-whispers">
+            <blockquote>The canvas shifts, the lines redraw,<br>A world remade, beyond the flaw.</blockquote>
+            <blockquote>A whispered word, a chosen sign,<br>A secret path you can define.</blockquote>
+            <blockquote>More threads to pull, more knots to tie,<br>To shape the world beneath the sky.</blockquote>
+        </div>
 
-        <p>
-            Our goal is to have the new site <strong>live by the end of summer</strong>,
-            perfectly timed for the start of the school year. We appreciate your patience.
-        </p>
         <p class="small-print">
-            The future is almost here.
+            The future is almost here. Thank you for your understanding.
         </p>
     </div>
 
@@ -387,48 +397,36 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // This script dynamically calculates the progress of the development timeline.
-
-            // --- Configuration ---
             const startYear = 2025;
             const endYear = 2025;
-
-            // --- Element References ---
             const startDateEl = document.getElementById("startDate");
             const endDateEl = document.getElementById("endDate");
             const startShortDateEl = document.getElementById("startShortDate");
             const endShortDateEl = document.getElementById("endShortDate");
             const progressBarEl = document.getElementById("progressBar");
 
-            // --- Update Displayed Dates ---
             if (startDateEl) startDateEl.textContent = `May 23rd, ${startYear}`;
             if (endDateEl) endDateEl.textContent = `August 23rd, ${endYear}`;
             if (startShortDateEl) startShortDateEl.textContent = `May 23`;
             if (endShortDateEl) endShortDateEl.textContent = `August 23`;
 
-            // --- Progress Calculation ---
             const startDate = new Date(`${startYear}-05-23T00:00:00`);
             const endDate = new Date(`${endYear}-08-23T23:59:59`);
             const now = new Date();
-
             const totalDuration = endDate - startDate;
             const elapsedTime = now - startDate;
-
             let progressPercentage;
 
             if (now >= endDate) {
-                progressPercentage = 100; // Project is complete
+                progressPercentage = 100;
             } else if (now <= startDate) {
-                progressPercentage = 0;   // Project hasn't started
+                progressPercentage = 0;
             } else {
                 progressPercentage = (elapsedTime / totalDuration) * 100;
             }
 
-            // Ensure progress is within the 0-100 range
             progressPercentage = Math.max(0, Math.min(100, progressPercentage));
 
-            // --- Apply Progress to CSS Variable ---
-            // The CSS animation 'fillProgressBar' uses this variable to set its 'to' state.
             if (progressBarEl) {
                 progressBarEl.style.setProperty("--current-progress", progressPercentage + "%");
             }
