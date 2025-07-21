@@ -41,8 +41,10 @@
             --shadow-glow: rgba(103, 32, 189, 0.2);
             --progress-bar-color: #8a2be2;
             --progress-bar-glow-color: rgba(103, 32, 189, 0.6);
-            --v1-link-color: #1e90ff;
-            --v3-link-color: #ff8c00;
+            /* --- Link Color Update --- */
+            --v1-link-color: var(--primary-purple); /* Changed to purple */
+            --v2-link-color: #1e90ff;             /* Changed to blue */
+            --v3-link-color: #ff8c00;             /* Remains orange */
         }
 
         /* --- Global & Body --- */
@@ -73,7 +75,8 @@
             border-radius: 16px;
             border: 1px solid var(--border-color);
             box-shadow: 0 10px 30px var(--shadow-color), 0 0 50px var(--shadow-glow);
-            max-width: 700px;
+            /* --- Width Adjustment --- */
+            max-width: 800px; /* Widened to match the links container below */
             width: 100%;
             padding: 40px;
             text-align: center;
@@ -161,7 +164,7 @@
             flex-direction: column;
             gap: 15px;
             width: 100%;
-            max-width: 700px;
+            max-width: 800px; /* Set to match the content card width */
             margin-top: 30px;
             animation: fadeIn 1s ease-out 0.2s;
             animation-fill-mode: backwards;
@@ -195,13 +198,14 @@
         }
         
         .go-v1 a { color: var(--v1-link-color); }
+        .go-v2 a { color: var(--v2-link-color); }
         .go-v3 a { color: var(--v3-link-color); }
 
         .go-link-box a:hover {
-            color: var(--primary-purple);
+            color: var(--darker-purple); /* Adjusted hover for better visibility on purple link */
         }
 
-        @media (min-width: 600px) {
+        @media (min-width: 768px) {
             .go-links {
                 flex-direction: row;
             }
@@ -258,8 +262,12 @@
 
     <div class="go-links">
         <div class="go-link-box go-v1">
-            Looking for the old site?
+            Looking for first version?
             <a href="https://4simpleproblems.github.io/v1/" id="v1Link">Access Version 1</a>
+        </div>
+        <div class="go-link-box go-v2">
+            Or the  second version?
+            <a href="https://4simpleproblems.github.io/v2/" id="v2Link">Access Version 2</a>
         </div>
         <div class="go-link-box go-v3">
             Or the previous version?
