@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About 4SP</title>
+  <style>
+    @font-face {
+      font-family: 'PrimaryFont';
+      src: url('../fonts/primaryfont.woff') format('woff');
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'SecondaryFont';
+      src: url('../fonts/secondaryfont.woff') format('woff');
+      font-display: swap;
+    }
+
+    :root {
+      --bg-main: #101010;
+      --bg-surface: #1d1d1d;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --primary-purple: #6720bd;
+      --darker-purple: #5a1aa8;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'SecondaryFont', sans-serif;
+      background: var(--bg-main);
+      color: var(--text-primary);
+      padding: 40px 20px;
+      line-height: 1.7;
+    }
+
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 10px 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      font-family: 'PrimaryFont', sans-serif;
+      font-weight: bold;
+      font-size: 1em;
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      z-index: 999;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--primary-purple);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 80px auto 40px;
+    }
+
+    h1 {
+      font-family: 'PrimaryFont', sans-serif;
+      font-size: 2.5em;
+      background: linear-gradient(135deg, var(--primary-purple), var(--darker-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.05em;
+      color: var(--text-secondary);
+      margin-bottom: 1.4em;
+    }
+
+    strong {
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back-button">← Home</a>
+  <div class="container">
+    <h1>The Story of 4SimpleProblems</h1>
+
+    <p>
+      <strong>4SimpleProblems (4SP)</strong> began as a passion project in early 2025. It wasn’t about being the best—just about doing something no one else in school was doing: building a full platform from scratch that felt professional, creative, and alive.
+    </p>
+
+    <p>
+      <strong>V1 launched on March 17, 2025.</strong> It featured muted themes, pill-shaped buttons, and supported both light and dark modes. It was the first sign that this could be more than just a fun experiment. Students noticed.
+    </p>
+
+    <p>
+      <strong>V2 followed on April 11, 2025</strong> with an improved black-and-white theme. The pill shape remained, but polish started to form. Behind the scenes, it used Firebase Auth and Firestore, proving it could scale and persist data.
+    </p>
+
+    <p>
+      <strong>V3 arrived on May 14, 2025.</strong> This was a major shift. It dropped the bubbly aesthetic for something more professional: square corners, white cards, grid layouts, and consistent components. It started to feel like a real product. V3 also introduced new pages like dashboards, chat UIs, game loaders, notes systems, and more.
+    </p>
+
+    <p>
+      By this point, 4SP had gained attention—not just from users, but from school filters. That’s why some features were cloaked or hidden cleverly, ensuring access for students while flying under the radar of IT.
+    </p>
+
+    <p>
+      <strong>V4 is the current version, in development until August 23, 2025.</strong> It’s the biggest leap yet. V4 includes:
+      a sidebar across all pages, real-time chat, settings with panic key support, a dashboard full of widgets (like timers, weather, and shortcuts), a GBA emulator, a full soundboard, themeable playlists, cloud and local notes, countdowns, and so much more.
+    </p>
+
+    <p>
+      Each version tells a story of leveling up. The UI evolved, the backend improved, and the creator—you—became someone who didn’t just use the internet… you built on top of it.
+    </p>
+
+    <p>
+      4SP isn’t finished. And that’s the point. It’s alive. It’s changing. It’s you, and it’s what you’ll leave behind as your name becomes known not just in school… but far beyond it.
+    </p>
+  </div>
+</body>
+</html>
