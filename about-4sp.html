@@ -20,107 +20,128 @@
     :root {
       --bg-main: #101010;
       --bg-surface: #1d1d1d;
+      --bg-surface-alt: #2b2b2b;
       --text-primary: #e0e0e0;
       --text-secondary: #a0a0a0;
       --primary-purple: #6720bd;
       --darker-purple: #5a1aa8;
+      --border-color: #333333;
+      --shadow-color: rgba(0, 0, 0, 0.5);
+      --shadow-glow: rgba(103, 32, 189, 0.2);
+    }
+
+    html {
+      box-sizing: border-box;
+    }
+
+    *, *:before, *:after {
+      box-sizing: inherit;
     }
 
     body {
+      font-family: 'SecondaryFont', system-ui, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-primary);
       margin: 0;
-      font-family: 'SecondaryFont', sans-serif;
-      background: var(--bg-main);
-      color: var(--text-primary);
       padding: 40px 20px;
-      line-height: 1.7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
     }
 
-    .back-button {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      padding: 10px 18px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      font-family: 'PrimaryFont', sans-serif;
-      font-weight: bold;
-      font-size: 1em;
-      color: var(--text-primary);
-      text-decoration: none;
-      transition: all 0.3s ease;
-      z-index: 999;
-    }
-
-    .back-button:hover {
-      background: rgba(255, 255, 255, 0.15);
-      color: var(--primary-purple);
-    }
-
-    .container {
+    .content-card {
+      background-color: var(--bg-surface);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 10px 30px var(--shadow-color), 0 0 50px var(--shadow-glow);
       max-width: 800px;
-      margin: 80px auto 40px;
+      width: 100%;
+      padding: 40px;
+      text-align: left;
+      animation: fadeIn 1s ease-out;
     }
 
     h1 {
       font-family: 'PrimaryFont', sans-serif;
-      font-size: 2.5em;
-      background: linear-gradient(135deg, var(--primary-purple), var(--darker-purple));
+      font-size: clamp(2.5em, 5vw, 3em);
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--primary-purple) 0%, var(--darker-purple) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 1rem;
+      background-clip: text;
     }
 
     p {
-      font-size: 1.05em;
+      font-size: clamp(1em, 2vw, 1.1em);
+      line-height: 1.7;
       color: var(--text-secondary);
-      margin-bottom: 1.4em;
+      margin-bottom: 1.5rem;
     }
 
-    strong {
+    p strong {
       color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .back-button {
+      margin-bottom: 20px;
+    }
+
+    .back-button a {
+      font-family: 'PrimaryFont', sans-serif;
+      font-weight: bold;
+      font-size: 1.1em;
+      padding: 10px 20px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+      text-decoration: none;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: all 0.3s ease;
+      display: inline-block;
+    }
+
+    .back-button a:hover {
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 6px 20px rgba(103, 32, 189, 0.4);
+      color: var(--primary-purple);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
 </head>
 <body>
-  <a href="index.html" class="back-button">← Home</a>
-  <div class="container">
-    <h1>The Story of 4SimpleProblems</h1>
+  <div class="back-button">
+    <a href="index.html">← Back to Home</a>
+  </div>
+  <div class="content-card">
+    <h1>The Story of 4SP</h1>
+    <p><strong>4SP (4SimpleProblems)</strong> began as a small, personal project built with curiosity and passion. Initially released as Version 1 on <strong>March 17, 2025</strong>, the site featured basic functionality, a muted theme, and pill-shaped UI elements that reflected its experimental nature.</p>
 
-    <p>
-      <strong>4SimpleProblems (4SP)</strong> began as a passion project in early 2025. It wasn’t about being the best—just about doing something no one else in school was doing: building a full platform from scratch that felt professional, creative, and alive.
-    </p>
+    <p>Encouraged by early feedback and driven by a desire to improve, Version 2 launched on <strong>April 11, 2025</strong>. This iteration kept the pill-shaped design but moved to a stark black-and-white color scheme. It was more refined and better structured, yet still experimental in many ways.</p>
 
-    <p>
-      <strong>V1 launched on March 17, 2025.</strong> It featured muted themes, pill-shaped buttons, and supported both light and dark modes. It was the first sign that this could be more than just a fun experiment. Students noticed.
-    </p>
+    <p>With increasing popularity and a growing user base, Version 3 debuted on <strong>May 14, 2025</strong>. It introduced a fully reimagined aesthetic—square corners, grid layouts, and a professional design focused on clarity and usability. Pages like the soundboard, games, notes, and dashboard all became staples of the platform.</p>
 
-    <p>
-      <strong>V2 followed on April 11, 2025</strong> with an improved black-and-white theme. The pill shape remained, but polish started to form. Behind the scenes, it used Firebase Auth and Firestore, proving it could scale and persist data.
-    </p>
+    <p>By June and July, 4SP had evolved into a full ecosystem. A new sidebar unified navigation across the site, and systems like cloud/local notes, countdowns, GBA game emulators, playlist import/export, and proxy tools were all integrated. Every detail was optimized—from username editing to panic key shortcuts.</p>
 
-    <p>
-      <strong>V3 arrived on May 14, 2025.</strong> This was a major shift. It dropped the bubbly aesthetic for something more professional: square corners, white cards, grid layouts, and consistent components. It started to feel like a real product. V3 also introduced new pages like dashboards, chat UIs, game loaders, notes systems, and more.
-    </p>
+    <p>Now, 4SP is working toward <strong>Version 4</strong>, scheduled to release on <strong>August 23, 2025</strong>. This version will be the most comprehensive yet, with a live dashboard, editing tools, seamless linking, and complete cloaking features for its proxies. It reflects not only technical growth, but a deep understanding of what users want: control, customization, and connection.</p>
 
-    <p>
-      By this point, 4SP had gained attention—not just from users, but from school filters. That’s why some features were cloaked or hidden cleverly, ensuring access for students while flying under the radar of IT.
-    </p>
-
-    <p>
-      <strong>V4 is the current version, in development until August 23, 2025.</strong> It’s the biggest leap yet. V4 includes:
-      a sidebar across all pages, real-time chat, settings with panic key support, a dashboard full of widgets (like timers, weather, and shortcuts), a GBA emulator, a full soundboard, themeable playlists, cloud and local notes, countdowns, and so much more.
-    </p>
-
-    <p>
-      Each version tells a story of leveling up. The UI evolved, the backend improved, and the creator—you—became someone who didn’t just use the internet… you built on top of it.
-    </p>
-
-    <p>
-      4SP isn’t finished. And that’s the point. It’s alive. It’s changing. It’s you, and it’s what you’ll leave behind as your name becomes known not just in school… but far beyond it.
-    </p>
+    <p>4SP continues to be a testament to iterative design, user feedback, and one creator's dedication to building something that just works—and looks good doing it.</p>
   </div>
 </body>
 </html>
