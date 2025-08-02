@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4simpleproblems</title>
+    <style>
+        /* CSS for the full-page Windows 98 style */
+        body {
+            background-color: #008080; /* Windows 98 teal background */
+            font-family: "MS Sans Serif", "Tahoma", sans-serif;
+            font-size: 16px;
+            margin: 0; /* Remove default body margins */
+            overflow: hidden; /* Prevent scrollbars */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ensure full viewport height */
+        }
+
+        .window {
+            border: 2px solid;
+            border-top-color: #FFFFFF;
+            border-left-color: #FFFFFF;
+            border-right-color: #000000;
+            border-bottom-color: #000000;
+            background-color: #C0C0C0; /* Classic grey */
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            width: 80%; /* Adjust as needed */
+            max-width: 800px; /* Maximum width */
+            height: 80%; /* Adjust as needed */
+            max-height: 600px; /* Maximum height */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .title-bar {
+            background: linear-gradient(to right, #000080, #1084d0); /* Windows 98 blue gradient */
+            color: white;
+            padding: 5px;
+            display: flex;
+            justify-content: center; /* Center the title */
+            align-items: center;
+        }
+
+        .title-bar-text {
+            font-weight: bold;
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .window-body {
+            padding: 20px;
+            flex-grow: 1; /* Allow body to take up remaining space */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Align content from the top */
+        }
+
+        .mode-selection, .difficulty-selection, .problem-area {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .mode-selection button, .difficulty-selection button, .answer-options button {
+            background-color: #C0C0C0;
+            border: 2px solid;
+            border-top-color: #FFFFFF;
+            border-left-color: #FFFFFF;
+            border-right-color: #000000;
+            border-bottom-color: #000000;
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        .mode-selection button:active, .difficulty-selection button:active, .answer-options button:active {
+            border-top-color: #000000;
+            border-left-color: #000000;
+            border-right-color: #FFFFFF;
+            border-bottom-color: #FFFFFF;
+        }
+
+        #problem-display {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border: 2px inset #808080;
+            margin-bottom: 20px;
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .answer-options button {
+            font-size: 18px;
+            height: 50px;
+        }
+
+        #feedback {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            height: 20px;
+        }
+
+        #score-display {
+            text-align: center;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="window">
+    <div class="title-bar">
+        <div class="title-bar-text">4simpleproblems</div>
+    </div>
+    <div class="window-body">
+        <div class="mode-selection">
+            <p>Select a math mode:</p>
+            <button onclick="showDifficulty('addition')">Addition</button>
+            <button onclick="showDifficulty('subtraction')">Subtraction</button>
+            <button onclick="showDifficulty('multiplication')">Multiplication</button>
+            <button onclick="showDifficulty('division')">Division</button>
+        </div>
+        <div class="difficulty-selection" style="display: none;">
+            <p>Select difficulty:</p>
+            <button onclick="startGame('easy', currentMode)">Easy</button>
+            <button onclick="startGame('medium', currentMode)">Medium</button>
+            <button onclick="startGame('hard', currentMode)">Hard</button>
+            <button onclick="showModeSelection()">Back to Mode Selection</button>
+        </div>
+        <div class="problem-area" style="display: none;">
+            <div id="problem-display"></div>
+            <div class="answer-options" id="answer-buttons">
+            </div>
+            <div id="feedback"></div>
+            <div id="score-display">Score: 0</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentMode = null;
+    let difficultyLevel = null;
+    let correctAnswer;
+    let score = parseInt(localStorage.getItem('mathScore')) || 0;
+
+    document.getElementById('score-display').textContent = `Score: ${score}`;
+
+    function showModeSelection() {
+        document.querySelector('.mode-selection').style.display = 'block';
+        document.querySelector('.difficulty-selection').style.display = 'none';
+        document.querySelector('.problem-area').style.display = 'none';
+    }
+
+    function showDifficulty(mode) {
+        currentMode = mode;
+        document.querySelector('.mode-selection').style.display = 'none';
+        document.querySelector('.difficulty-selection').style.display = 'block';
+        document.querySelector('.problem-area').style.display = 'none';
+    }
+
+    function startGame(difficulty, mode) {
+        difficultyLevel = difficulty;
+        currentMode = mode;
+        document.querySelector('.mode-selection').style.display = 'none';
+        document.querySelector('.difficulty-selection').style.display = 'none';
+        document.querySelector('.problem-area').style.display = 'block';
+        generateProblem();
+    }
+
+    function generateProblem() {
+        let num1, num2, problemText;
+        const problemDisplay = document.getElementById('problem-display');
+        const feedback = document.getElementById('feedback');
+        feedback.textContent = ''; // Clear previous feedback
+
+        let maxNumber;
+        switch (difficultyLevel) {
+            case 'easy':
+                maxNumber = 20;
+                break;
+            case 'medium':
+                maxNumber = 50;
+                break;
+            case 'hard':
+                maxNumber = 100;
+                break;
+            default:
+                maxNumber = 20;
+        }
+
+        switch(currentMode) {
+            case 'addition':
+                num1 = Math.floor(Math.random() * maxNumber) + 1;
+                num2 = Math.floor(Math.random() * maxNumber) + 1;
+                correctAnswer = num1 + num2;
+                problemText = `${num1} + ${num2} = ?`;
+                break;
+            case 'subtraction':
+                num1 = Math.floor(Math.random() * maxNumber) + Math.floor(maxNumber / 2); // Ensure positive result
+                num2 = Math.floor(Math.random() * Math.floor(maxNumber / 2)) + 1;
+                correctAnswer = num1 - num2;
+                problemText = `${num1} - ${num2} = ?`;
+                break;
+            case 'multiplication':
+                num1 = Math.floor(Math.random() * Math.min(10, maxNumber)) + 2;
+                num2 = Math.floor(Math.random() * Math.min(10, maxNumber)) + 2;
+                correctAnswer = num1 * num2;
+                problemText = `${num1} x ${num2} = ?`;
+                break;
+            case 'division':
+                let divisor = Math.floor(Math.random() * Math.min(10, maxNumber / 2)) + 2;
+                let quotient = Math.floor(Math.random() * Math.min(10, maxNumber / 2)) + 2;
+                num1 = divisor * quotient;
+                num2 = divisor;
+                correctAnswer = quotient;
+                problemText = `${num1} ÷ ${num2} = ?`;
+                break;
+        }
+
+        problemDisplay.textContent = problemText;
+        generateAnswers();
+    }
+
+    function generateAnswers() {
+        const answerButtonsContainer = document.getElementById('answer-buttons');
+        answerButtonsContainer.innerHTML = '';
+        let answers = [correctAnswer];
+        let attempts = 0;
+        const maxAttempts = 100; // Prevent infinite loops
+
+        while (answers.length < 4 && attempts < maxAttempts) {
+            let range = 15;
+            if (difficultyLevel === 'medium') range = 25;
+            if (difficultyLevel === 'hard') range = 50;
+            let wrongAnswer = correctAnswer + (Math.floor(Math.random() * range) - Math.floor(range / 2));
+            if (wrongAnswer !== correctAnswer && !answers.includes(wrongAnswer)) {
+                answers.push(wrongAnswer);
+            }
+            attempts++;
+        }
+        while (answers.length < 4) { // Fallback to ensure 4 answers
+            let wrongAnswer = correctAnswer + (Math.random() < 0.5 ? -1 : 1) * Math.floor(Math.random() * 5 + 1);
+            if (!answers.includes(wrongAnswer)) answers.push(wrongAnswer);
+        }
+
+
+        answers.sort(() => Math.random() - 0.5);
+
+        answers.forEach(answer => {
+            const button = document.createElement('button');
+            button.textContent = answer;
+            button.onclick = () => checkAnswer(answer);
+            answerButtonsContainer.appendChild(button);
+        });
+    }
+
+    function checkAnswer(selectedAnswer) {
+        const feedback = document.getElementById('feedback');
+        const answerButtons = document.querySelectorAll('#answer-buttons button');
+        answerButtons.forEach(button => button.disabled = true); // Disable buttons
+
+        if (selectedAnswer === correctAnswer) {
+            feedback.textContent = "Correct!";
+            feedback.style.color = 'green';
+            score++;
+        } else {
+            feedback.textContent = `Incorrect. The correct answer was ${correctAnswer}.`;
+            feedback.style.color = 'red';
+            score = Math.max(0, score - 1); // Score cannot go below 0
+        }
+
+        document.getElementById('score-display').textContent = `Score: ${score}`;
+        localStorage.setItem('mathScore', score);
+
+        setTimeout(generateProblem, 1500); // Move to the next problem after a short delay
+    }
+
+    // Initial state: show mode selection
+    showModeSelection();
+
+</script>
+
+</body>
+</html>
