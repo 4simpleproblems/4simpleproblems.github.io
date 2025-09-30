@@ -33,16 +33,16 @@
             overflow: hidden;
         }
 
-        /* --- DEVELOPMENT DISCLAIMER STYLES --- */
+        /* --- DEVELOPMENT DISCLAIMER STYLES (UPDATED) --- */
         #development-disclaimer-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); /* A bit darker to stand out */
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 10000; /* Highest z-index to be on top of everything */
             display: none; /* Hidden by default; shown by JS */
             justify-content: center;
@@ -53,45 +53,69 @@
         }
 
         .disclaimer-box {
-            background-color: #ffffff;
-            padding: 30px 40px;
-            border-radius: 10px;
+            /* Updated for glossy/blurry/translucent effect */
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px; /* More rounded */
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            padding: 40px;
             text-align: center;
-            max-width: 550px; /* Wider for more text */
-            box-shadow: 0 5px 25px rgba(0,0,0,0.25);
-            color: #333;
+            max-width: 580px;
+            color: #fff; /* White text for contrast */
         }
 
-        .disclaimer-box h2 {
+        #disclaimer-title { /* ID added for JS animation */
             margin-top: 0;
-            font-size: 1.8em;
+            margin-bottom: 35px; /* More space for animation */
+            font-size: 2.2em;
             text-transform: uppercase;
-            color: #6720BD; /* Match theme color */
+            color: #fff;
+            position: relative; /* Needed for transform */
+            /* 3D effect text shadow */
+            text-shadow: 0 1px 0 #ccc, 
+                         0 2px 0 #c9c9c9,
+                         0 3px 0 #bbb,
+                         0 4px 0 #b9b9b9,
+                         0 5px 0 #aaa,
+                         0 6px 1px rgba(0,0,0,.1),
+                         0 0 5px rgba(0,0,0,.1),
+                         0 1px 3px rgba(0,0,0,.3),
+                         0 3px 5px rgba(0,0,0,.2),
+                         0 5px 10px rgba(0,0,0,.25),
+                         0 10px 10px rgba(0,0,0,.2),
+                         0 20px 20px rgba(0,0,0,.15);
         }
 
         .disclaimer-box p {
-            font-size: 1.05em;
+            font-size: 1.1em;
             line-height: 1.7;
             margin-bottom: 20px;
-            text-align: left; /* Better for readability of paragraphs */
+            text-align: left;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Add shadow for readability */
         }
 
         #disclaimer-continue-btn {
-            padding: 12px 25px;
+            padding: 14px 28px;
             border: none;
-            border-radius: 8px;
-            background-color: #6720BD;
+            border-radius: 12px;
+            background-color: #7b2ff7; /* Brighter purple */
             color: #fff;
             font-family: 'PrimaryFont', sans-serif;
             font-weight: 700;
             text-transform: uppercase;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
             margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
         }
 
         #disclaimer-continue-btn:hover {
-            background-color: #4b138f;
+            background-color: #6720BD;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
 
 
@@ -103,7 +127,6 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
-            /* The backdrop-filter blurs content behind the element */
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px); /* For Safari browser compatibility */
             z-index: 9999;
@@ -401,7 +424,7 @@
 <body>
     <div id="development-disclaimer-overlay">
         <div class="disclaimer-box">
-            <h2>A Note on Future Development</h2>
+            <h2 id="disclaimer-title">A Note on Future Development</h2>
             <p><strong>Heads up!</strong> I am currently hard at work developing <strong>Version 5 of 4SP</strong>, also known as <strong>Project Zirconium</strong>.</p>
             <p>As a result, this current version (v4) will remain online but will no longer be actively updated or accept new requests. The decision to move forward comes from the current design being cluttered, difficult to maintain, and plagued with various bugs that a fresh start will solve.</p>
             <p>For long-time users, think of this update as being similar in scale to the transition from Version 2 to Version 3, but this will be a much more meticulous and comprehensive overhaul that will naturally take longer to complete. Thank you for your understanding and continued support!</p>
@@ -695,30 +718,23 @@
         backdrop.addEventListener('click', hideVersionDetails);
 
 
-        // --- NEW: One-Time Force Logout Script ---
-        // This script runs once per user per browser to ensure data consistency
-        // by forcing a re-login, which will trigger the account-fixing logic on the login page.
+        // --- One-Time Force Logout Script ---
         (function() {
             const forceLogoutKey = 'forceLogoutCompleted_v1';
-            // Check if the one-time logout has already been performed.
             if (!localStorage.getItem(forceLogoutKey)) {
                 console.log('Performing one-time force logout to ensure data consistency...');
-                // Use an auth state observer to ensure Firebase is ready.
                 const unsubscribe = firebase.auth().onAuthStateChanged(user => {
-                    unsubscribe(); // Stop listening after the first check.
+                    unsubscribe();
                     if (user) {
-                        // If a user is logged in, sign them out.
                         firebase.auth().signOut().then(() => {
                             localStorage.setItem(forceLogoutKey, 'true');
                             window.location.reload();
                         }).catch(error => {
-                            // If signout fails for some reason, still set the flag and reload to avoid loops.
                             console.error('Force logout failed, but setting flag to prevent loop:', error);
                             localStorage.setItem(forceLogoutKey, 'true');
                             window.location.reload();
                         });
                     } else {
-                        // If no user is logged in, just set the flag.
                         localStorage.setItem(forceLogoutKey, 'true');
                     }
                 });
@@ -749,15 +765,44 @@
 
         // Dropdown Menu & Other Page Logic
         document.addEventListener('DOMContentLoaded', () => {
-            // --- NEW: ONE-TIME DEVELOPMENT DISCLAIMER LOGIC ---
+            // --- ONE-TIME DEVELOPMENT DISCLAIMER LOGIC (UPDATED) ---
             const disclaimerOverlay = document.getElementById('development-disclaimer-overlay');
             const disclaimerContinueBtn = document.getElementById('disclaimer-continue-btn');
+            const disclaimerTitle = document.getElementById('disclaimer-title');
             const disclaimerDismissedKey = 'zirconiumDisclaimerDismissed';
+            let animationFrameId; // To hold the animation ID for stopping it
+
+            // --- Title Animation Logic ---
+            let angle = 0;
+            const radius = 15; // How big the circular path is
+            const speed = 0.03; // How fast it moves
+
+            function animateTitle() {
+                angle += speed;
+                // Calculate position in a circle
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                // Calculate a "wobble" rotation
+                const rotZ = Math.sin(angle * 2) * 10; // Rotates up to 10 degrees back and forth
+
+                if(disclaimerTitle) {
+                    disclaimerTitle.style.transform = `translateX(${x}px) translateY(${y}px) rotateZ(${rotZ}deg)`;
+                }
+                
+                animationFrameId = requestAnimationFrame(animateTitle);
+            }
+
+            function stopAnimation() {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+            }
 
             // Check if the disclaimer has been dismissed before
             if (!localStorage.getItem(disclaimerDismissedKey)) {
                 disclaimerOverlay.style.display = 'flex';
                 document.body.classList.add('no-scroll');
+                animateTitle(); // Start the animation
             }
 
             // Add event listener to the continue button
@@ -767,6 +812,7 @@
                     document.body.classList.remove('no-scroll');
                     // Set the flag in localStorage so it doesn't show again
                     localStorage.setItem(disclaimerDismissedKey, 'true');
+                    stopAnimation(); // Stop the animation to save resources
                 });
             }
 
