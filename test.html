@@ -33,7 +33,7 @@
             overflow: hidden;
         }
 
-        /* --- DEVELOPMENT DISCLAIMER STYLES (UPDATED) --- */
+        /* --- DEVELOPMENT DISCLAIMER STYLES --- */
         #development-disclaimer-overlay {
             position: fixed;
             top: 0;
@@ -53,26 +53,28 @@
         }
 
         .disclaimer-box {
-            /* Updated for glossy/blurry/translucent effect */
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px; /* More rounded */
+            border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.18);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             padding: 40px;
             text-align: center;
             max-width: 580px;
-            color: #fff; /* White text for contrast */
+            color: #fff;
         }
 
-        #disclaimer-title { /* ID added for JS animation */
+        #disclaimer-title {
             margin-top: 0;
-            margin-bottom: 35px; /* More space for animation */
+            margin-bottom: 35px;
             font-size: 2.2em;
             text-transform: uppercase;
             color: #fff;
-            position: relative; /* Needed for transform */
+            position: relative;
+            /* Added for 3D transforms to work correctly */
+            transform-style: preserve-3d;
+            perspective: 800px;
             /* 3D effect text shadow */
             text-shadow: 0 1px 0 #ccc, 
                          0 2px 0 #c9c9c9,
@@ -93,14 +95,14 @@
             line-height: 1.7;
             margin-bottom: 20px;
             text-align: left;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Add shadow for readability */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         #disclaimer-continue-btn {
             padding: 14px 28px;
             border: none;
             border-radius: 12px;
-            background-color: #7b2ff7; /* Brighter purple */
+            background-color: #7b2ff7;
             color: #fff;
             font-family: 'PrimaryFont', sans-serif;
             font-weight: 700;
@@ -128,9 +130,9 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px); /* For Safari browser compatibility */
+            -webkit-backdrop-filter: blur(8px);
             z-index: 9999;
-            display: none; /* Hidden by default; shown by JS */
+            display: none;
             justify-content: center;
             align-items: center;
             font-family: 'PrimaryFont', sans-serif;
@@ -164,7 +166,7 @@
             padding: 12px 25px;
             border: none;
             border-radius: 8px;
-            background-color: #6720BD; /* Matches your site's theme color */
+            background-color: #6720BD;
             color: #fff;
             font-family: 'PrimaryFont', sans-serif;
             font-weight: 700;
@@ -174,7 +176,7 @@
         }
 
         #continue-btn:hover {
-            background-color: #4b138f; /* A darker shade for the hover effect */
+            background-color: #4b138f;
         }
 
 
@@ -185,7 +187,7 @@
         }
 
         .whats-new-section {
-            padding: 60px 0; /* Reduced padding */
+            padding: 60px 0;
         }
 
         .timeline-section {
@@ -206,14 +208,14 @@
         }
 
         .whats-new-content {
-            max-width: 950px; /* Made the section wider */
+            max-width: 950px;
             margin: 40px auto 0 auto;
             text-align: left;
         }
             
         .whats-new-content p {
-            font-size: 1.05em; /* Slightly smaller font */
-            font-style: italic; /* Italicized text */
+            font-size: 1.05em;
+            font-style: italic;
             line-height: 1.6;
             color: #555;
         }
@@ -239,13 +241,12 @@
             align-items: center;
             position: relative;
         }
-        /* The line connecting the dots */
         .timeline-wrapper::before {
             content: '';
             position: absolute;
             top: 50%;
-            left: 12%; /* Added padding */
-            right: 12%;/* Added padding */
+            left: 12%;
+            right: 12%;
             height: 2px;
             background-color: #e0e0e0;
             transform: translateY(-50%);
@@ -255,7 +256,7 @@
         .timeline-item {
             text-align: center;
             position: relative;
-            z-index: 2; /* Sits on top of the line */
+            z-index: 2;
             cursor: pointer;
         }
         
@@ -264,8 +265,8 @@
             width: 30px;
             height: 30px;
             border-radius: 50%;
-            margin: 0 auto 15px auto; /* Center the circle and add space below for text */
-            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover effect */
+            margin: 0 auto 15px auto;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
@@ -274,7 +275,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         
-        /* Specific gradient colors for each version's circle */
         .timeline-item:nth-child(1) .timeline-circle { background-image: linear-gradient(45deg, #434343 0%, #000000 100%); }
         .timeline-item:nth-child(2) .timeline-circle { background-image: linear-gradient(45deg, #87CEEB 0%, #4285F4 100%); }
         .timeline-item:nth-child(3) .timeline-circle { background-image: linear-gradient(45deg, #FEE140 0%, #FA709A 100%); }
@@ -288,7 +288,7 @@
         .timeline-item-content h3 {
             font-size: 1.1em;
             margin-bottom: 4px;
-            padding-top: 10px; /* Added padding to push it down from the line */
+            padding-top: 10px;
         }
         .timeline-item-content p {
             font-size: 0.9em;
@@ -311,11 +311,10 @@
 
         .version-modal {
             display: none;
-            position: absolute; /* Changed to absolute */
+            position: absolute;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
             z-index: 1001;
             overflow: hidden;
-            /* Transition properties and border-radius are set by JS */
         }
         
         .version-modal.has-gradient-bg {
@@ -328,7 +327,6 @@
             overflow-y: auto;
             box-sizing: border-box;
             padding: 25px 30px;
-             /* Transition properties are set by JS */
         }
 
         .modal-backdrop.show {
@@ -606,8 +604,8 @@
         const modal = document.getElementById('versionModal');
         const backdrop = document.getElementById('versionModalBackdrop');
         const closeModalBtn = document.getElementById('closeModalBtn');
-        let activeCircle = null; // Store the clicked circle element
-        let activeModal = false; // Prevents multiple clicks during animation
+        let activeCircle = null;
+        let activeModal = false;
 
         function showVersionDetails(versionKey, event) {
             if (activeModal) return;
@@ -621,12 +619,9 @@
             }
 
             const initialRect = activeCircle.getBoundingClientRect();
-
-            // Get background from circle
             const circleStyle = window.getComputedStyle(activeCircle);
             const bgImage = circleStyle.backgroundImage;
 
-            // Populate content first
             document.getElementById('modalTitle').innerText = details.title;
             document.getElementById('modalStartDate').innerHTML = details.startDate;
             document.getElementById('modalCreationDate').innerHTML = details.creationDate;
@@ -635,8 +630,7 @@
             redirectBtn.href = details.url;
             redirectBtn.style.display = details.url === '#' ? 'none' : 'inline-block';
 
-            // Set initial state for animation
-            modal.style.transition = 'none'; // No transition for initial setup
+            modal.style.transition = 'none';
             const initialTop = initialRect.top + window.scrollY;
             const initialLeft = initialRect.left + window.scrollX;
 
@@ -644,7 +638,7 @@
             modal.style.left = `${initialLeft}px`;
             modal.style.width = `${initialRect.width}px`;
             modal.style.height = `${initialRect.height}px`;
-            modal.style.borderRadius = '15px'; // Start with 15px, as 30x30 with 15px radius is a circle
+            modal.style.borderRadius = '15px';
             modal.style.backgroundImage = bgImage;
             modal.classList.add('has-gradient-bg');
             
@@ -654,7 +648,6 @@
             modal.classList.add('visible');
             backdrop.classList.add('show');
 
-            // Force reflow to apply initial styles before animating
             requestAnimationFrame(() => {
                 modal.style.transition = 'width 0.4s ease, height 0.4s ease, left 0.4s ease';
                 
@@ -664,12 +657,10 @@
                 modal.style.width = `${finalWidth}px`;
                 modal.style.height = `${finalHeight}px`;
 
-                // V4 opens to the left
                 if (versionKey === 'v4') {
                     modal.style.left = `${initialLeft - finalWidth + initialRect.width}px`;
                 }
 
-                // Fade in content after expansion
                 setTimeout(() => {
                     innerContent.style.transition = 'opacity 0.3s ease';
                     innerContent.style.opacity = 1;
@@ -681,16 +672,12 @@
             if (!activeModal || !activeCircle) return;
 
             const innerContent = modal.querySelector('.modal-inner-content');
-
-            // 1. Fade out content fast
             innerContent.style.transition = 'opacity 0.1s ease';
             innerContent.style.opacity = 0;
             
-            // 2. After content is faded, start shrinking
             setTimeout(() => {
                 modal.style.transition = 'width 0.4s ease, height 0.4s ease, top 0.4s ease, left 0.4s ease, border-radius 0.4s ease';
                 
-                // BUG FIX: Recalculate the circle's current position
                 const currentRect = activeCircle.getBoundingClientRect();
                 const finalTop = currentRect.top + window.scrollY;
                 const finalLeft = currentRect.left + window.scrollX;
@@ -699,19 +686,18 @@
                 modal.style.left = `${finalLeft}px`;
                 modal.style.width = `${currentRect.width}px`;
                 modal.style.height = `${currentRect.height}px`;
-                modal.style.borderRadius = '15px'; // Stays 15px, effectively a circle at this size
+                modal.style.borderRadius = '15px';
                 
                 backdrop.classList.remove('show');
-            }, 100); // Short delay for content to fade
+            }, 100);
             
-            // 3. Clean up after all animations are done
             setTimeout(() => {
                 modal.classList.remove('visible');
                 modal.style.backgroundImage = '';
                 modal.classList.remove('has-gradient-bg');
-                activeCircle = null; // Clear the active circle
-                activeModal = false; // Allow clicking again
-            }, 500); // 100ms delay + 400ms transition
+                activeCircle = null;
+                activeModal = false;
+            }, 500);
         }
 
         closeModalBtn.addEventListener('click', hideVersionDetails);
@@ -770,23 +756,22 @@
             const disclaimerContinueBtn = document.getElementById('disclaimer-continue-btn');
             const disclaimerTitle = document.getElementById('disclaimer-title');
             const disclaimerDismissedKey = 'zirconiumDisclaimerDismissed';
-            let animationFrameId; // To hold the animation ID for stopping it
+            let animationFrameId;
 
-            // --- Title Animation Logic ---
+            // --- Title Animation Logic (Corrected to tilt, not move) ---
             let angle = 0;
-            const radius = 15; // How big the circular path is
-            const speed = 0.03; // How fast it moves
+            const maxTilt = 15; // The maximum tilt angle in degrees
+            const speed = 0.02; // How fast it tilts
 
             function animateTitle() {
                 angle += speed;
-                // Calculate position in a circle
-                const x = Math.cos(angle) * radius;
-                const y = Math.sin(angle) * radius;
-                // Calculate a "wobble" rotation
-                const rotZ = Math.sin(angle * 2) * 10; // Rotates up to 10 degrees back and forth
+                // Use sine and cosine to create a circular tilting motion
+                const rotX = Math.sin(angle) * maxTilt;
+                const rotY = Math.cos(angle) * maxTilt;
 
                 if(disclaimerTitle) {
-                    disclaimerTitle.style.transform = `translateX(${x}px) translateY(${y}px) rotateZ(${rotZ}deg)`;
+                    // Apply perspective for 3D and the X/Y rotations. No translation.
+                    disclaimerTitle.style.transform = `perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
                 }
                 
                 animationFrameId = requestAnimationFrame(animateTitle);
@@ -810,9 +795,8 @@
                 disclaimerContinueBtn.addEventListener('click', () => {
                     disclaimerOverlay.style.display = 'none';
                     document.body.classList.remove('no-scroll');
-                    // Set the flag in localStorage so it doesn't show again
                     localStorage.setItem(disclaimerDismissedKey, 'true');
-                    stopAnimation(); // Stop the animation to save resources
+                    stopAnimation();
                 });
             }
 
@@ -850,8 +834,6 @@
             const continueBtn = document.getElementById('continue-btn');
 
             function checkAspectRatio() {
-                // Aspect Ratio is calculated by width / height.
-                // If the result is 1 or less, it means the viewport is square or portrait.
                 const aspectRatio = window.innerWidth / window.innerHeight;
                 if (aspectRatio <= 1) { 
                     overlay.style.display = 'flex';
@@ -864,10 +846,8 @@
                 document.body.classList.remove('no-scroll');
             }
 
-            // Check the aspect ratio as soon as the page is ready
             checkAspectRatio();
 
-            // Add the click event to the continue button
             if (continueBtn) {
                 continueBtn.addEventListener('click', hideOverlay);
             }
