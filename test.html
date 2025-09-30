@@ -33,6 +33,68 @@
             overflow: hidden;
         }
 
+        /* --- DEVELOPMENT DISCLAIMER STYLES --- */
+        #development-disclaimer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* A bit darker to stand out */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 10000; /* Highest z-index to be on top of everything */
+            display: none; /* Hidden by default; shown by JS */
+            justify-content: center;
+            align-items: center;
+            font-family: 'PrimaryFont', sans-serif;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .disclaimer-box {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 550px; /* Wider for more text */
+            box-shadow: 0 5px 25px rgba(0,0,0,0.25);
+            color: #333;
+        }
+
+        .disclaimer-box h2 {
+            margin-top: 0;
+            font-size: 1.8em;
+            text-transform: uppercase;
+            color: #6720BD; /* Match theme color */
+        }
+
+        .disclaimer-box p {
+            font-size: 1.05em;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            text-align: left; /* Better for readability of paragraphs */
+        }
+
+        #disclaimer-continue-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            background-color: #6720BD;
+            color: #fff;
+            font-family: 'PrimaryFont', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        #disclaimer-continue-btn:hover {
+            background-color: #4b138f;
+        }
+
+
         /* --- MOBILE ASPECT RATIO WARNING STYLES --- */
         #mobile-warning-overlay {
             position: fixed;
@@ -337,6 +399,16 @@
     <script src="../panic-key.js"></script>
 </head>
 <body>
+    <div id="development-disclaimer-overlay">
+        <div class="disclaimer-box">
+            <h2>A Note on Future Development</h2>
+            <p><strong>Heads up!</strong> I am currently hard at work developing <strong>Version 5 of 4SP</strong>, also known as <strong>Project Zirconium</strong>.</p>
+            <p>As a result, this current version (v4) will remain online but will no longer be actively updated or accept new requests. The decision to move forward comes from the current design being cluttered, difficult to maintain, and plagued with various bugs that a fresh start will solve.</p>
+            <p>For long-time users, think of this update as being similar in scale to the transition from Version 2 to Version 3, but this will be a much more meticulous and comprehensive overhaul that will naturally take longer to complete. Thank you for your understanding and continued support!</p>
+            <button id="disclaimer-continue-btn">I Understand</button>
+        </div>
+    </div>
+
     <main>
         <section class="hero-section dark-bg">
             <div class="container">
@@ -369,7 +441,7 @@
         </section>
         <section class="hp-infra-section light-bg">
             <div class="container">
-                <h2>over 140 users, and counting.</h2>
+                <h2>Over 150 users, and counting.</h2>
                 <p>Engage in uneducational games, modify your experience, and escape reality.</p>
             </div>
         </section>
@@ -675,8 +747,31 @@
             }
         });
 
-        // Dropdown Menu & Aspect Ratio Logic
+        // Dropdown Menu & Other Page Logic
         document.addEventListener('DOMContentLoaded', () => {
+            // --- NEW: ONE-TIME DEVELOPMENT DISCLAIMER LOGIC ---
+            const disclaimerOverlay = document.getElementById('development-disclaimer-overlay');
+            const disclaimerContinueBtn = document.getElementById('disclaimer-continue-btn');
+            const disclaimerDismissedKey = 'zirconiumDisclaimerDismissed';
+
+            // Check if the disclaimer has been dismissed before
+            if (!localStorage.getItem(disclaimerDismissedKey)) {
+                disclaimerOverlay.style.display = 'flex';
+                document.body.classList.add('no-scroll');
+            }
+
+            // Add event listener to the continue button
+            if (disclaimerContinueBtn) {
+                disclaimerContinueBtn.addEventListener('click', () => {
+                    disclaimerOverlay.style.display = 'none';
+                    document.body.classList.remove('no-scroll');
+                    // Set the flag in localStorage so it doesn't show again
+                    localStorage.setItem(disclaimerDismissedKey, 'true');
+                });
+            }
+
+
+            // --- DROPDOWN MENU LOGIC ---
             const dropdownTrigger = document.getElementById('more-dropdown');
             const dropdownContent = document.getElementById('more-menu-content');
 
@@ -704,7 +799,7 @@
                 dropdownContent.addEventListener('mouseleave', hideMenu);
             }
 
-            // --- NEW: ASPECT RATIO WARNING LOGIC ---
+            // --- ASPECT RATIO WARNING LOGIC ---
             const overlay = document.getElementById('mobile-warning-overlay');
             const continueBtn = document.getElementById('continue-btn');
 
