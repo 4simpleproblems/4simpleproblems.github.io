@@ -50,7 +50,7 @@
             font-family: 'SecondaryFont', sans-serif;
             padding: 15px;
             box-sizing: border-box;
-            line-height: 0.6; /* Adjust this value to control line spacing */
+            /* REMOVED: line-height: 0.6; - this was causing overly tight text spacing */ 
         }
 
         .disclaimer-box {
@@ -92,7 +92,8 @@
 
         .disclaimer-box p {
             font-size: 1.1em;
-            line-height: 1.7;
+            /* This line-height is now the active one for paragraphs, which gives normal spacing */
+            line-height: 1.7; 
             margin-bottom: 20px;
             text-align: left;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
@@ -134,12 +135,13 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
         
+        /* UPDATED STYLES for Complete Form Button */
         #disclaimer-form-btn {
-            background-color: #5a626b; /* Secondary button color */
+            background-color: #007bff; /* Bluish color */
         }
 
         #disclaimer-form-btn:hover {
-            background-color: #4a4f56;
+            background-color: #0056b3; /* Darker bluish hover */
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
