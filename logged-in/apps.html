@@ -287,6 +287,21 @@
         /* ⭐ UPDATED: Changes the stat text to the new, less dark red color */
         color: #D03D36;
     }
+    
+    /* --- ⭐ NEW: Disabled App Styles --- */
+    .grid-item.disabled-app {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    .grid-item.disabled-app .feature-tile {
+        background-color: #f8f9fa;
+    }
+    .grid-item.disabled-app:hover {
+        transform: none;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+    }
+
 
     /* --- Animation for fade-in --- */
     .fade-in { animation: fadeInGeneral 0.5s ease-out forwards; }
@@ -368,10 +383,10 @@
       { id: 'weather', href: 'weather.html', icon: '⛅', title: 'WEATHER', description: 'Get detailed weather information with a 24-hour hourly breakdown and an extended 14-day forecast. You can save your preferred location for quick access to local weather conditions.', stats: [{ number: 'DETAIL', label: 'Cards' }, { number: '24 HR', label: 'Forecast' }, { number: 'SAVED', label: 'Location' }] },
       { id: 'notes', href: 'notes.html', icon: '📝', title: 'NOTES', description: 'A powerful and versatile notes application with all data saved directly and securely in your local browser storage. Features include note coloring for organization and password protection for privacy.', stats: [{ number: 'SECURE', label: 'Passwords' }, { number: 'COLOR', label: 'Notes' }, { number: 'LOCAL', label: 'Save' }] },
       { id: 'countdowns', href: 'countdowns.html', icon: '🗓', title: 'COUNTDOWNS', description: 'Never miss an important date again. Create, manage, and track countdowns for any upcoming event, with all data saved securely and locally in your browser for quick and private access.', stats: [{ number: 'SECURE', label: 'Saving' }, { number: 'MANAGE', label: 'Events' }, { number: 'LOCAL', label: 'Save' }] },
-      { id: 'requests', href: 'requests.html', icon: '🎵', title: 'REQUESTS', description: 'Use this portal to submit requests for new sounds and application features, or to report any issues you encounter. You can choose to make your submissions public or keep them anonymous.', stats: [{ number: 'PUBLIC', label: 'Requests' }, { number: 'FAST', label: 'Handling' }, { number: 'WEEKDAY', label: 'Access' }] },
+      { id: 'requests', href: '#', icon: '🎵', title: 'REQUESTS', description: '<i style="font-family: \'SecondaryFont\', sans-serif; color: #555;">The requests page is disabled while v5 is in production.</i>', stats: [{ number: 'V5', label: 'Pending' }, { number: 'TEMP.', label: 'Offline' }, { number: 'SOON', label: 'Comeback' }], customClass: 'disabled-app' },
       { id: 'playlists', href: 'playlists.html', icon: '🎼', title: 'PLAYLISTS', description: 'Create and manage an unlimited number of custom soundboard playlists. This tool allows you to organize your favorite sounds and share them easily with others via secure encoded files.', stats: [{ number: '∞', label: 'Playlists' }, { number: 'ENCODED', label: 'Sharing' }, { number: 'ANNOY', label: 'People' }] },
       { id: 'slotz', href: 'slotz.html', icon: '🎰', title: 'SLOTZ', description: 'Experience the excitement of a classic slot machine game. Test your luck, spin the reels, and track your performance on a personal leaderboard that saves your high scores locally.', stats: [{ number: 'PERSONAL', label: 'Board' }, { number: 'CLASSIC', label: 'Slots' }, { number: 'FUN', label: 'Addiction' }] },
-      { id: 'msg-tutorial', href: 'messenger-tutorial.html', icon: '📱', title: 'MESSENGER TUTORIAL', description: 'Follow this comprehensive guide to access the Chromebook Messenger application. It leverages a secure Firebase backend for real-time, worldwide communication and reliable message saving.', stats: [{ number: 'SECURE', label: 'Talking' }, { number: 'FIREBASE', label: 'Saving' }, { number: 'GLOBAL', label: 'Chat' }] },
+      { id: 'msg-tutorial', href: 'messenger-tutorial.html', icon: '💬', title: 'FIREBASE MESSENGER APP', description: 'Download the standalone Firebase Messenger application. It leverages a secure Firebase backend for real-time, worldwide communication and reliable message saving.', stats: [{ number: 'SECURE', label: 'Talking' }, { number: 'FIREBASE', label: 'Saving' }, { number: 'GLOBAL', label: 'Chat' }] },
       { id: 'grade-calculator', href: 'grade-calculator.html', icon: '📓', title: 'GRADE CALCULATOR', description: 'Easily calculate your academic grades for any class using the standard USA grading scale. All entered data is saved locally on your device, ensuring your information remains private.', stats: [{ number: 'LOCAL', label: 'Saving' }, { number: 'USA', label: 'Scale' }, { number: 'KNOW', label: 'Grades' }] },
       { id: 'lme', href: 'lme.html', icon: '🏫', title: 'LME', description: 'Explore a fake learning management portal designed with a nostalgic 2000s web aesthetic. It serves as a unique and interactive environment where the answers are always easy to find.', stats: [{ number: 'FAKE', label: 'Portal' }, { number: '2000\'S', label: 'Aesthetic' }, { number: 'EASY', label: 'Answers' }] },
     ];
