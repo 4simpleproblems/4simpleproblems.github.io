@@ -33,6 +33,96 @@
             overflow: hidden;
         }
 
+        /* --- DEVELOPMENT DISCLAIMER STYLES --- */
+        #development-disclaimer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10000; /* Highest z-index to be on top of everything */
+    display: none; /* Hidden by default; shown by JS */
+    justify-content: center;
+    align-items: center;
+    font-family: 'SecondaryFont', sans-serif;
+    padding: 15px;
+    box-sizing: border-box;
+    line-height: 0.6; /* Adjust this value to control line spacing */
+}
+
+        .disclaimer-box {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            padding: 40px;
+            text-align: center;
+            max-width: 580px;
+            color: #fff;
+        }
+
+        #disclaimer-title {
+            margin-top: 0;
+            margin-bottom: 35px;
+            font-size: 2.2em;
+            text-transform: uppercase;
+            font-family: 'PrimaryFont', sans-serif;
+            color: #fff;
+            position: relative;
+            /* Added for 3D transforms to work correctly */
+            transform-style: preserve-3d;
+            perspective: 800px;
+            /* 3D effect text shadow */
+            text-shadow: 0 1px 0 #ccc, 
+                         0 2px 0 #c9c9c9,
+                         0 3px 0 #bbb,
+                         0 4px 0 #b9b9b9,
+                         0 5px 0 #aaa,
+                         0 6px 1px rgba(0,0,0,.1),
+                         0 0 5px rgba(0,0,0,.1),
+                         0 1px 3px rgba(0,0,0,.3),
+                         0 3px 5px rgba(0,0,0,.2),
+                         0 5px 10px rgba(0,0,0,.25),
+                         0 10px 10px rgba(0,0,0,.2),
+                         0 20px 20px rgba(0,0,0,.15);
+        }
+
+        .disclaimer-box p {
+            font-size: 1.1em;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            text-align: left;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #disclaimer-continue-btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            background-color: #7b2ff7;
+            color: #fff;
+            font-family: 'PrimaryFont', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+
+        #disclaimer-continue-btn:hover {
+            background-color: #6720BD;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+
         /* --- MOBILE ASPECT RATIO WARNING STYLES --- */
         #mobile-warning-overlay {
             position: fixed;
@@ -41,11 +131,10 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
-            /* The backdrop-filter blurs content behind the element */
             backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px); /* For Safari browser compatibility */
+            -webkit-backdrop-filter: blur(8px);
             z-index: 9999;
-            display: none; /* Hidden by default; shown by JS */
+            display: none;
             justify-content: center;
             align-items: center;
             font-family: 'PrimaryFont', sans-serif;
@@ -79,7 +168,7 @@
             padding: 12px 25px;
             border: none;
             border-radius: 8px;
-            background-color: #6720BD; /* Matches your site's theme color */
+            background-color: #6720BD;
             color: #fff;
             font-family: 'PrimaryFont', sans-serif;
             font-weight: 700;
@@ -89,7 +178,7 @@
         }
 
         #continue-btn:hover {
-            background-color: #4b138f; /* A darker shade for the hover effect */
+            background-color: #4b138f;
         }
 
 
@@ -100,7 +189,7 @@
         }
 
         .whats-new-section {
-            padding: 60px 0; /* Reduced padding */
+            padding: 60px 0;
         }
 
         .timeline-section {
@@ -121,14 +210,14 @@
         }
 
         .whats-new-content {
-            max-width: 950px; /* Made the section wider */
+            max-width: 950px;
             margin: 40px auto 0 auto;
             text-align: left;
         }
             
         .whats-new-content p {
-            font-size: 1.05em; /* Slightly smaller font */
-            font-style: italic; /* Italicized text */
+            font-size: 1.05em;
+            font-style: italic;
             line-height: 1.6;
             color: #555;
         }
@@ -154,13 +243,12 @@
             align-items: center;
             position: relative;
         }
-        /* The line connecting the dots */
         .timeline-wrapper::before {
             content: '';
             position: absolute;
             top: 50%;
-            left: 12%; /* Added padding */
-            right: 12%;/* Added padding */
+            left: 12%;
+            right: 12%;
             height: 2px;
             background-color: #e0e0e0;
             transform: translateY(-50%);
@@ -170,7 +258,7 @@
         .timeline-item {
             text-align: center;
             position: relative;
-            z-index: 2; /* Sits on top of the line */
+            z-index: 2;
             cursor: pointer;
         }
         
@@ -179,8 +267,8 @@
             width: 30px;
             height: 30px;
             border-radius: 50%;
-            margin: 0 auto 15px auto; /* Center the circle and add space below for text */
-            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover effect */
+            margin: 0 auto 15px auto;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
@@ -189,7 +277,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         
-        /* Specific gradient colors for each version's circle */
         .timeline-item:nth-child(1) .timeline-circle { background-image: linear-gradient(45deg, #434343 0%, #000000 100%); }
         .timeline-item:nth-child(2) .timeline-circle { background-image: linear-gradient(45deg, #87CEEB 0%, #4285F4 100%); }
         .timeline-item:nth-child(3) .timeline-circle { background-image: linear-gradient(45deg, #FEE140 0%, #FA709A 100%); }
@@ -203,7 +290,7 @@
         .timeline-item-content h3 {
             font-size: 1.1em;
             margin-bottom: 4px;
-            padding-top: 10px; /* Added padding to push it down from the line */
+            padding-top: 10px;
         }
         .timeline-item-content p {
             font-size: 0.9em;
@@ -226,11 +313,10 @@
 
         .version-modal {
             display: none;
-            position: absolute; /* Changed to absolute */
+            position: absolute;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
             z-index: 1001;
             overflow: hidden;
-            /* Transition properties and border-radius are set by JS */
         }
         
         .version-modal.has-gradient-bg {
@@ -243,7 +329,6 @@
             overflow-y: auto;
             box-sizing: border-box;
             padding: 25px 30px;
-             /* Transition properties are set by JS */
         }
 
         .modal-backdrop.show {
@@ -337,6 +422,16 @@
     <script src="../panic-key.js"></script>
 </head>
 <body>
+    <div id="development-disclaimer-overlay">
+        <div class="disclaimer-box">
+            <h2 id="disclaimer-title">A Note on Future Development</h2>
+            <p><strong>hello humans</strong> i am currently starting developmet on <strong>Version 5 of 4SP</strong>, also known as <strong>Project Zirconium</strong>.</p>
+            <p>As a result, this current version (v4) will remain online but will no longer be actively updated or accept new requests. The decision to move forward comes from the current design being cluttered, difficult to maintain, and plagued with various bugs that a fresh start will solve.</p>
+            <p>For long-time users, think of this update as being similar in scale to the transition from Version 2 to Version 3, but this will be a much more meticulous and comprehensive overhaul that will naturally take longer to complete. Thank you for your understanding and continued support!</p>
+            <button id="disclaimer-continue-btn">I Understand</button>
+        </div>
+    </div>
+
     <main>
         <section class="hero-section dark-bg">
             <div class="container">
@@ -511,8 +606,8 @@
         const modal = document.getElementById('versionModal');
         const backdrop = document.getElementById('versionModalBackdrop');
         const closeModalBtn = document.getElementById('closeModalBtn');
-        let activeCircle = null; // Store the clicked circle element
-        let activeModal = false; // Prevents multiple clicks during animation
+        let activeCircle = null;
+        let activeModal = false;
 
         function showVersionDetails(versionKey, event) {
             if (activeModal) return;
@@ -526,12 +621,9 @@
             }
 
             const initialRect = activeCircle.getBoundingClientRect();
-
-            // Get background from circle
             const circleStyle = window.getComputedStyle(activeCircle);
             const bgImage = circleStyle.backgroundImage;
 
-            // Populate content first
             document.getElementById('modalTitle').innerText = details.title;
             document.getElementById('modalStartDate').innerHTML = details.startDate;
             document.getElementById('modalCreationDate').innerHTML = details.creationDate;
@@ -540,8 +632,7 @@
             redirectBtn.href = details.url;
             redirectBtn.style.display = details.url === '#' ? 'none' : 'inline-block';
 
-            // Set initial state for animation
-            modal.style.transition = 'none'; // No transition for initial setup
+            modal.style.transition = 'none';
             const initialTop = initialRect.top + window.scrollY;
             const initialLeft = initialRect.left + window.scrollX;
 
@@ -549,7 +640,7 @@
             modal.style.left = `${initialLeft}px`;
             modal.style.width = `${initialRect.width}px`;
             modal.style.height = `${initialRect.height}px`;
-            modal.style.borderRadius = '15px'; // Start with 15px, as 30x30 with 15px radius is a circle
+            modal.style.borderRadius = '15px';
             modal.style.backgroundImage = bgImage;
             modal.classList.add('has-gradient-bg');
             
@@ -559,7 +650,6 @@
             modal.classList.add('visible');
             backdrop.classList.add('show');
 
-            // Force reflow to apply initial styles before animating
             requestAnimationFrame(() => {
                 modal.style.transition = 'width 0.4s ease, height 0.4s ease, left 0.4s ease';
                 
@@ -569,12 +659,10 @@
                 modal.style.width = `${finalWidth}px`;
                 modal.style.height = `${finalHeight}px`;
 
-                // V4 opens to the left
                 if (versionKey === 'v4') {
                     modal.style.left = `${initialLeft - finalWidth + initialRect.width}px`;
                 }
 
-                // Fade in content after expansion
                 setTimeout(() => {
                     innerContent.style.transition = 'opacity 0.3s ease';
                     innerContent.style.opacity = 1;
@@ -586,16 +674,12 @@
             if (!activeModal || !activeCircle) return;
 
             const innerContent = modal.querySelector('.modal-inner-content');
-
-            // 1. Fade out content fast
             innerContent.style.transition = 'opacity 0.1s ease';
             innerContent.style.opacity = 0;
             
-            // 2. After content is faded, start shrinking
             setTimeout(() => {
                 modal.style.transition = 'width 0.4s ease, height 0.4s ease, top 0.4s ease, left 0.4s ease, border-radius 0.4s ease';
                 
-                // BUG FIX: Recalculate the circle's current position
                 const currentRect = activeCircle.getBoundingClientRect();
                 const finalTop = currentRect.top + window.scrollY;
                 const finalLeft = currentRect.left + window.scrollX;
@@ -604,49 +688,41 @@
                 modal.style.left = `${finalLeft}px`;
                 modal.style.width = `${currentRect.width}px`;
                 modal.style.height = `${currentRect.height}px`;
-                modal.style.borderRadius = '15px'; // Stays 15px, effectively a circle at this size
+                modal.style.borderRadius = '15px';
                 
                 backdrop.classList.remove('show');
-            }, 100); // Short delay for content to fade
+            }, 100);
             
-            // 3. Clean up after all animations are done
             setTimeout(() => {
                 modal.classList.remove('visible');
                 modal.style.backgroundImage = '';
                 modal.classList.remove('has-gradient-bg');
-                activeCircle = null; // Clear the active circle
-                activeModal = false; // Allow clicking again
-            }, 500); // 100ms delay + 400ms transition
+                activeCircle = null;
+                activeModal = false;
+            }, 500);
         }
 
         closeModalBtn.addEventListener('click', hideVersionDetails);
         backdrop.addEventListener('click', hideVersionDetails);
 
 
-        // --- NEW: One-Time Force Logout Script ---
-        // This script runs once per user per browser to ensure data consistency
-        // by forcing a re-login, which will trigger the account-fixing logic on the login page.
+        // --- One-Time Force Logout Script ---
         (function() {
             const forceLogoutKey = 'forceLogoutCompleted_v1';
-            // Check if the one-time logout has already been performed.
             if (!localStorage.getItem(forceLogoutKey)) {
                 console.log('Performing one-time force logout to ensure data consistency...');
-                // Use an auth state observer to ensure Firebase is ready.
                 const unsubscribe = firebase.auth().onAuthStateChanged(user => {
-                    unsubscribe(); // Stop listening after the first check.
+                    unsubscribe();
                     if (user) {
-                        // If a user is logged in, sign them out.
                         firebase.auth().signOut().then(() => {
                             localStorage.setItem(forceLogoutKey, 'true');
                             window.location.reload();
                         }).catch(error => {
-                            // If signout fails for some reason, still set the flag and reload to avoid loops.
                             console.error('Force logout failed, but setting flag to prevent loop:', error);
                             localStorage.setItem(forceLogoutKey, 'true');
                             window.location.reload();
                         });
                     } else {
-                        // If no user is logged in, just set the flag.
                         localStorage.setItem(forceLogoutKey, 'true');
                     }
                 });
@@ -675,8 +751,59 @@
             }
         });
 
-        // Dropdown Menu & Aspect Ratio Logic
+        // Dropdown Menu & Other Page Logic
         document.addEventListener('DOMContentLoaded', () => {
+            // --- ONE-TIME DEVELOPMENT DISCLAIMER LOGIC (UPDATED) ---
+            const disclaimerOverlay = document.getElementById('development-disclaimer-overlay');
+            const disclaimerContinueBtn = document.getElementById('disclaimer-continue-btn');
+            const disclaimerTitle = document.getElementById('disclaimer-title');
+            const disclaimerDismissedKey = 'zirconiumDisclaimerDismissed';
+            let animationFrameId;
+
+            // --- Title Animation Logic (Corrected to tilt, not move) ---
+            let angle = 0;
+            const maxTilt = 15; // The maximum tilt angle in degrees
+            const speed = 0.02; // How fast it tilts
+
+            function animateTitle() {
+                angle += speed;
+                // Use sine and cosine to create a circular tilting motion
+                const rotX = Math.sin(angle) * maxTilt;
+                const rotY = Math.cos(angle) * maxTilt;
+
+                if(disclaimerTitle) {
+                    // Apply perspective for 3D and the X/Y rotations. No translation.
+                    disclaimerTitle.style.transform = `perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+                }
+                
+                animationFrameId = requestAnimationFrame(animateTitle);
+            }
+
+            function stopAnimation() {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+            }
+
+            // Check if the disclaimer has been dismissed before
+            if (!localStorage.getItem(disclaimerDismissedKey)) {
+                disclaimerOverlay.style.display = 'flex';
+                document.body.classList.add('no-scroll');
+                animateTitle(); // Start the animation
+            }
+
+            // Add event listener to the continue button
+            if (disclaimerContinueBtn) {
+                disclaimerContinueBtn.addEventListener('click', () => {
+                    disclaimerOverlay.style.display = 'none';
+                    document.body.classList.remove('no-scroll');
+                    localStorage.setItem(disclaimerDismissedKey, 'true');
+                    stopAnimation();
+                });
+            }
+
+
+            // --- DROPDOWN MENU LOGIC ---
             const dropdownTrigger = document.getElementById('more-dropdown');
             const dropdownContent = document.getElementById('more-menu-content');
 
@@ -704,13 +831,11 @@
                 dropdownContent.addEventListener('mouseleave', hideMenu);
             }
 
-            // --- NEW: ASPECT RATIO WARNING LOGIC ---
+            // --- ASPECT RATIO WARNING LOGIC ---
             const overlay = document.getElementById('mobile-warning-overlay');
             const continueBtn = document.getElementById('continue-btn');
 
             function checkAspectRatio() {
-                // Aspect Ratio is calculated by width / height.
-                // If the result is 1 or less, it means the viewport is square or portrait.
                 const aspectRatio = window.innerWidth / window.innerHeight;
                 if (aspectRatio <= 1) { 
                     overlay.style.display = 'flex';
@@ -723,10 +848,8 @@
                 document.body.classList.remove('no-scroll');
             }
 
-            // Check the aspect ratio as soon as the page is ready
             checkAspectRatio();
 
-            // Add the click event to the continue button
             if (continueBtn) {
                 continueBtn.addEventListener('click', hideOverlay);
             }
