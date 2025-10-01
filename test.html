@@ -50,7 +50,6 @@
             font-family: 'SecondaryFont', sans-serif;
             padding: 15px;
             box-sizing: border-box;
-            /* REMOVED: line-height: 0.6; - this was causing overly tight text spacing */ 
         }
 
         .disclaimer-box {
@@ -60,7 +59,8 @@
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.18);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            padding: 40px;
+            /* CHANGE: Reduced padding for the box to 20px */
+            padding: 20px; 
             text-align: center;
             max-width: 580px;
             color: #fff;
@@ -92,9 +92,9 @@
 
         .disclaimer-box p {
             font-size: 1.1em;
-            /* This line-height is now the active one for paragraphs, which gives normal spacing */
-            line-height: 1.7; 
-            margin-bottom: 20px;
+            /* Less line spacing for paragraphs for better density */
+            line-height: 1; 
+            margin-bottom: 15px;
             text-align: left;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
@@ -104,11 +104,12 @@
             justify-content: center;
             align-items: center;
             gap: 15px;
-            margin-top: 25px;
+            margin-top: 20px;
             flex-wrap: wrap; /* Allows buttons to stack on smaller screens */
         }
 
         #disclaimer-continue-btn, #disclaimer-form-btn {
+            /* CHANGE: Unified padding for both buttons */
             padding: 14px 28px;
             border: none;
             border-radius: 12px;
@@ -137,7 +138,8 @@
         
         /* UPDATED STYLES for Complete Form Button */
         #disclaimer-form-btn {
-            background-color: #007bff; /* Bluish color */
+            /* CHANGE: Bluish color */
+            background-color: #007bff; 
         }
 
         #disclaimer-form-btn:hover {
