@@ -35,22 +35,23 @@
 
         /* --- DEVELOPMENT DISCLAIMER STYLES --- */
         #development-disclaimer-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 10000; /* Highest z-index to be on top of everything */
-            display: none; /* Hidden by default; shown by JS */
-            justify-content: center;
-            align-items: center;
-            font-family: 'SecondaryFont', sans-serif;
-            padding: 15px;
-            box-sizing: border-box;
-        }
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10000; /* Highest z-index to be on top of everything */
+    display: none; /* Hidden by default; shown by JS */
+    justify-content: center;
+    align-items: center;
+    font-family: 'SecondaryFont', sans-serif;
+    padding: 15px;
+    box-sizing: border-box;
+    line-height: 0.6; /* Adjust this value to control line spacing */
+}
 
         .disclaimer-box {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
