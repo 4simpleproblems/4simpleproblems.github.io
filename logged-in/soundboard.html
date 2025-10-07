@@ -1125,8 +1125,8 @@
                 const sortOrder = document.querySelector('input[name="soundSortOrder"]:checked')?.value || 'alpha-asc';
                 
                 for (const categoryKey in soundsData) {
-                    if (categoryKey.toLowerCase() === 'explicit') {
-                        continue; // Skip the explicit category
+                    if (categoryKey.toLowerCase().includes('explicit')) {
+                        continue; // Skip any category containing the word 'explicit'
                     }
 
                     let categoryTitle = categoryKey.replace(/([A-Z])/g, ' $1').trim();
