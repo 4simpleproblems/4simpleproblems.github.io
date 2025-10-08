@@ -68,26 +68,12 @@
 
         #disclaimer-title {
             margin-top: 0;
-            margin-bottom: 35px;
+            margin-bottom: 25px; /* Reduced margin */
             font-size: 2.2em;
             text-transform: uppercase;
             font-family: 'PrimaryFont', sans-serif;
             color: #fff;
-            position: relative;
-            transform-style: preserve-3d;
-            perspective: 800px;
-            text-shadow: 0 1px 0 #ccc, 
-                         0 2px 0 #c9c9c9,
-                         0 3px 0 #bbb,
-                         0 4px 0 #b9b9b9,
-                         0 5px 0 #aaa,
-                         0 6px 1px rgba(0,0,0,.1),
-                         0 0 5px rgba(0,0,0,.1),
-                         0 1px 3px rgba(0,0,0,.3),
-                         0 3px 5px rgba(0,0,0,.2),
-                         0 5px 10px rgba(0,0,0,.25),
-                         0 10px 10px rgba(0,0,0,.2),
-                         0 20px 20px rgba(0,0,0,.15);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Simpler shadow */
         }
 
         .disclaimer-box p {
@@ -108,7 +94,7 @@
             flex-wrap: wrap; /* Allows buttons to stack on smaller screens */
         }
 
-        #disclaimer-continue-btn, #disclaimer-form-btn {
+        #disclaimer-continue-btn, #disclaimer-discord-btn {
             /* CHANGE: Unified padding for both buttons */
             padding: 14px 28px;
             border: none;
@@ -126,24 +112,24 @@
             display: inline-block; /* For the <a> tag */
         }
 
+        /* I Understand Button - Alert Red */
         #disclaimer-continue-btn {
-            background-color: #7b2ff7;
+            background-color: #d9534f;
         }
 
         #disclaimer-continue-btn:hover {
-            background-color: #6720BD;
+            background-color: #c9302c;
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
         
-        /* UPDATED STYLES for Complete Form Button */
-        #disclaimer-form-btn {
-            /* CHANGE: Bluish color */
-            background-color: #007bff; 
+        /* NEW STYLES for Discord Button - Discord Blue */
+        #disclaimer-discord-btn {
+            background-color: #5865F2; 
         }
 
-        #disclaimer-form-btn:hover {
-            background-color: #0056b3; /* Darker bluish hover */
+        #disclaimer-discord-btn:hover {
+            background-color: #404EED; /* Darker blue hover */
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
@@ -450,13 +436,13 @@
 <body>
     <div id="development-disclaimer-overlay">
         <div class="disclaimer-box">
-            <h2 id="disclaimer-title">A Note on Future Development</h2>
-            <p><strong>hello humans</strong> i am currently starting development on <strong>Version 5 of 4SP</strong>, also known as <strong>Project Zirconium</strong>.</p>
-            <p>As a result, this current version (v4) will remain online but will no longer be actively updated or accept new requests. The decision to move forward comes from the current design being cluttered, difficult to maintain, and plagued with various bugs that some cool update will solve.</p>
-            <p>For long-time users, think of this update as being similar in scale to the transition from Version 2 to Version 3, but this will be a much more meticulous and comprehensive overhaul that will naturally take longer to complete. Thank you for your understanding and continued support!</p>
+            <h2 id="disclaimer-title">IMPORTANT SERVICE ANNOUNCEMENT</h2>
+            <p><strong>Heads up, everyone.</strong> As 4SP grows, we've noticed an increased risk of being detected and blocked by school network filters, including **Securly**.</p>
+            <p>We are actively taking measures to prevent this, but the situation is volatile. If the website is blocked, we will attempt to move to a new URL as quickly as possible, and we may have to resort to a new main URL frequently to stay online.</p>
+            <p>Please follow our official channels (Discord, etc.) for the most up-to-date information on the current working URL. Your understanding and patience are greatly appreciated as we work to keep 4SP accessible!</p>
             <div class="disclaimer-button-group">
                 <button id="disclaimer-continue-btn">I Understand</button>
-                <a href="https://forms.gle/BrWamQPsv2wDLAL58" target="_blank" rel="noopener noreferrer" id="disclaimer-form-btn">Complete Form</a>
+                <a href="https://discord.gg/MRvfFDpqCv" target="_blank" rel="noopener noreferrer" id="disclaimer-discord-btn">Discord</a>
             </div>
         </div>
     </div>
@@ -488,7 +474,7 @@
 
         <section class="news-bar light-bg">
             <div class="container">
-                <p>Fast. Secure. Yours.</p>
+                <p>Securly Is Catching On...</p>
             </div>
         </section>
         <section class="hp-infra-section light-bg">
@@ -785,40 +771,13 @@
             // --- ONE-TIME DEVELOPMENT DISCLAIMER LOGIC (UPDATED) ---
             const disclaimerOverlay = document.getElementById('development-disclaimer-overlay');
             const disclaimerContinueBtn = document.getElementById('disclaimer-continue-btn');
-            const disclaimerTitle = document.getElementById('disclaimer-title');
-            const disclaimerDismissedKey = 'zirconiumDisclaimerDismissed';
-            let animationFrameId;
-
-            // --- Title Animation Logic (Corrected to tilt, not move) ---
-            let angle = 0;
-            const maxTilt = 15; // The maximum tilt angle in degrees
-            const speed = 0.02; // How fast it tilts
-
-            function animateTitle() {
-                angle += speed;
-                // Use sine and cosine to create a circular tilting motion
-                const rotX = Math.sin(angle) * maxTilt;
-                const rotY = Math.cos(angle) * maxTilt;
-
-                if(disclaimerTitle) {
-                    // Apply perspective for 3D and the X/Y rotations. No translation.
-                    disclaimerTitle.style.transform = `perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-                }
-                
-                animationFrameId = requestAnimationFrame(animateTitle);
-            }
-
-            function stopAnimation() {
-                if (animationFrameId) {
-                    cancelAnimationFrame(animationFrameId);
-                }
-            }
+            // Using a new key so users who dismissed the V5 message see this critical warning
+            const disclaimerDismissedKey = 'securlyDisclaimerDismissed_v2'; 
 
             // Check if the disclaimer has been dismissed before
             if (!localStorage.getItem(disclaimerDismissedKey)) {
                 disclaimerOverlay.style.display = 'flex';
                 document.body.classList.add('no-scroll');
-                animateTitle(); // Start the animation
             }
 
             // Add event listener to the continue button
@@ -827,7 +786,6 @@
                     disclaimerOverlay.style.display = 'none';
                     document.body.classList.remove('no-scroll');
                     localStorage.setItem(disclaimerDismissedKey, 'true');
-                    stopAnimation();
                 });
             }
 
