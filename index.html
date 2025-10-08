@@ -786,7 +786,8 @@
             const disclaimerOverlay = document.getElementById('development-disclaimer-overlay');
             const disclaimerContinueBtn = document.getElementById('disclaimer-continue-btn');
             const disclaimerTitle = document.getElementById('disclaimer-title');
-            const disclaimerDismissedKey = 'zirconiumDisclaimerDismissed';
+            // UPDATED LOCAL STORAGE KEY TO ENSURE EVERYONE SEES THE NEW DISCLAIMER
+            const disclaimerDismissedKey = 'accessDisclaimerDismissed_v2'; 
             let animationFrameId;
 
             // --- Title Animation Logic (Corrected to tilt, not move) ---
