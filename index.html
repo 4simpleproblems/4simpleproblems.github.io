@@ -40,7 +40,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.75);
+            /* UPDATED: Red-tinted blurred background */
+            background-color: rgba(139, 0, 0, 0.75); /* Deep Red with transparency */
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             z-index: 10000; /* Highest z-index to be on top of everything */
@@ -53,32 +54,44 @@
         }
 
         .disclaimer-box {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+            /* UPDATED: Deep red background for the box itself */
+            background: linear-gradient(135deg, rgba(178, 34, 34, 0.9), rgba(139, 0, 0, 0.8)); /* Firebrick to DarkRed */
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.18);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            /* CHANGE: Reduced padding for the box to 20px */
             padding: 20px; 
             text-align: center;
             max-width: 580px;
             color: #fff;
         }
 
+        /* NEW KEYFRAMES FOR ROTATING ANIMATION */
+        @keyframes rotate3d {
+            0% { transform: rotateX(0deg) rotateY(0deg) translateZ(0); }
+            25% { transform: rotateX(10deg) rotateY(15deg) translateZ(5px); }
+            50% { transform: rotateX(0deg) rotateY(0deg) translateZ(0); }
+            75% { transform: rotateX(-10deg) rotateY(-15deg) translateZ(5px); }
+            100% { transform: rotateX(0deg) rotateY(0deg) translateZ(0); }
+        }
+
         #disclaimer-title {
             margin-top: 0;
-            margin-bottom: 25px; /* Reduced margin */
+            margin-bottom: 25px; 
             font-size: 2.2em;
             text-transform: uppercase;
             font-family: 'PrimaryFont', sans-serif;
             color: #fff;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Simpler shadow */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); 
+            /* RE-ADDED ANIMATION */
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            animation: rotate3d 8s ease-in-out infinite;
         }
 
         .disclaimer-box p {
             font-size: 1.1em;
-            /* Less line spacing for paragraphs for better density */
             line-height: 1.3; 
             margin-bottom: 15px;
             text-align: left;
@@ -91,11 +104,10 @@
             align-items: center;
             gap: 15px;
             margin-top: 20px;
-            flex-wrap: wrap; /* Allows buttons to stack on smaller screens */
+            flex-wrap: wrap; 
         }
 
         #disclaimer-continue-btn, #disclaimer-discord-btn {
-            /* CHANGE: Unified padding for both buttons */
             padding: 14px 28px;
             border: none;
             border-radius: 12px;
@@ -107,29 +119,29 @@
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-            font-size: 1em; /* Unified font size */
-            text-decoration: none; /* For the <a> tag */
-            display: inline-block; /* For the <a> tag */
+            font-size: 1em; 
+            text-decoration: none; 
+            display: inline-block; 
         }
 
-        /* I Understand Button - Alert Red */
+        /* UPDATED: "I Understand" Button - Purple */
         #disclaimer-continue-btn {
-            background-color: #d9534f;
+            background-color: #6720BD; /* Primary Purple */
         }
 
         #disclaimer-continue-btn:hover {
-            background-color: #c9302c;
+            background-color: #4b138f; /* Darker purple hover */
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
         
-        /* NEW STYLES for Discord Button - Discord Blue */
+        /* UPDATED: Discord Button - Deeper Purple */
         #disclaimer-discord-btn {
-            background-color: #5865F2; 
+            background-color: #4b0082; /* Indigo - A deeper purple */
         }
 
         #disclaimer-discord-btn:hover {
-            background-color: #404EED; /* Darker blue hover */
+            background-color: #3a0066; /* Even deeper purple hover */
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
@@ -474,7 +486,7 @@
 
         <section class="news-bar light-bg">
             <div class="container">
-                <p>Securly Is Catching On...</p>
+                <p>Fast. Secure. Yours.</p>
             </div>
         </section>
         <section class="hp-infra-section light-bg">
