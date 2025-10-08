@@ -40,8 +40,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            /* UPDATED: Red-tinted blurred background */
-            background-color: rgba(139, 0, 0, 0.75); /* Deep Red with transparency */
+            /* UPDATED: Darker, less tinted red background for the overlay */
+            background-color: rgba(139, 0, 0, 0.9); /* DarkRed with higher opacity */
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             z-index: 10000; /* Highest z-index to be on top of everything */
@@ -66,27 +66,28 @@
             max-width: 580px;
             color: #fff;
         }
-
-        /* NEW KEYFRAMES FOR ROTATING ANIMATION */
+        
+        /* NEW KEYFRAMES FOR ROTATING ANIMATION (Re-added) */
         @keyframes rotate3d {
-            0% { transform: rotateX(0deg) rotateY(0deg) translateZ(0); }
-            25% { transform: rotateX(10deg) rotateY(15deg) translateZ(5px); }
-            50% { transform: rotateX(0deg) rotateY(0deg) translateZ(0); }
-            75% { transform: rotateX(-10deg) rotateY(-15deg) translateZ(5px); }
-            100% { transform: rotateX(0deg) rotateY(0deg) translateZ(0); }
+            0% { transform: perspective(800px) rotateX(0deg) rotateY(0deg); }
+            25% { transform: perspective(800px) rotateX(10deg) rotateY(15deg); }
+            50% { transform: perspective(800px) rotateX(0deg) rotateY(0deg); }
+            75% { transform: perspective(800px) rotateX(-10deg) rotateY(-15deg); }
+            100% { transform: perspective(800px) rotateX(0deg) rotateY(0deg); }
         }
 
         #disclaimer-title {
             margin-top: 0;
-            margin-bottom: 25px; 
+            margin-bottom: 25px; /* Adjusted spacing */
             font-size: 2.2em;
             text-transform: uppercase;
             font-family: 'PrimaryFont', sans-serif;
             color: #fff;
+            /* Simple text shadow for better readability with rotation */
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); 
             /* RE-ADDED ANIMATION */
-            perspective: 1000px;
             transform-style: preserve-3d;
+            perspective: 800px;
             animation: rotate3d 8s ease-in-out infinite;
         }
 
@@ -104,50 +105,61 @@
             align-items: center;
             gap: 15px;
             margin-top: 20px;
-            flex-wrap: wrap; 
+            flex-wrap: wrap;
         }
 
-        #disclaimer-continue-btn, #disclaimer-discord-btn {
+        /* --- DYNAMIC GLASS BUTTON STYLES --- */
+        #disclaimer-continue-btn, #disclaimer-form-btn {
+            /* CSS variables for dynamic styling */
+            --button-base-color: #6720BD; /* Primary Purple (I Understand) */
+            --button-deep-color: #4b0082; /* Deep Purple (Discord/Form) */
+            --glow-color: rgba(255, 255, 255, 0.4); 
+            --cursor-x: 50%; /* Default center */
+            --cursor-y: 50%;
+            
+            /* Unified Styles */
             padding: 14px 28px;
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Light border for glass look */
             border-radius: 12px;
             color: #fff;
             font-family: 'PrimaryFont', sans-serif;
             font-weight: 700;
             text-transform: uppercase;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+            transition: box-shadow 0.3s ease, transform 0.3s ease; /* Ensure hover transitions work */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
             font-size: 1em; 
             text-decoration: none; 
-            display: inline-block; 
+            display: inline-block;
+            position: relative; 
+            overflow: hidden; 
+            /* Base gradient for when JS is not active / initial state */
+            background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 40%);
         }
 
-        /* UPDATED: "I Understand" Button - Purple */
+        /* I Understand Button - Primary Purple */
         #disclaimer-continue-btn {
-            background-color: #6720BD; /* Primary Purple */
-        }
-
-        #disclaimer-continue-btn:hover {
-            background-color: #4b138f; /* Darker purple hover */
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            background-color: var(--button-base-color); /* Fallback/Base */
+            /* Custom property for hover color, used in JS and CSS hover */
+            --hover-color: #4b138f;
         }
         
-        /* UPDATED: Discord Button - Deeper Purple */
-        #disclaimer-discord-btn {
-            background-color: #4b0082; /* Indigo - A deeper purple */
+        /* Complete Form Button - Deeper Purple */
+        #disclaimer-form-btn {
+            background-color: var(--button-deep-color); /* Fallback/Base */
+            /* Custom property for hover color, used in JS and CSS hover */
+            --hover-color: #3a0066;
         }
 
-        #disclaimer-discord-btn:hover {
-            background-color: #3a0066; /* Even deeper purple hover */
+        /* Hover Effect */
+        #disclaimer-continue-btn:hover, #disclaimer-form-btn:hover {
+            background-color: var(--hover-color); 
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5);
         }
 
-
-        /* --- MOBILE ASPECT RATIO WARNING STYLES --- */
+        /* --- MOBILE ASPECT RATIO WARNING STYLES --- (Retained original styles below this point) */
         #mobile-warning-overlay {
             position: fixed;
             top: 0;
@@ -448,13 +460,13 @@
 <body>
     <div id="development-disclaimer-overlay">
         <div class="disclaimer-box">
-            <h2 id="disclaimer-title">IMPORTANT SERVICE ANNOUNCEMENT</h2>
-            <p><strong>Heads up, everyone.</strong> As 4SP grows, we've noticed an increased risk of being detected and blocked by school network filters, including **Securly**.</p>
-            <p>We are actively taking measures to prevent this, but the situation is volatile. If the website is blocked, we will attempt to move to a new URL as quickly as possible, and we may have to resort to a new main URL frequently to stay online.</p>
-            <p>Please follow our official channels (Discord, etc.) for the most up-to-date information on the current working URL. Your understanding and patience are greatly appreciated as we work to keep 4SP accessible!</p>
+            <h2 id="disclaimer-title">A Note on Future Development</h2>
+            <p><strong>hello humans</strong> i am currently starting development on <strong>Version 5 of 4SP</strong>, also known as <strong>Project Zirconium</strong>.</p>
+            <p>As a result, this current version (v4) will remain online but will no longer be actively updated or accept new requests. The decision to move forward comes from the current design being cluttered, difficult to maintain, and plagued with various bugs that some cool update will solve.</p>
+            <p>For long-time users, think of this update as being similar in scale to the transition from Version 2 to Version 3, but this will be a much more meticulous and comprehensive overhaul that will naturally take longer to complete. Thank you for your understanding and continued support!</p>
             <div class="disclaimer-button-group">
                 <button id="disclaimer-continue-btn">I Understand</button>
-                <a href="https://discord.gg/MRvfFDpqCv" target="_blank" rel="noopener noreferrer" id="disclaimer-discord-btn">Discord</a>
+                <a href="https://forms.gle/BrWamQPsv2wDLAL58" target="_blank" rel="noopener noreferrer" id="disclaimer-form-btn">Complete Form</a>
             </div>
         </div>
     </div>
@@ -783,13 +795,54 @@
             // --- ONE-TIME DEVELOPMENT DISCLAIMER LOGIC (UPDATED) ---
             const disclaimerOverlay = document.getElementById('development-disclaimer-overlay');
             const disclaimerContinueBtn = document.getElementById('disclaimer-continue-btn');
-            // Using a new key so users who dismissed the V5 message see this critical warning
-            const disclaimerDismissedKey = 'securlyDisclaimerDismissed_v2'; 
+            const disclaimerDismissedKey = 'zirconiumDisclaimerDismissed';
+            
+            // --- Dynamic Glass Button Logic ---
+            const continueBtn = document.getElementById('disclaimer-continue-btn');
+            const formBtn = document.getElementById('disclaimer-form-btn');
+            const buttons = [
+                { element: continueBtn, baseColor: '#6720BD', deepColor: '#4b138f' },
+                { element: formBtn, baseColor: '#4b0082', deepColor: '#3a0066' }
+            ];
+
+            function updateGradient(e) {
+                const button = e.currentTarget;
+                const rect = button.getBoundingClientRect();
+                const x = e.clientX - rect.left; // x position within the element.
+                const y = e.clientY - rect.top; // y position within the element.
+                const xPercent = (x / rect.width) * 100;
+                const yPercent = (y / rect.height) * 100;
+                
+                // Determine colors based on which button is being hovered
+                const baseColor = button.id === 'disclaimer-continue-btn' ? '#6720BD' : '#4b0082';
+                const deepColor = button.id === 'disclaimer-continue-btn' ? '#4b138f' : '#3a0066';
+
+                // Dynamic background with the radial-gradient for gloss
+                button.style.backgroundImage = `radial-gradient(circle at ${xPercent}% ${yPercent}%, rgba(255, 255, 255, 0.4) 0%, transparent 40%),
+                                                linear-gradient(to right, ${baseColor}, ${deepColor})`;
+            }
+
+            buttons.forEach(btn => {
+                if (btn.element) {
+                    btn.element.addEventListener('mousemove', updateGradient);
+                    // Reset to a subtle gradient on mouseleave
+                    btn.element.addEventListener('mouseleave', () => {
+                        btn.element.style.backgroundImage = `radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+                                                             linear-gradient(to right, ${btn.baseColor}, ${btn.deepColor})`;
+                    });
+                    // Initial call to set the base gradient
+                    btn.element.style.backgroundImage = `radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+                                                         linear-gradient(to right, ${btn.baseColor}, ${btn.deepColor})`;
+                }
+            });
+            // --- END Dynamic Glass Button Logic ---
+
 
             // Check if the disclaimer has been dismissed before
             if (!localStorage.getItem(disclaimerDismissedKey)) {
                 disclaimerOverlay.style.display = 'flex';
                 document.body.classList.add('no-scroll');
+                // CSS animation handles the rotation now, no need to call animateTitle()
             }
 
             // Add event listener to the continue button
@@ -798,6 +851,7 @@
                     disclaimerOverlay.style.display = 'none';
                     document.body.classList.remove('no-scroll');
                     localStorage.setItem(disclaimerDismissedKey, 'true');
+                    // No need to call stopAnimation()
                 });
             }
 
@@ -832,7 +886,7 @@
 
             // --- ASPECT RATIO WARNING LOGIC ---
             const overlay = document.getElementById('mobile-warning-overlay');
-            const continueBtn = document.getElementById('continue-btn');
+            const continueBtnMobile = document.getElementById('continue-btn'); // Renamed variable
 
             function checkAspectRatio() {
                 const aspectRatio = window.innerWidth / window.innerHeight;
@@ -849,8 +903,8 @@
 
             checkAspectRatio();
 
-            if (continueBtn) {
-                continueBtn.addEventListener('click', hideOverlay);
+            if (continueBtnMobile) {
+                continueBtnMobile.addEventListener('click', hideOverlay);
             }
         });
     </script>
