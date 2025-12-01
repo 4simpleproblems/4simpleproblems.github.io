@@ -4159,11 +4159,11 @@ const performAccountDeletion = async (credential) => {
                     'Orange': 2, 'Sunset': 2, 'Rust': 2, 'Ember': 2, 'Copper': 2,
                     'Gold': 3,
                     'Green': 4, 'Forest': 4, 'Matrix': 4,
-                    'Teal Dream': 5, 'Mint': 5,
+                    'Mint': 5,
                     'Ocean': 6, 'Deep Blue': 6,
                     'Purple': 7, 'Royal': 7, 'Haze': 7, 'Lavender': 7,
                     'Pink': 8, 'Coral': 8, 'Rose Gold': 8,
-                    'Monochrome': 9, 'Silver': 9, 'Slate': 9
+                    'Clanker': 9, 'Monochrome': 9, 'Silver': 9, 'Slate': 9
                 };
                 
                 // Helper to determine type (Dark=0, Light=1 for sorting)
