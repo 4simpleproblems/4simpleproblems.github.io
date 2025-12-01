@@ -364,39 +364,45 @@ const applyCounterZoom = () => {
                 position: fixed; top: 0; left: 0; right: 0; z-index: 1000; 
                 /* UPDATED: transform-origin ensures scaling happens from top-left corner */
                 transform-origin: top left;
-                background: #000000; /* Pure Black */
-                border-bottom: 1px solid rgb(31 41 55); height: 4rem; 
+                background: var(--navbar-bg); 
+                border-bottom: 1px solid var(--navbar-border); height: 4rem; 
+                transition: background-color 0.3s ease, border-color 0.3s ease;
             }
             
             .auth-navbar nav { padding: 0 1rem; height: 100%; display: flex; align-items: center; justify-content: space-between; }
             
-                        .auth-menu-container { 
-                            position: absolute; right: 0; top: 50px; width: 16rem; 
-                            background: #000000; /* Pure Black */
-                            backdrop-filter: none;
-                            -webkit-backdrop-filter: none;
-                            border: 1px solid rgb(55 65 81); border-radius: 0.9rem; padding: 0.75rem; 
-                            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -2px rgba(0,0,0,0.2);
-                            transition: transform 0.2s ease-out, opacity 0.2s ease-out; transform-origin: top right; 
-                        }
-                        .auth-menu-container.open { opacity: 1; transform: translateY(0) scale(1); }
-                        .auth-menu-container.closed { opacity: 0; pointer-events: none; transform: translateY(-10px) scale(0.95); }
-            
-                        .initial-avatar { background: linear-gradient(135deg, #374151 0%, #111827 100%); font-family: 'Geist', sans-serif; text-transform: uppercase; display: flex; align-items: center; justify-content: center; color: white; }
-            
-                                    /* Auth Menu Username and Email Styling */
-                                    .auth-menu-username {
-                                        text-align: left !important;
-                                        margin: 0 !important;
-                                        font-weight: 400 !important;
-                                    }
-                                    .auth-menu-email {
-                                        text-align: left !important;
-                                        margin: 0 !important;
-                                        font-weight: 400 !important;
-                                    }            /* * UPDATED STYLE: Matches 'dropdown-item' from notes.html 
+            .auth-menu-container { 
+                position: absolute; right: 0; top: 50px; width: 16rem; 
+                background: var(--menu-bg); 
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                border: 1px solid var(--menu-border); border-radius: 0.9rem; padding: 0.75rem; 
+                box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -2px rgba(0,0,0,0.2);
+                transition: transform 0.2s ease-out, opacity 0.2s ease-out, background-color 0.3s ease, border-color 0.3s ease; 
+                transform-origin: top right; 
+            }
+            .auth-menu-container .border-b { border-color: var(--menu-divider) !important; transition: border-color 0.3s ease; }
+            .auth-menu-container.open { opacity: 1; transform: translateY(0) scale(1); }
+            .auth-menu-container.closed { opacity: 0; pointer-events: none; transform: translateY(-10px) scale(0.95); }
+
+            .initial-avatar { background: var(--avatar-gradient); font-family: 'Geist', sans-serif; text-transform: uppercase; display: flex; align-items: center; justify-content: center; color: white; }
+
+            /* Auth Menu Username and Email Styling */
+            .auth-menu-username {
+                text-align: left !important;
+                margin: 0 !important;
+                font-weight: 400 !important;
+                color: var(--menu-username-text);
+            }
+            .auth-menu-email {
+                text-align: left !important;
+                margin: 0 !important;
+                font-weight: 400 !important;
+                color: var(--menu-email-text);
+            }            
+
+            /* * UPDATED STYLE: Matches 'dropdown-item' from notes.html 
              * Using flex gap instead of margin-right on icons.
-             * Darker hover background (#2a2a2a).
              */
             .auth-menu-link, .auth-menu-button { 
                 display: flex;
@@ -405,7 +411,7 @@ const applyCounterZoom = () => {
                 width: 100%; text-align: left; 
                 padding: 0.5rem 0.75rem; 
                 font-size: 0.875rem; 
-                color: #d1d5db; 
+                color: var(--menu-text); 
                 border-radius: 0.375rem; 
                 transition: background-color 0.15s, color 0.15s; 
                 border: none;
@@ -414,17 +420,19 @@ const applyCounterZoom = () => {
             }
             
             .auth-menu-link:hover, .auth-menu-button:hover { 
-                background-color: #2a2a2a; /* Matches notes.html hover */
-                color: #ffffff; 
+                background-color: var(--menu-item-hover-bg); 
+                color: var(--menu-item-hover-text); 
             }
 
             /* New custom style for the logged out button's icon and background */
             .logged-out-auth-toggle {
-                background: #010101; 
-                border: 1px solid #374151; 
+                background: var(--logged-out-icon-bg); 
+                border: 1px solid var(--logged-out-icon-border); 
+                transition: background-color 0.3s ease, border-color 0.3s ease;
             }
             .logged-out-auth-toggle i {
-                color: #DADADA; 
+                color: var(--logged-out-icon-color); 
+                transition: color 0.3s ease;
             }
 
             /* --- Marquee Styles --- */
@@ -778,6 +786,15 @@ const applyCounterZoom = () => {
         
         // --- NEW: Init Marquees ---
         checkMarquees();
+
+        // --- NEW: Re-apply theme after render to ensure logo tinting works ---
+        let currentTheme;
+        try {
+            currentTheme = JSON.parse(localStorage.getItem(THEME_STORAGE_KEY));
+        } catch (e) {
+             currentTheme = null;
+        }
+        window.applyTheme(currentTheme || DEFAULT_THEME);
     };
 
     const setupEventListeners = (user) => {
