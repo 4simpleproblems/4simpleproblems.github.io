@@ -31,112 +31,14 @@ const FIREBASE_CONFIG = {
 // --- Configuration ---
 // This object defines the default "Dark" theme, containing only necessary properties for navigation-mini.js
 const DEFAULT_THEME = {
-    'name': 'Dark',
-    'logo-src': '/images/logo.png', 
-    'navbar-bg': '#000000',
-    'navbar-border': 'rgb(31 41 55)',
     'avatar-gradient': 'linear-gradient(135deg, #374151 0%, #111827 100%)',
-    'avatar-border': '#4b5563',
-    'menu-bg': '#000000',
-    'menu-border': 'rgb(55 65 81)',
-    'menu-divider': '#374151',
-    'menu-text': '#d1d5db',
-    'menu-username-text': '#ffffff', 
-    'menu-email-text': '#9ca3af',
-    'menu-item-hover-bg': 'rgb(55 65 81)', 
-    'menu-item-hover-text': '#ffffff',
-    'glass-menu-bg': 'rgba(10, 10, 10, 0.8)',
-    'glass-menu-border': 'rgba(55, 65, 81, 0.8)',
-    'logged-out-icon-bg': '#010101',
-    'logged-out-icon-border': '#374151',
-    'logged-out-icon-color': '#DADADA',
-    'glide-icon-color': '#ffffff',
-    'glide-gradient-left': 'linear-gradient(to right, #000000, transparent)',
-    'glide-gradient-right': 'linear-gradient(to left, #000000, transparent)',
-    'tab-text': '#9ca3af',
-    'tab-hover-text': '#ffffff',
-    'tab-hover-border': '#d1d5db',
-    'tab-hover-bg': 'rgba(79, 70, 229, 0.05)',
-    'tab-active-text': '#4f46e5',
-    'tab-active-border': '#4f46e5',
-    'tab-active-bg': 'rgba(79, 70, 229, 0.1)',
-    'tab-active-hover-text': '#6366f1',
-    'tab-active-hover-border': '#6366f1',
-    'tab-active-hover-bg': 'rgba(79, 70, 229, 0.15)',
-    'pin-btn-border': '#4b5563',
-    'pin-btn-hover-bg': '#374151',
-    'pin-btn-icon-color': '#d1d5db',
-    'hint-bg': '#010101',
-    'hint-border': '#374151',
-    'hint-text': '#ffffff'
 };
 
-const PAGE_CONFIG_URL = '../page-identification.json';
+const PAGE_CONFIG_URL = '../page-identification.json'; // <--- NEW CONSTANT
 const PINNED_PAGE_KEY = 'navbar_pinnedPage';
 const PIN_BUTTON_HIDDEN_KEY = 'navbar_pinButtonHidden';
-
-
-
-window.applyTheme = (theme) => {
-    const root = document.documentElement;
-    if (!root) return;
-    const themeToApply = theme && typeof theme === 'object' ? theme : DEFAULT_THEME;
-    
-    // Determine if it's a light theme
-    const isLightTheme = lightThemeNames.includes(themeToApply.name);
-
-        // The navigation-mini.js should not manage general theme styles, only logo and tint.
-        // for (const [key, value] of Object.entries(themeToApply)) {                                                                                                             
-        //     if (key !== 'logo-src' && key !== 'name') {                                                                                                                        
-        //         root.style.setProperty(`--${key}`, value);                                                                                                                     
-        //     }                                                                                                                                                                  
-        // }                                                                                                                                                                      
-                                                                                                                                                                               
-        // The navigation-mini.js should not manage general theme styles, only logo and tint.
-        // if (isLightTheme) {                                                                                                                                                    
-        //     root.style.setProperty('--menu-username-text', '#000000'); // Black for username                                                                                   
-        //     root.style.setProperty('--menu-email-text', '#333333');   // Dark grey for email                                                                                   
-        // } else {                                                                                                                                                               
-        //     // Revert to theme's default or global default                                                                                                                     
-        //     root.style.setProperty('--menu-username-text', themeToApply['menu-username-text'] || DEFAULT_THEME['menu-username-text']);                                         
-        //     root.style.setProperty('--menu-email-text', themeToApply['menu-email-text'] || DEFAULT_THEME['menu-email-text']);                                                  
-        // }
-    const logoImg = document.getElementById('navbar-logo');
-    if (logoImg) {
-        let newLogoSrc;
-        if (themeToApply.name === 'Christmas') {
-            newLogoSrc = '/images/logo-christmas.png';
-        } else {
-            newLogoSrc = themeToApply['logo-src'] || DEFAULT_THEME['logo-src'];
-        }
-        const currentSrc = logoImg.src;
-        const expectedSrc = new URL(newLogoSrc, window.location.origin).href;
-        if (currentSrc !== expectedSrc) {
-            logoImg.src = newLogoSrc;
-        }
-
-        // --- NEW: Logo Tinting Logic ---
-const noFilterThemes = ['Dark', 'Light', 'Christmas'];
-
-if (noFilterThemes.includes(themeToApply.name)) {
-    // Reset styles for themes that don't need tinting
-    logoImg.style.filter = ''; 
-    logoImg.style.transform = '';
-} else {
-    // 1. Get the highlight color from the theme (e.g., the tab text color)
-    // You can choose 'navbar-border' or 'tab-active-text' depending on preference
-    const tintColor = themeToApply['tab-active-text'] || '#ffffff';
-
-    // 2. Create a colored shadow 100px to the right, and move the actual image 100px to the left
-    // This hides the white image and shows only the colored shadow
-    logoImg.style.filter = `drop-shadow(100px 0 0 ${tintColor})`;
-    logoImg.style.transform = 'translateX(-100px)';
-}
-// --- END NEW: Logo Tinting Logic ---
-    }
-};
-
-// --- Self-invoking function to encapsulate all logic ---
+const THEME_STORAGE_KEY = 'user-navbar-theme'; // Added for compatibility
+const lightThemeNames = ['Light', 'Lavender', 'Rose Gold', 'Mint']; // Added for compatibility
 
 /**
  * NEW FUNCTION: applyCounterZoom
@@ -244,15 +146,13 @@ const applyCounterZoom = () => {
             await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js");
             await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js");
 
+            // Now that scripts are loaded, we can use the `firebase` global object
+            initializeApp(); // No longer passing pages here as allPages is global
+            
             // We need to inject the styles and setup the container immediately
             // so the onAuthStateChanged listener can call renderNavbar successfully.
             injectStyles();
             setupContainer(); 
-
-                        // Theme loading has been moved to navigation.js.
-                        // window.applyTheme(DEFAULT_THEME); // Apply default theme or a minimal theme for logo/tint            
-            // Now that scripts are loaded, we can use the `firebase` global object
-            initializeApp(); // No longer passing pages here as allPages is global
             
         } catch (error) {
             console.error("Failed to load necessary SDKs or Font Awesome:", error);
@@ -357,45 +257,39 @@ const applyCounterZoom = () => {
                 position: fixed; top: 0; left: 0; right: 0; z-index: 1000; 
                 /* UPDATED: transform-origin ensures scaling happens from top-left corner */
                 transform-origin: top left;
-                background: var(--navbar-bg); 
-                border-bottom: 1px solid var(--navbar-border); height: 4rem; 
-                transition: background-color 0.3s ease, border-color 0.3s ease;
+                background: #000000; /* Pure Black */
+                border-bottom: 1px solid rgb(31 41 55); height: 4rem; 
             }
             
             .auth-navbar nav { padding: 0 1rem; height: 100%; display: flex; align-items: center; justify-content: space-between; }
             
-            .auth-menu-container { 
-                position: absolute; right: 0; top: 50px; width: 16rem; 
-                background: var(--menu-bg); 
-                backdrop-filter: none;
-                -webkit-backdrop-filter: none;
-                border: 1px solid var(--menu-border); border-radius: 0.9rem; padding: 0.75rem; 
-                box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -2px rgba(0,0,0,0.2);
-                transition: transform 0.2s ease-out, opacity 0.2s ease-out, background-color 0.3s ease, border-color 0.3s ease; 
-                transform-origin: top right; 
-            }
-            .auth-menu-container .border-b { border-color: var(--menu-divider) !important; transition: border-color 0.3s ease; }
-            .auth-menu-container.open { opacity: 1; transform: translateY(0) scale(1); }
-            .auth-menu-container.closed { opacity: 0; pointer-events: none; transform: translateY(-10px) scale(0.95); }
-
-            .initial-avatar { background: var(--avatar-gradient); font-family: 'Geist', sans-serif; text-transform: uppercase; display: flex; align-items: center; justify-content: center; color: white; }
-
-            /* Auth Menu Username and Email Styling */
-            .auth-menu-username {
-                text-align: left !important;
-                margin: 0 !important;
-                font-weight: 400 !important;
-                color: var(--menu-username-text);
-            }
-            .auth-menu-email {
-                text-align: left !important;
-                margin: 0 !important;
-                font-weight: 400 !important;
-                color: var(--menu-email-text);
-            }            
-
-            /* * UPDATED STYLE: Matches 'dropdown-item' from notes.html 
+                        .auth-menu-container { 
+                            position: absolute; right: 0; top: 50px; width: 16rem; 
+                            background: #000000; /* Pure Black */
+                            backdrop-filter: none;
+                            -webkit-backdrop-filter: none;
+                            border: 1px solid rgb(55 65 81); border-radius: 0.9rem; padding: 0.75rem; 
+                            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -2px rgba(0,0,0,0.2);
+                            transition: transform 0.2s ease-out, opacity 0.2s ease-out; transform-origin: top right; 
+                        }
+                        .auth-menu-container.open { opacity: 1; transform: translateY(0) scale(1); }
+                        .auth-menu-container.closed { opacity: 0; pointer-events: none; transform: translateY(-10px) scale(0.95); }
+            
+                        .initial-avatar { background: linear-gradient(135deg, #374151 0%, #111827 100%); font-family: 'Geist', sans-serif; text-transform: uppercase; display: flex; align-items: center; justify-content: center; color: white; }
+            
+                                    /* Auth Menu Username and Email Styling */
+                                    .auth-menu-username {
+                                        text-align: left !important;
+                                        margin: 0 !important;
+                                        font-weight: 400 !important;
+                                    }
+                                    .auth-menu-email {
+                                        text-align: left !important;
+                                        margin: 0 !important;
+                                        font-weight: 400 !important;
+                                    }            /* * UPDATED STYLE: Matches 'dropdown-item' from notes.html 
              * Using flex gap instead of margin-right on icons.
+             * Darker hover background (#2a2a2a).
              */
             .auth-menu-link, .auth-menu-button { 
                 display: flex;
@@ -404,7 +298,7 @@ const applyCounterZoom = () => {
                 width: 100%; text-align: left; 
                 padding: 0.5rem 0.75rem; 
                 font-size: 0.875rem; 
-                color: var(--menu-text); 
+                color: #d1d5db; 
                 border-radius: 0.375rem; 
                 transition: background-color 0.15s, color 0.15s; 
                 border: none;
@@ -413,19 +307,17 @@ const applyCounterZoom = () => {
             }
             
             .auth-menu-link:hover, .auth-menu-button:hover { 
-                background-color: var(--menu-item-hover-bg); 
-                color: var(--menu-item-hover-text); 
+                background-color: #2a2a2a; /* Matches notes.html hover */
+                color: #ffffff; 
             }
 
             /* New custom style for the logged out button's icon and background */
             .logged-out-auth-toggle {
-                background: var(--logged-out-icon-bg); 
-                border: 1px solid var(--logged-out-icon-border); 
-                transition: background-color 0.3s ease, border-color 0.3s ease;
+                background: #010101; 
+                border: 1px solid #374151; 
             }
             .logged-out-auth-toggle i {
-                color: var(--logged-out-icon-color); 
-                transition: color 0.3s ease;
+                color: #DADADA; 
             }
 
             /* --- Marquee Styles --- */
@@ -646,7 +538,7 @@ const applyCounterZoom = () => {
         const container = document.getElementById('navbar-container');
         if (!container) return; // Should not happen if setupContainer runs
 
-        const logoPath = DEFAULT_THEME['logo-src']; 
+        const logoPath = "/images/logo-christmas.png"; // Using root-relative path
         const currentPagePath = window.location.pathname; // Get current path for conditional links
 
         // UPDATED: Use a function to render the conditional links
@@ -762,7 +654,7 @@ const applyCounterZoom = () => {
             <header class="auth-navbar">
                 <nav>
                     <a href="/" class="flex items-center space-x-2">
-                        <img src="${logoPath}" alt="4SP Logo" class="h-10 w-auto" id="navbar-logo">
+                        <img src="${logoPath}" alt="4SP Logo" class="h-10 w-auto">
                     </a>
                     <div id="auth-controls-wrapper-mini" class="flex items-center gap-3 flex-shrink-0">
                         ${user ? loggedInView(user, userData) : loggedOutView(currentPagePath)}
@@ -779,15 +671,6 @@ const applyCounterZoom = () => {
         
         // --- NEW: Init Marquees ---
         checkMarquees();
-
-        // --- NEW: Re-apply theme after render to ensure logo tinting works ---
-        let currentTheme;
-        try {
-            currentTheme = JSON.parse(localStorage.getItem(THEME_STORAGE_KEY));
-        } catch (e) {
-             currentTheme = null;
-        }
-        window.applyTheme(currentTheme || DEFAULT_THEME);
     };
 
     const setupEventListeners = (user) => {
@@ -840,15 +723,6 @@ const applyCounterZoom = () => {
                 try {
                     const userDoc = await db.collection('users').doc(user.uid).get();
                     currentUserData = userDoc.exists ? userDoc.data() : null; // Update global var
-                    
-                    // --- NEW: Apply Theme from Firestore ---
-                    if (currentUserData && currentUserData.navbarTheme) {
-                        window.applyTheme(currentUserData.navbarTheme);
-                        // Sync to local storage for future page loads
-                        localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(currentUserData.navbarTheme));
-                    }
-                    // ---------------------------------------
-
                     renderNavbar(user, currentUserData);
                     updatePinButtonArea(); // <--- ADD THIS LINE
                 } catch (error) {
