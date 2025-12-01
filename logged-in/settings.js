@@ -1869,10 +1869,6 @@
     '#E879F9', // Fuchsia
     '#EC4899', // Pink
     '#F43F5E', // Rose
-    '#800000', // Maroon
-
-    // --- NEUTRALS ---
-    '#6B7280', // Gray
     '#FFFFFF'  // White
 ]
         };
