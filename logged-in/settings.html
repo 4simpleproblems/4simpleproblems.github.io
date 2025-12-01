@@ -528,16 +528,12 @@
             border: 1px dashed rgba(255, 255, 255, 0.3); /* Thinner dashed outline */
         }
         
-        /* --- Color Palette Styles --- */
         .color-palette-grid {
-            /* 1. Sets up the Grid layout */
-            display: grid; 
-            
-            /* 2. Allows for automatic, responsive wrapping */
-            /* This ensures as many 40px columns as possible fit, and when they don't, 
-               the rest automatically move to the next row (wrapping). */
-            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); 
-            
+            display: grid;
+            /* MODIFICATION: Forces exactly 10 columns. 
+               The 1fr ensures they are equally spaced, and minmax(40px, 1fr) ensures 
+               the circle size doesn't drop below 40px. */
+            grid-template-columns: repeat(10, minmax(40px, 1fr));
             gap: 10px;
             width: 100%;
             margin-top: 10px;
