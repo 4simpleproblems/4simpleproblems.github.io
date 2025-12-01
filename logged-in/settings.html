@@ -138,6 +138,8 @@
             display: flex;
             flex-direction: column; 
             align-items: flex-start;
+            /* FIX: Prevents horizontal scrollbar from appearing due to overflowing children */
+            overflow-x: hidden; 
         }
         
         .about-section-content {
@@ -528,18 +530,17 @@
             border: 1px dashed rgba(255, 255, 255, 0.3); /* Thinner dashed outline */
         }
         
+        /* --- Color Palette Styles --- */
         .color-palette-grid {
-            /* NEW: Switched to Flexbox for reliable wrapping and no scrollbar */
+            /* Flexbox setup for automatic wrapping */
             display: flex; 
             flex-wrap: wrap; 
             
-            /* Max width calculation for 10 items: 
-               10 * (40px width) + 9 * (10px gap) = 490px.
-               This forces the 11th item to wrap onto the next line. */
+            /* Calculated max width for 10 items (10 * 40px width + 9 * 10px gap = 490px) 
+               This is what forces the 11th item to the next row. */
             max-width: 490px;
             
             gap: 10px;
-            /* width: 100%; is no longer needed/useful with max-width */
             margin-top: 10px;
         }
         .color-option {
