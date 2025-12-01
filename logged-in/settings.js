@@ -4153,8 +4153,42 @@ const performAccountDeletion = async (credential) => {
                     }
                 });
 
-                // Sort remaining themes alphabetically by name
-                themes.sort((a, b) => a.name.localeCompare(b.name));
+                // Sort remaining themes by Rainbow Color then Type
+                const colorMap = {
+                    'Crimson': 1, 'Fire': 1,
+                    'Orange': 2, 'Sunset': 2, 'Rust': 2, 'Ember': 2, 'Copper': 2,
+                    'Gold': 3,
+                    'Green': 4, 'Forest': 4, 'Matrix': 4,
+                    'Teal Dream': 5, 'Mint': 5,
+                    'Ocean': 6, 'Deep Blue': 6,
+                    'Purple': 7, 'Royal': 7, 'Haze': 7, 'Lavender': 7,
+                    'Pink': 8, 'Coral': 8, 'Rose Gold': 8,
+                    'Monochrome': 9, 'Silver': 9, 'Slate': 9
+                };
+                
+                // Helper to determine type (Dark=0, Light=1 for sorting)
+                // Light themes use logo-dark.png
+                const getThemeType = (t) => (t['logo-src'] && t['logo-src'].includes('logo-dark.png')) ? 1 : 0;
+
+                themes.sort((a, b) => {
+                    const colorA = colorMap[a.name] || 100; // Default to end if unknown
+                    const colorB = colorMap[b.name] || 100;
+                    
+                    if (colorA !== colorB) {
+                        return colorA - colorB;
+                    }
+                    
+                    // If same color, sort by type
+                    const typeA = getThemeType(a);
+                    const typeB = getThemeType(b);
+                    
+                    if (typeA !== typeB) {
+                        return typeA - typeB; // Dark first, then Light
+                    }
+                    
+                    // If same color and type, alphabetical
+                    return a.name.localeCompare(b.name);
+                });
 
                 // Combine them
                 themes = [...sortedThemes, ...themes];
