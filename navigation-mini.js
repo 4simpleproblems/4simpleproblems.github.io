@@ -31,18 +31,113 @@ const FIREBASE_CONFIG = {
 // --- Configuration ---
 // This object defines the default "Dark" theme, containing only necessary properties for navigation-mini.js
 const DEFAULT_THEME = {
+    'name': 'Dark',
+    'logo-src': '/images/logo.png', 
+    'navbar-bg': '#000000',
+    'navbar-border': 'rgb(31 41 55)',
     'avatar-gradient': 'linear-gradient(135deg, #374151 0%, #111827 100%)',
+    'avatar-border': '#4b5563',
+    'menu-bg': '#000000',
+    'menu-border': 'rgb(55 65 81)',
+    'menu-divider': '#374151',
+    'menu-text': '#d1d5db',
+    'menu-username-text': '#ffffff', 
+    'menu-email-text': '#9ca3af',
+    'menu-item-hover-bg': 'rgb(55 65 81)', 
+    'menu-item-hover-text': '#ffffff',
+    'glass-menu-bg': 'rgba(10, 10, 10, 0.8)',
+    'glass-menu-border': 'rgba(55, 65, 81, 0.8)',
+    'logged-out-icon-bg': '#010101',
+    'logged-out-icon-border': '#374151',
+    'logged-out-icon-color': '#DADADA',
+    'glide-icon-color': '#ffffff',
+    'glide-gradient-left': 'linear-gradient(to right, #000000, transparent)',
+    'glide-gradient-right': 'linear-gradient(to left, #000000, transparent)',
+    'tab-text': '#9ca3af',
+    'tab-hover-text': '#ffffff',
+    'tab-hover-border': '#d1d5db',
+    'tab-hover-bg': 'rgba(79, 70, 229, 0.05)',
+    'tab-active-text': '#4f46e5',
+    'tab-active-border': '#4f46e5',
+    'tab-active-bg': 'rgba(79, 70, 229, 0.1)',
+    'tab-active-hover-text': '#6366f1',
+    'tab-active-hover-border': '#6366f1',
+    'tab-active-hover-bg': 'rgba(79, 70, 229, 0.15)',
+    'pin-btn-border': '#4b5563',
+    'pin-btn-hover-bg': '#374151',
+    'pin-btn-icon-color': '#d1d5db',
+    'hint-bg': '#010101',
+    'hint-border': '#374151',
+    'hint-text': '#ffffff'
 };
 
-const PAGE_CONFIG_URL = '../page-identification.json'; // <--- NEW CONSTANT
+const PAGE_CONFIG_URL = '../page-identification.json';
 const PINNED_PAGE_KEY = 'navbar_pinnedPage';
 const PIN_BUTTON_HIDDEN_KEY = 'navbar_pinButtonHidden';
-const THEME_STORAGE_KEY = 'user-navbar-theme'; // Added for compatibility
-const lightThemeNames = ['Light', 'Lavender', 'Rose Gold', 'Mint']; // Added for compatibility
+const THEME_STORAGE_KEY = 'user-navbar-theme';
+const lightThemeNames = ['Light', 'Lavender', 'Rose Gold', 'Mint', 'Pink'];
 
-/**
- * NEW FUNCTION: applyCounterZoom
- * This calculates the browser's current zoom level (devicePixelRatio) and applies
+window.applyTheme = (theme) => {
+    const root = document.documentElement;
+    if (!root) return;
+    const themeToApply = theme && typeof theme === 'object' ? theme : DEFAULT_THEME;
+    
+    // Determine if it's a light theme
+    const isLightTheme = lightThemeNames.includes(themeToApply.name);
+
+    for (const [key, value] of Object.entries(themeToApply)) {
+        if (key !== 'logo-src' && key !== 'name') {
+            root.style.setProperty(`--${key}`, value);
+        }
+    }
+
+    // Apply specific colors for light themes
+    if (isLightTheme) {
+        root.style.setProperty('--menu-username-text', '#000000'); // Black for username
+        root.style.setProperty('--menu-email-text', '#333333');   // Dark grey for email
+    } else {
+        // Revert to theme's default or global default
+        root.style.setProperty('--menu-username-text', themeToApply['menu-username-text'] || DEFAULT_THEME['menu-username-text']);
+        root.style.setProperty('--menu-email-text', themeToApply['menu-email-text'] || DEFAULT_THEME['menu-email-text']);
+    }
+
+    const logoImg = document.getElementById('navbar-logo');
+    if (logoImg) {
+        let newLogoSrc;
+        if (themeToApply.name === 'Christmas') {
+            newLogoSrc = '/images/logo-christmas.png';
+        } else {
+            newLogoSrc = themeToApply['logo-src'] || DEFAULT_THEME['logo-src'];
+        }
+        const currentSrc = logoImg.src;
+        const expectedSrc = new URL(newLogoSrc, window.location.origin).href;
+        if (currentSrc !== expectedSrc) {
+            logoImg.src = newLogoSrc;
+        }
+
+        // --- NEW: Logo Tinting Logic ---
+const noFilterThemes = ['Dark', 'Light', 'Christmas'];
+
+if (noFilterThemes.includes(themeToApply.name)) {
+    // Reset styles for themes that don't need tinting
+    logoImg.style.filter = ''; 
+    logoImg.style.transform = '';
+} else {
+    // 1. Get the highlight color from the theme (e.g., the tab text color)
+    // You can choose 'navbar-border' or 'tab-active-text' depending on preference
+    const tintColor = themeToApply['tab-active-text'] || '#ffffff';
+
+    // 2. Create a colored shadow 100px to the right, and move the actual image 100px to the left
+    // This hides the white image and shows only the colored shadow
+    logoImg.style.filter = `drop-shadow(100px 0 0 ${tintColor})`;
+    logoImg.style.transform = 'translateX(-100px)';
+}
+// --- END NEW: Logo Tinting Logic ---
+    }
+};
+
+// --- Self-invoking function to encapsulate all logic ---
+
  * an inverse scale transform to the navbar. This forces the navbar to appear the
  * same physical size regardless of zoom.
  */
@@ -146,13 +241,22 @@ const applyCounterZoom = () => {
             await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js");
             await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js");
 
-            // Now that scripts are loaded, we can use the `firebase` global object
-            initializeApp(); // No longer passing pages here as allPages is global
-            
             // We need to inject the styles and setup the container immediately
             // so the onAuthStateChanged listener can call renderNavbar successfully.
             injectStyles();
             setupContainer(); 
+
+            let savedTheme;
+            try {
+                savedTheme = JSON.parse(localStorage.getItem(THEME_STORAGE_KEY));
+            } catch (e) {
+                savedTheme = null;
+                console.warn("Could not parse saved theme from Local Storage.");
+            }
+            window.applyTheme(savedTheme || DEFAULT_THEME);
+            
+            // Now that scripts are loaded, we can use the `firebase` global object
+            initializeApp(); // No longer passing pages here as allPages is global
             
         } catch (error) {
             console.error("Failed to load necessary SDKs or Font Awesome:", error);
@@ -538,7 +642,7 @@ const applyCounterZoom = () => {
         const container = document.getElementById('navbar-container');
         if (!container) return; // Should not happen if setupContainer runs
 
-        const logoPath = "/images/logo-christmas.png"; // Using root-relative path
+        const logoPath = DEFAULT_THEME['logo-src']; 
         const currentPagePath = window.location.pathname; // Get current path for conditional links
 
         // UPDATED: Use a function to render the conditional links
@@ -654,7 +758,7 @@ const applyCounterZoom = () => {
             <header class="auth-navbar">
                 <nav>
                     <a href="/" class="flex items-center space-x-2">
-                        <img src="${logoPath}" alt="4SP Logo" class="h-10 w-auto">
+                        <img src="${logoPath}" alt="4SP Logo" class="h-10 w-auto" id="navbar-logo">
                     </a>
                     <div id="auth-controls-wrapper-mini" class="flex items-center gap-3 flex-shrink-0">
                         ${user ? loggedInView(user, userData) : loggedOutView(currentPagePath)}
@@ -723,6 +827,15 @@ const applyCounterZoom = () => {
                 try {
                     const userDoc = await db.collection('users').doc(user.uid).get();
                     currentUserData = userDoc.exists ? userDoc.data() : null; // Update global var
+                    
+                    // --- NEW: Apply Theme from Firestore ---
+                    if (currentUserData && currentUserData.navbarTheme) {
+                        window.applyTheme(currentUserData.navbarTheme);
+                        // Sync to local storage for future page loads
+                        localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(currentUserData.navbarTheme));
+                    }
+                    // ---------------------------------------
+
                     renderNavbar(user, currentUserData);
                     updatePinButtonArea(); // <--- ADD THIS LINE
                 } catch (error) {
