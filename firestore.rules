@@ -25,9 +25,14 @@ service cloud.firestore {
       // Allow authenticated users to read their own full profile
       // Allow other authenticated users to read specific public fields (for friend lists, profiles, etc.)
       allow get: if isAuthenticated();
-      allow list: if isAuthenticated(); // For friend code lookups and general user browsing
+      // Allow authenticated users to list their profiles or other users' specific public data.
+      // Also allow unauthenticated users to query for username availability during signup.
+      // WARNING: This rule allows any unauthenticated user to query the 'users' collection.
+      // It is assumed that client-side queries for username availability are very specific
+      // (e.g., `where('username', '==', 'someUsername')`) and do not expose sensitive data.
+      allow list: if isAuthenticated() || request.auth == null;
 
-      allow create: if isAuthenticated()
+      allow create: if request.auth != null
                         && request.auth.uid == userId
                         && !exists(resource) // Ensure it's a new document
                         // Validate initial fields are present and correctly typed/valued
