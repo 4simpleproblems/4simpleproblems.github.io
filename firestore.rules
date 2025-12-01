@@ -17,6 +17,22 @@ service cloud.firestore {
       return username is string && username.matches(/^[a-zA-Z0-9.,_!?-]{6,24}$/);
     }
 
+    function getAdmin(uid) {
+      return get(/databases/$(database)/documents/admins/$(uid));
+    }
+
+    function isAdmin(uid) {
+      return isAuthenticated() && exists(getAdmin(uid));
+    }
+
+    function isSuperadmin(uid) {
+      return isAdmin(uid) && getAdmin(uid).data.role == 'superadmin';
+    }
+
+    function isTopSuperadmin(uid) {
+      return isSuperadmin(uid) && getAdmin(uid).data.email == '4simpleproblems@gmail.com';
+    }
+
     // =========================================================================
     // USERS COLLECTION: /users/{userId}
     // Stores user profiles, settings, friends lists, etc.
@@ -79,9 +95,6 @@ service cloud.firestore {
                             ||
                             (
                                 isValidUsername(request.resource.data.username)
-                                && request.resource.data.usernameChangesThisMonth == (resource.data.usernameChangesThisMonth + 1)
-                                && request.resource.data.usernameChangesThisMonth <= 5 // Max 5 changes per month
-                                && request.resource.data.lastUsernameChangeMonth == request.time.month
                             )
                         )
                         // pfpType update
@@ -131,6 +144,62 @@ service cloud.firestore {
                         && request.resource.data.pending_requests is list;
 
       allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // =========================================================================
+    // ADMINS COLLECTION: /admins/{adminId}
+    // Stores information about users with administrative roles.
+    // =========================================================================
+    match /admins/{adminId} {
+      // Allow only authenticated users with 'admin' or 'superadmin' role to read the admin list.
+      allow read: if isAdmin(request.auth.uid) || isSuperadmin(request.auth.uid);
+
+      // Allow only superadmins to create new admin entries.
+      // A new entry must specify 'admin' or 'superadmin' role and include basic info.
+      allow create: if isSuperadmin(request.auth.uid)
+                        && request.auth.uid != adminId // Superadmin can't create own admin entry
+                        && request.resource.data.keys().hasAll(['role', 'addedBy', 'addedAt', 'username', 'email'])
+                        && request.resource.data.role in ['admin', 'superadmin']
+                        && request.resource.data.addedBy == request.auth.uid
+                        && request.resource.data.addedAt == request.time
+                        && request.resource.data.username is string
+                        && request.resource.data.email is string;
+
+      // Allow only superadmins to update admin entries (e.g., change role from admin to superadmin).
+      // Disallow updating the top superadmin (4simpleproblems@gmail.com).
+      allow update: if isSuperadmin(request.auth.uid)
+                        && !isTopSuperadmin(adminId) // Cannot update the top superadmin
+                        && request.resource.data.role in ['admin', 'superadmin'] // Role can be changed
+                        // Ensure immutable fields are not changed
+                        && request.resource.data.addedBy == resource.data.addedBy
+                        && request.resource.data.addedAt == resource.data.addedAt
+                        && request.resource.data.username == resource.data.username
+                        && request.resource.data.email == resource.data.email;
+
+      // Allow only superadmins to delete admin entries.
+      // Disallow deleting the top superadmin (4simpleproblems@gmail.com).
+      allow delete: if isSuperadmin(request.auth.uid) && !isTopSuperadmin(adminId);
+    }
+
+    // =========================================================================
+    // BANS COLLECTION: /bans/{banId}
+    // Stores information about banned users.
+    // =========================================================================
+    match /bans/{banId} {
+      // Only admins or superadmins can create ban entries.
+      allow create: if isAdmin(request.auth.uid) || isSuperadmin(request.auth.uid)
+                        && request.resource.data.keys().hasAll(['uid', 'reason', 'bannedBy', 'bannedAt', 'duration'])
+                        && request.resource.data.uid == banId
+                        && request.resource.data.reason is string
+                        && request.resource.data.bannedBy == request.auth.uid
+                        && request.resource.data.bannedAt == request.time
+                        && request.resource.data.duration is string;
+
+      // Only admins or superadmins can read ban entries.
+      allow read: if isAdmin(request.auth.uid) || isSuperadmin(request.auth.uid);
+
+      // Only admins or superadmins can delete (unban) ban entries.
+      allow delete: if isAdmin(request.auth.uid) || isSuperadmin(request.auth.uid);
     }
 
     // =========================================================================
@@ -226,6 +295,7 @@ service cloud.firestore {
                         && request.resource.data.createdAt == request.time
                         && request.resource.data.code == code // Ensure code matches path
                         && request.resource.data.code.size() == 8;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
   }
 }
