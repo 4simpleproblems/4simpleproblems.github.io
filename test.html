@@ -3,135 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4SP - DOCUMENTATION</title>
-    <meta name="description" content="Your comprehensive guide to getting the most out of the 4SP Essential Student Toolkit.">
-    
+    <title>4SP - ACCESS ACCOUNT</title>
+    <meta name="description" content="Log into or create your 4SP account to access the student toolkit.">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
+    <script src="../navigation-mini.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-
+    <script>
+        // Unified Tailwind CSS configuration for a consistent dark theme
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-darkest-gray': '#040404', // Body background
+                        'custom-dark-gray': '#111111',    // Form container background
+                        'custom-medium-gray': '#252525', // Borders, inputs, buttons
+                        'custom-light-gray': '#505050',  // Labels and secondary text
+                        'custom-lighter-gray': '#808080', // Hover states and subtle text
+                        'custom-white-gray': '#c0c0c0',  // Main text and headings
+                    }
+                }
+            }
+        }
+    </script>
+    
     <style>
         :root {
-            --bg-page: #040404;
-            --bg-container: #000000;
-            --border-color: #333;
-            --text-primary: #c0c0c0;
-            --text-secondary: #a0a0a0;
+            --geist-foreground: 192, 192, 192; /* custom-white-gray */
+            --geist-background: 7, 7, 7;       /* custom-darkest-gray */
         }
 
-        body { 
-            font-family: 'Geist', sans-serif; 
-            background-color: var(--bg-page);
-            color: var(--text-primary);
-            font-weight: 300;
+        body {
+            font-family: 'Geist', sans-serif;
+            background-color: rgb(var(--geist-background));
+            color: rgb(var(--geist-foreground));
+            transition: all 0.3s ease;
+            font-weight: 300; /* CUSTOM: Lighter base font weight */
         }
 
-        h1, h2, h3, .font-bold, .font-semibold, strong {
+        /* CUSTOM: Lighter bold/headings to match notes.html */
+        h1, h2, h3, .font-bold, .font-semibold, strong, .tracking-tighter {
             font-weight: 400 !important;
         }
-        
-        .btn-toolbar-style {
-            background: #0000000;
-            border: 1px solid #333;
-            border-radius: 0.75rem;
-            color: #d1d5db;
-            padding: 0.5rem 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
+
+        .btn-social {
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
-        .btn-toolbar-style:hover {
-            background-color: #000000;
-            border-color: #fff;
-            color: #ffffff;
+        .btn-social:hover {
+            /* Keep existing hover effect for social buttons */
+            background-color: rgba(37, 37, 37, 0.7); /* custom-medium-gray with transparency */
+            border-color: #383838;
         }
         
-        .settings-tab {
-            width: 100%;
-            justify-content: flex-start;
-        }
-        .settings-tab.active {
-            background-color: rgba(79, 70, 229, 0.1);
-            border: 1px solid #4f46e5;
-            color: #4f46e5;
-        }
-        .settings-tab.active:hover {
-             background-color: rgba(79, 70, 229, 0.15);
-            border-color: #6366f1;
-            color: #6366f1;
-        }
+        .message-area { min-height: 20px; }
+        .error-message { color: #f87171; font-weight: 400; /* Match new heading weight */ }
+        .success-message { color: #4ade80; font-weight: 400; }
+        .warning-message { color: #fbbf24; font-weight: 400; }
         
-        #page-content {
-            min-height: calc(100vh - 4rem);
-            display: flex;
-            flex-direction: column;
-        }
-
-        #documentation-container {
-            display: flex;
-            flex-grow: 1;
-            padding: 20px;
-            min-height: calc(100vh - 4rem - 40px); 
-            max-width: 1200px; /* Limit width to be readable */
-            margin: 0 auto; /* Center the container */
-        }
-
-        #documentation-sidebar {
-            width: 250px;
-            padding-right: 20px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            position: sticky; 
-            top: 4.5rem; 
-            align-self: flex-start; 
-        }
-
-        #documentation-main-view {
-            flex-grow: 1;
-            padding: 20px;
-            background-color: #0d0d0d;
-            border: 1px solid #1a1a1a;
-            border-radius: 0.75rem;
-            min-height: 100%; 
-            display: flex;
-            flex-direction: column; 
-            align-items: flex-start;
-        }
-
-        .documentation-section {
-            display: none; /* Hidden by default, shown by JS */
-            width: 100%;
-        }
-
-        .documentation-section.active {
-            display: block;
-        }
-
-        .image-placeholder {
-            border: 2px dashed var(--border-color);
-            background-color: #111;
-            border-radius: 16px;
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--text-secondary);
-            margin-top: 1rem;
-            max-width: 600px; /* Constrain image width */
-            object-fit: cover; /* Ensure image covers the area nicely */
+        .auth-split-container { max-width: 1200px; margin: 0 auto; }
+        @media (min-width: 768px) { .auth-col { } }
+        @media (max-width: 767px) {
+            .right-col { display: none; }
+            .left-col { border-right: none; }
         }
     </style>
-<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1D4F692C1Q"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -142,209 +80,471 @@
 </script>
     
 </head>
-<body class="min-h-screen">
+<body class="bg-custom-darkest-gray text-custom-white-gray min-h-screen flex flex-col">
 
-    <div id="page-content">
-        <header class="flex justify-between items-center p-4 border-b border-[#1a1a1a]">
-            <h1 class="text-2xl font-bold text-white">4SP Documentation</h1>
-        </header>
+    <div id="navbar-container"></div>
+    <main class="flex-grow flex items-stretch justify-center p-0">
+        <div class="auth-split-container bg-custom-darkest-gray flex flex-wrap w-full border-0 overflow-hidden p-0">
+            <div class="auth-col left-col flex-1 p-8 flex flex-col justify-center items-center bg-custom-darkest-gray min-w-[300px]">
 
-        <div id="documentation-container">
-            <nav id="documentation-sidebar">
-                <button class="btn-toolbar-style settings-tab active" data-tab="authenticate">
-                    <i class="fa-solid fa-lock w-5"></i> <span>How to Authenticate</span>
-                </button>
-                <button class="btn-toolbar-style settings-tab" data-tab="navigate">
-                    <i class="fa-solid fa-compass w-5"></i> <span>How to Navigate</span>
-                </button>
-                <button class="btn-toolbar-style settings-tab" data-tab="game-categories">
-                    <i class="fa-solid fa-gamepad w-5"></i> <span>How to Switch Game Categories</span>
-                </button>
-                <button class="btn-toolbar-style settings-tab" data-tab="themes">
-                    <i class="fa-solid fa-palette w-5"></i> <span>How to Change Themes</span>
-                </button>
-                <button class="btn-toolbar-style settings-tab" data-tab="providers">
-                    <i class="fa-solid fa-link w-5"></i> <span>How to Link Providers</span>
-                </button>
-                <button class="btn-toolbar-style settings-tab" data-tab="pin-button">
-                    <i class="fa-solid fa-thumbtack w-5"></i> <span>How to use the Pin Button</span>
-                </button>
-                <button class="btn-toolbar-style settings-tab" data-tab="panic-keys">
-                    <i class="fa-solid fa-hand-paper w-5"></i> <span>How to use Panic Keys</span>
-                </button>
-                <button class="btn-toolbar-style settings-tab" data-tab="tab-disguiser">
-                    <i class="fa-solid fa-mask w-5"></i> <span>How to use Tab Disguiser</span>
-                </button>
-                <button class="btn-toolbar-style settings-tab" data-tab="mibi-avatar">
-                    <i class="fa-solid fa-user-circle w-5"></i> <span>How to use your Mibi Avatar</span>
-                </button>
-                <button class="btn-toolbar-style settings-tab" data-tab="messenger-2">
-                    <i class="fa-solid fa-comments w-5"></i> <span>How to open the Messenger 2.0</span>
-                </button>
-                <button class="btn-toolbar-style settings-tab" data-tab="dailyphoto-friends">
-                    <i class="fa-solid fa-users w-5"></i> <span>How to add friends on Dailyphoto</span>
-                </button>
-            </nav>
+                <div id="loginContainer" class="w-full flex flex-col items-center">
+                    <h2 class="text-3xl font-normal text-custom-white-gray mb-6 text-center w-full tracking-tighter">Login to Your Account</h2>
+                    <form id="loginForm" novalidate class="w-full max-w-md"> 
+                        <div class="mb-5">
+                            <label for="loginEmail" class="block mb-2 text-custom-light-gray text-sm font-light text-left">Email</label>
+                            <input type="email" id="loginEmail" placeholder="Enter your email" required class="w-full p-3 border border-custom-medium-gray bg-custom-dark-gray rounded-xl text-custom-white-gray transition focus:border-custom-light-gray focus:ring focus:ring-custom-light-gray/50 focus:outline-none">
+                        </div>
+                        <div class="mb-5">
+                            <label for="loginPassword" class="block mb-2 text-custom-light-gray text-sm font-light text-left">Password</label>
+                            <input type="password" id="loginPassword" placeholder="Enter your password" required class="w-full p-3 border border-custom-medium-gray bg-custom-dark-gray rounded-xl text-custom-white-gray transition focus:border-custom-light-gray focus:ring focus:ring-custom-light-gray/50 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full p-3 text-lg rounded-xl font-normal ring-1 ring-white/20 text-white bg-white/5 hover:bg-white/10 transition">LOGIN</button>
+                    </form>
+                    <div id="loginMessage" class="message-area w-full max-w-md mt-4 text-center text-sm"></div>
+                    <div class="w-full max-w-md mt-4 text-center"> 
+                        <a id="forgotPasswordLink" class="text-white hover:text-gray-300 font-normal text-sm cursor-pointer">Forgot Password?</a> 
+                    </div>
+                    <p class="text-sm text-custom-light-gray mt-6 text-center w-full max-w-md">
+                        Don't have an account? 
+                        <a id="showSignupLink" href="#" class="text-white hover:text-gray-300 font-normal transition">Sign up here</a>
+                    </p>
+                </div>
 
-            <div id="documentation-main-view">
+                <div id="resetPasswordContainer" class="w-full flex-col items-center" style="display: none;">
+                    <h2 class="text-3xl font-normal text-custom-white-gray mb-6 text-center w-full tracking-tighter">Reset Your Password</h2>
+                    <p class="text-custom-light-gray text-base mb-6 text-center max-w-md font-normal">Enter your email address and we'll send you a link to reset your password.</p>
+                    <form id="resetPasswordForm" novalidate class="w-full max-w-md">
+                        <div class="mb-5">
+                            <label for="resetEmail" class="block mb-2 text-custom-light-gray text-sm font-light text-left">Email</label>
+                            <input type="email" id="resetEmail" placeholder="Enter your registered email" required class="w-full p-3 border border-custom-medium-gray bg-custom-dark-gray rounded-xl text-custom-white-gray transition focus:border-custom-light-gray focus:ring focus:ring-custom-light-gray/50 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full p-3 text-lg rounded-xl font-normal ring-1 ring-white/20 text-white bg-white/5 hover:bg-white/10 transition">SEND RESET LINK</button>
+                    </form>
+                    <div id="resetMessage" class="message-area w-full max-w-md mt-4 text-center text-sm"></div>
+                    <div class="w-full max-w-md mt-6 text-center"> 
+                        <a id="backToLoginLink" class="text-white hover:text-gray-300 font-normal text-sm cursor-pointer">&larr; Back to Login</a> 
+                    </div>
+                </div>
+
+                <div id="usernameContainer" class="w-full flex-col items-center" style="display: none;">
+                    <h2 class="text-3xl font-normal text-custom-white-gray mb-6 text-center w-full tracking-tighter">Choose Your Username</h2>
+                    <form id="usernameForm" novalidate class="w-full max-w-md"> 
+                        <div class="mb-5">
+                            <label for="signupUsername" class="block mb-2 text-custom-light-gray text-sm font-light text-left">Username</label>
+                            <input type="text" id="signupUsername" placeholder="6-24 characters, including symbols" required class="w-full p-3 border border-custom-medium-gray bg-custom-dark-gray rounded-xl text-custom-white-gray transition focus:border-custom-light-gray focus:ring focus:ring-custom-light-gray/50 focus:outline-none">
+                            <p class="text-xs text-custom-lighter-gray mt-2 text-left font-light">Allowed symbols: .,-+\_!?$</p>
+                        </div>
+                        <button type="submit" class="w-full p-3 text-lg rounded-xl font-normal ring-1 ring-white/20 text-white bg-white/5 hover:bg-white/10 transition">NEXT</button>
+                    </form>
+                    <div id="usernameMessage" class="message-area w-full max-w-md mt-4 text-center text-sm"></div>
+                    <p class="text-sm text-custom-light-gray mt-6 text-center w-full max-w-md">
+                        Already have an account? 
+                        <a id="showLoginLink" href="#" class="text-white hover:text-gray-300 font-normal transition">Login here</a>
+                    </p>
+                </div>
                 
-                <div id="authenticate-section" class="documentation-section active">
-                    <h2 class="text-3xl font-medium mb-4">How to Authenticate</h2>
-                    <p class="text-lg text-gray-400">
-                        Instructions on how to log in or create an account using various authentication methods, including email/password and social providers.
-                    </p>
-                    <img src="https://via.placeholder.com/600x400?text=Authentication+Image" alt="Authentication Screenshot" class="image-placeholder">
-                </div>
-
-                <div id="navigate-section" class="documentation-section">
-                    <h2 class="text-3xl font-medium mb-4">How to Navigate</h2>
-                    <p class="text-lg text-gray-400">
-                        Learn how to efficiently move between different sections and features of the 4SP toolkit.
-                    </p>
-                    <img src="https://via.placeholder.com/600x400?text=Navigation+Image" alt="Navigation Screenshot" class="image-placeholder">
-                </div>
-
-                <div id="game-categories-section" class="documentation-section">
-                    <h2 class="text-3xl font-medium mb-4">How to Switch Game Categories</h2>
-                    <p class="text-lg text-gray-400">
-                        Detailed steps on how to change and filter different categories of games available in the platform.
-                    </p>
-                    <img src="https://via.placeholder.com/600x400?text=Game+Categories+Image" alt="Game Categories Screenshot" class="image-placeholder">
-                </div>
-
-                <div id="themes-section" class="documentation-section">
-                    <h2 class="text-3xl font-medium mb-4">How to Change Themes</h2>
-                    <p class="text-lg text-gray-400">
-                        Customize your 4SP experience by learning how to switch between different visual themes.
-                    </p>
-                    <img src="https://via.placeholder.com/600x400?text=Themes+Image" alt="Themes Screenshot" class="image-placeholder">
-                </div>
-
-                <div id="providers-section" class="documentation-section">
-                    <h2 class="text-3xl font-medium mb-4">How to Link Providers</h2>
-                    <p class="text-lg text-gray-400">
-                        Connect your 4SP account with external services and providers for enhanced functionality.
-                    </p>
-                    <img src="https://via.placeholder.com/600x400?text=Link+Providers+Image" alt="Link Providers Screenshot" class="image-placeholder">
-                </div>
-
-                <div id="pin-button-section" class="documentation-section">
-                    <h2 class="text-3xl font-medium mb-4">How to use the Pin Button</h2>
-                    <p class="text-lg text-gray-400">
-                        Understand the functionality of the pin button to quickly access your favorite pages or tools.
-                    </p>
-                    <img src="https://via.placeholder.com/600x400?text=Pin+Button+Image" alt="Pin Button Screenshot" class="image-placeholder">
-                </div>
-
-                <div id="panic-keys-section" class="documentation-section">
-                    <h2 class="text-3xl font-medium mb-4">How to use Panic Keys</h2>
-                    <p class="text-lg text-gray-400">
-                        Learn how to set up and effectively use panic keys for quick and discreet exits.
-                    </p>
-                    <img src="https://via.placeholder.com/600x400?text=Panic+Keys+Image" alt="Panic Keys Screenshot" class="image-placeholder">
-                </div>
-
-                <div id="tab-disguiser-section" class="documentation-section">
-                    <h2 class="text-3xl font-medium mb-4">How to use Tab Disguiser</h2>
-                    <p class="text-lg text-gray-400">
-                        Instructions on how to use the tab disguiser feature to quickly change your tab's appearance and title.
-                    </p>
-                    <img src="https://via.placeholder.com/600x400?text=Tab+Disguiser+Image" alt="Tab Disguiser Screenshot" class="image-placeholder">
-                </div>
-
-                <div id="mibi-avatar-section" class="documentation-section">
-                    <h2 class="text-3xl font-medium mb-4">How to use your Mibi Avatar</h2>
-                    <p class="text-lg text-gray-400">
-                        Personalize your profile with a Mibi Avatar and learn how to customize its various components.
-                    </p>
-                    <img src="https://via.placeholder.com/600x400?text=Mibi+Avatar+Image" alt="Mibi Avatar Screenshot" class="image-placeholder">
-                </div>
-
-                <div id="messenger-2-section" class="documentation-section">
-                    <h2 class="text-3xl font-medium mb-4">How to open the Messenger 2.0</h2>
-                    <p class="text-lg text-gray-400">
-                        To access Messenger 2.0, you first need to download the HTML file from the 
-                        <a href="logged-in/messenger-tutorial.html" class="text-blue-400 hover:underline">Messenger Tutorial page</a>.
-                        Once downloaded, navigate to the files app where the HTML file was saved.
-                        Then, you have two options to open it:
-                    </p>
-                    <ol class="list-decimal list-inside text-lg text-gray-400 ml-4 mt-2">
-                        <li>Double-click the file (this works on most file managers).</li>
-                        <li>Right-click the file and select "Open" from the context menu.</li>
-                    </ol>
-                    <p class="text-lg text-red-400 mt-4">
-                        <strong>Important:</strong> If these methods do not work, HTML file opening might not be supported on your device or browser configuration.
-                    </p>
-                    <img src="https://via.placeholder.com/600x400?text=Messenger+2.0+Image" alt="Messenger 2.0 Screenshot" class="image-placeholder">
-                </div>
-
-                <div id="dailyphoto-friends-section" class="documentation-section">
-                    <h2 class="text-3xl font-medium mb-4">How to add friends on Dailyphoto</h2>
-                    <p class="text-lg text-gray-400">
-                        Learn how to connect with friends and share your daily photos within the Dailyphoto application.
-                    </p>
-                    <img src="https://via.placeholder.com/600x400?text=Dailyphoto+Friends+Image" alt="Dailyphoto Friends Screenshot" class="image-placeholder">
+                <div id="signupContainer" class="w-full flex-col items-center" style="display: none;">
+                    <h2 class="text-3xl font-normal text-custom-white-gray mb-6 text-center w-full tracking-tighter">Set Your Credentials</h2>
+                    <form id="signupForm" novalidate class="w-full max-w-md"> 
+                        <div class="mb-5">
+                            <label for="signupEmail" class="block mb-2 text-custom-light-gray text-sm font-light text-left">Email</label>
+                            <input type="email" id="signupEmail" placeholder="Enter your email" required class="w-full p-3 border border-custom-medium-gray bg-custom-dark-gray rounded-xl text-custom-white-gray transition focus:border-custom-light-gray focus:ring focus:ring-custom-light-gray/50 focus:outline-none">
+                        </div>
+                        <div class="mb-5">
+                            <label for="signupPassword" class="block mb-2 text-custom-light-gray text-sm font-light text-left">Password</label>
+                            <input type="password" id="signupPassword" placeholder="Enter your password" required class="w-full p-3 border border-custom-medium-gray bg-custom-dark-gray rounded-xl text-custom-white-gray transition focus:border-custom-light-gray focus:ring focus:ring-custom-light-gray/50 focus:outline-none">
+                            <p class="text-xs text-custom-lighter-gray mt-2 text-left font-light">At least 6 characters.</p>
+                        </div>
+                        <button type="submit" class="w-full p-3 text-lg rounded-xl font-normal ring-1 ring-white/20 text-white bg-white/5 hover:bg-white/10 transition">CREATE ACCOUNT</button>
+                    </form>
+                    <div id="signupMessage" class="message-area w-full max-w-md mt-4 text-center text-sm"></div>
+                    <div class="w-full max-w-md mt-6 text-center"> 
+                        <a id="backToUsernameLink" class="text-white hover:text-gray-300 font-normal text-sm cursor-pointer">&larr; Back to Username</a> 
+                    </div>
                 </div>
 
             </div>
+
+            <div class="auth-col right-col flex-1 p-8 flex flex-col justify-center items-center bg-custom-darkest-gray">
+                <div class="w-full flex flex-col items-center justify-center">
+                    <h2 class="text-3xl font-normal text-custom-white-gray mb-6 text-center w-full tracking-tighter">Continue instantly</h2>
+                    <p class="text-lg text-custom-light-gray mb-8 text-center max-w-md font-normal">
+                        Use a trusted provider to sign in or create an account in one click.
+                    </p>
+                    
+                    <button id="googleAuthBtn" class="btn-social flex items-center justify-center w-full max-w-md p-3 bg-custom-dark-gray text-custom-white-gray border border-custom-medium-gray rounded-xl font-normal cursor-pointer mb-3">
+                        <img src="images/google-icon.png" alt="Google Logo" class="w-6 h-6 mr-3">
+                        Continue with Google
+                    </button>
+                    <button id="microsoftAuthBtn" class="btn-social flex items-center justify-center w-full max-w-md p-3 bg-custom-dark-gray text-custom-white-gray border border-custom-medium-gray rounded-xl font-normal cursor-pointer mb-3">
+                        <img src="images/microsoft.png" alt="Microsoft Logo" class="w-6 h-6 mr-3">
+                        Continue with Microsoft
+                    </button>
+                    <button id="githubAuthBtn" class="btn-social flex items-center justify-center w-full max-w-md p-3 bg-custom-dark-gray text-custom-white-gray border border-custom-medium-gray rounded-xl font-normal cursor-pointer mb-3">
+                        <img src="images/github-mark-white.png" alt="GitHub Logo" class="w-6 h-6 mr-3">
+                        Continue with GitHub
+                    </button>
+                    
+                    <button id="twitterAuthBtn" class="btn-social flex items-center justify-center w-full max-w-md p-3 bg-custom-dark-gray text-custom-white-gray border border-custom-medium-gray rounded-xl font-normal cursor-pointer mb-3">
+                        <img src="../images/x.png" alt="X Logo" class="w-6 h-6 mr-3">
+                        Continue with X
+                    </button>
+
+                    
+                    <p class="text-xs italic text-custom-light-gray text-center max-w-md mt-4 leading-relaxed font-light">
+                        By continuing, you agree to our 
+                        <a href="legal.html#terms-of-service" target="_blank" class="text-white hover:text-gray-300 font-normal">Terms of Service</a> and 
+                        <a href="legal.html#privacy-policy" target="_blank" class="text-white hover:text-gray-300 font-normal">Privacy Policy</a>.
+                    </p>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <script src="navigation-mini.js"></script>
+    </main>
 
-    <script>
+    <footer class="border-t border-gray-900 py-6">
+        <div class="mx-auto max-w-7xl px-4 text-center text-gray-500 text-sm">
+            &copy; 2025 4simpleproblems (4SP). Built for students.
+            <span class="mx-2">|</span>
+            <a href="legal.html#terms-of-service" class="hover:underline">Terms of Service</a>
+            <span class="mx-2">|</span>
+            <a href="legal.html#privacy-policy" class="hover:underline">Privacy Policy</a>
+        </div>
+    </footer>
+
+<script type="module">
+        // --- Firebase Imports (Combined) ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import {
+            getAuth,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            sendPasswordResetEmail,
+            sendEmailVerification,
+            fetchSignInMethodsForEmail,
+            signOut,
+            GoogleAuthProvider,
+            GithubAuthProvider,
+            TwitterAuthProvider,
+            OAuthProvider,
+            signInWithPopup,
+            setPersistence,
+            browserLocalPersistence,
+            getAdditionalUserInfo
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc, 
+            setDoc, 
+            collection,
+            query,
+            where,
+            getDocs,
+            serverTimestamp,
+            setLogLevel
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        
+        // --- Import Firebase Config ---
+        import { firebaseConfig } from "./firebase-config.js"; 
+
+        // --- Canvas Global Variables (MANDATORY USE) ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        if (!firebaseConfig || !firebaseConfig.apiKey) {
+            console.error("FATAL ERROR: Firebase configuration is missing or invalid.");
+        }
+
+        // --- Firebase Initialization ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        setLogLevel('debug'); // Enable Firestore logging
+
+
+
+        // --- Unified Data Model ---
+        // All user profile data will be stored in a top-level 'users' collection.
+        const getUserDocRef = (userId) => doc(db, 'users', userId);
+        let selectedUsername = null; // Store username between signup steps
+
+        // --- DOM Elements ---
+        const containers = {
+            login: document.getElementById('loginContainer'),
+            reset: document.getElementById('resetPasswordContainer'),
+            username: document.getElementById('usernameContainer'),
+            signup: document.getElementById('signupContainer')
+        };
+        const messageDivs = {
+            login: document.getElementById('loginMessage'),
+            reset: document.getElementById('resetMessage'),
+            username: document.getElementById('usernameMessage'),
+            signup: document.getElementById('signupMessage')
+        };
+
+        // --- View Management ---
+        const showView = (viewName) => {
+            Object.values(messageDivs).forEach(div => div.innerHTML = '');
+            for (const key in containers) {
+                containers[key].style.display = (key === viewName) ? 'flex' : 'none';
+                if (key === viewName) {
+                    containers[key].style.flexDirection = 'column';
+                }
+            }
+        };
+
+        // --- Helper Functions ---
+        const showMessage = (element, text, type = 'error') => {
+            element.innerHTML = text;
+            element.className = `message-area w-full max-w-md mt-4 text-center text-sm ${type}-message`;
+        };
+
+        const navigateToDashboard = () => window.location.href = 'logged-in/dashboard.html';
+
+        const createUserDocument = async (user, authMethod, username) => {
+            const isVerified = authMethod !== 'email' || !!user.emailVerified;
+            try {
+                await setDoc(getUserDocRef(user.uid), {
+                    email: user.email, 
+                    authMethod: authMethod, 
+                    createdAt: serverTimestamp(),
+                    username: username, 
+                    emailVerified: isVerified
+                });
+                return true;
+            } catch (error) { 
+                console.error("Error creating user document:", error); 
+                return false; 
+            }
+        };
+
+        const handleSuccessfulLogin = async (user) => {
+            await setPersistence(auth, browserLocalPersistence);
+            
+
+            
+            const isProviderLogin = user.providerData.some(p => ['google.com', 'github.com', 'twitter.com', 'microsoft.com'].includes(p.providerId));
+            
+            if (user.emailVerified || isProviderLogin) {
+                navigateToDashboard();
+            } else {
+                showMessage(messageDivs.login, 'Your email is not verified. Please check your inbox. <a href="#" id="resend-link" class="underline cursor-pointer">Resend email</a>', 'error');
+                document.getElementById('resend-link').addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    try {
+                        await sendEmailVerification(user);
+                        showMessage(messageDivs.login, 'A new verification link has been sent!', 'success');
+                    } catch (err) { showMessage(messageDivs.login, `Error sending email: ${err.message}`); }
+                });
+                await signOut(auth);
+            }
+        };
+
+        const checkProfanity = async (text) => {
+            try {
+                const response = await fetch(`https://www.purgomalum.com/service/containsprofanity?text=${encodeURIComponent(text)}`);
+                const result = await response.text();
+                return result.toLowerCase() === 'true';
+            } catch (error) { console.error('Profanity API error:', error); return false; }
+        };
+
+        const isUsernameTaken = async (username) => {
+            const q = query(collection(db, 'users'), where('username', '==', username));
+            const querySnapshot = await getDocs(q);
+            return !querySnapshot.empty;
+        };
+
+        const validateEmail = (email) => {
+            // Robust regex check for basic email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email) return 'Email is required.';
+            if (!emailRegex.test(email)) return 'The email address format is invalid.';
+            return null;
+        };
+        
+        const validatePassword = (password) => {
+            if (password.length < 6) return 'Password must be at least 6 characters.';
+
+            return null;
+        };
+
+        // --- Event Listener Setup ---
         document.addEventListener('DOMContentLoaded', () => {
-            const tabs = document.querySelectorAll('#documentation-sidebar .settings-tab');
-            const sections = document.querySelectorAll('#documentation-main-view .documentation-section');
+            // Initial view
+            showView('login');
 
-            function showSection(tabId) {
-                sections.forEach(section => {
-                    section.classList.remove('active');
-                });
-                tabs.forEach(tab => {
-                    tab.classList.remove('active');
-                });
+            // --- View Navigation ---
+            document.getElementById('showSignupLink').addEventListener('click', (e) => { e.preventDefault(); showView('username'); });
+            document.getElementById('showLoginLink').addEventListener('click', (e) => { e.preventDefault(); showView('login'); });
+            document.getElementById('forgotPasswordLink').addEventListener('click', () => showView('reset'));
+            document.getElementById('backToLoginLink').addEventListener('click', () => showView('login'));
+            document.getElementById('backToUsernameLink').addEventListener('click', () => showView('username'));
 
-                document.getElementById(`${tabId}-section`).classList.add('active');
-                document.querySelector(`.settings-tab[data-tab="${tabId}"]`).classList.add('active');
-            }
+            // --- Form Handlers ---
 
-            // Function to get the initial tab from URL hash, or default to the first tab
-            function getInitialTab() {
-                const hash = window.location.hash.substring(1); // Get hash without '#'
-                if (hash) {
-                    const correspondingTab = document.querySelector(`.settings-tab[data-tab="${hash}"]`);
-                    if (correspondingTab) {
-                        return hash;
+            // Login Form
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                if (!email || !password) { showMessage(messageDivs.login, 'Please enter both email and password.'); return; }
+
+                try {
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    const userDoc = await getDoc(getUserDocRef(userCredential.user.uid));
+                    if (userDoc.exists()) {
+                        await handleSuccessfulLogin(userCredential.user);
+                    } else {
+                        await signOut(auth);
+                        showMessage(messageDivs.login, 'Account record is incomplete. Please sign up again or contact support.');
                     }
-                }
-                return tabs.length > 0 ? tabs[0].dataset.tab : null;
-            }
-
-            // Show the initial section based on URL hash or default
-            const initialTab = getInitialTab();
-            if (initialTab) {
-                showSection(initialTab);
-            }
-
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabId = tab.dataset.tab;
-                    showSection(tabId);
-                    window.location.hash = tabId; // Update URL hash on tab change
-                });
-            });
-
-            // Handle browser back/forward buttons with hash changes
-            window.addEventListener('hashchange', () => {
-                const hash = window.location.hash.substring(1);
-                if (hash) {
-                    const correspondingTab = document.querySelector(`.settings-tab[data-tab="${hash}"]`);
-                    if (correspondingTab && !correspondingTab.classList.contains('active')) {
-                        showSection(hash);
-                    }
+                } catch (error) {
+                    let msg = 'Invalid email or password.';
+                    if (error.code === 'auth/too-many-requests') msg = 'Access temporarily disabled due to too many failed login attempts.';
+                    else if (error.code === 'auth/user-disabled') msg = 'Your account has been disabled.';
+                    showMessage(messageDivs.login, msg);
                 }
             });
+
+            // Password Reset Form
+            document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('resetEmail').value.trim();
+                if (!email) { showMessage(messageDivs.reset, 'Please enter your email.'); return; }
+
+                try {
+                    const methods = await fetchSignInMethodsForEmail(auth, email);
+                    if (methods.length === 0) {
+                        showMessage(messageDivs.reset, 'No account found with this email.');
+                    } else if (methods.some(m => m !== 'password')) {
+                        showMessage(messageDivs.reset, 'This account uses a social provider and does not have a password to reset.');
+                    } else {
+                        await sendPasswordResetEmail(auth, email);
+                        showMessage(messageDivs.reset, 'Password reset link sent! Check your inbox.', 'success');
+                    }
+                } catch (error) {
+                    showMessage(messageDivs.reset, 'An error occurred. Please check the email and try again.');
+                }
+            });
+
+            // Signup Step 1: Username Form
+            document.getElementById('usernameForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('signupUsername').value.trim();
+                if (username.length < 6 || username.length > 24) { showMessage(messageDivs.username, 'Username must be 6-24 characters.'); return; }
+                if (!/^[a-zA-Z0-9.,\-+_\!\?\$\\]+$/.test(username)) { showMessage(messageDivs.username, 'Username contains invalid characters.'); return; }
+
+                showMessage(messageDivs.username, 'Checking username...', 'warning');
+                if (await checkProfanity(username)) { showMessage(messageDivs.username, 'This username is not allowed. Please choose another.'); return; }
+                if (await isUsernameTaken(username)) { showMessage(messageDivs.username, 'This username is already taken.'); return; }
+
+                selectedUsername = username;
+                showView('signup');
+                document.getElementById('signupEmail').focus();
+            });
+
+            // Signup Step 2: Credentials Form
+            document.getElementById('signupForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('signupEmail').value.trim();
+                const password = document.getElementById('signupPassword').value;
+
+                // --- NEW EMAIL VALIDATION CHECK ---
+                const emailError = validateEmail(email);
+                if (emailError) { showMessage(messageDivs.signup, emailError); return; }
+                
+                const passwordError = validatePassword(password);
+                if (passwordError) { showMessage(messageDivs.signup, passwordError); return; }
+
+                try {
+                    // DEBUGGING: Log the data being sent to verify inputs are non-empty/correct
+                    console.log('Attempting signup with:', { email: email, passwordLength: password.length, username: selectedUsername });
+
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    await sendEmailVerification(userCredential.user);
+                    const docCreated = await createUserDocument(userCredential.user, 'email', selectedUsername);
+
+                    if (docCreated) {
+                        await signOut(auth);
+                        showMessage(messageDivs.signup, `Success! A verification email has been sent to ${email}. You can now log in.`, 'success');
+                    } else {
+                        await userCredential.user.delete();
+                        showMessage(messageDivs.signup, 'Failed to create user record. Please try again.');
+                    }
+                } catch (error) {
+                    let msg = 'An unknown error occurred.';
+                    
+                    // Specific check for the 'operation-not-allowed' error, which can cause 400s:
+                    if (error.code === 'auth/operation-not-allowed') {
+                        msg = 'Email/Password sign-in is not enabled in your Firebase project settings. Please check your console.';
+                    } else if (error.code === 'auth/email-already-in-use') {
+                        msg = 'This email is already in use. If you used a social provider, please sign in with that instead.';
+                    } else if (error.code === 'auth/invalid-email') {
+                        msg = 'The email address is not valid.';
+                    } else if (error.code === 'auth/weak-password') {
+                        msg = 'Password is too weak.';
+                    }
+                    
+                    showMessage(messageDivs.signup, msg);
+                    console.error("Firebase Auth Error:", error.code, error.message);
+                }
+            });
+
+            // --- Social Authentication Handler (Unified for Login & Signup) ---
+            const handleSocialAuth = async (provider) => {
+                try {
+                    const result = await signInWithPopup(auth, provider);
+                    const user = result.user;
+                    const additionalInfo = getAdditionalUserInfo(result);
+                    const userDoc = await getDoc(getUserDocRef(user.uid));
+                    const providerName = provider.providerId.split('.')[0];
+
+                    if (userDoc.exists()) {
+                        // User exists -> Log them in
+                        // This will trigger handleSuccessfulLogin, which has the beta check.
+                        await handleSuccessfulLogin(user);
+                    } else {
+                        // New user -> Create account
+                        
+                        let rawUsername = additionalInfo?.username || user.displayName || user.email.split('@')[0] || 'User';
+                        let username = rawUsername.replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
+                        
+                        if (username.length < 6) username = `User${user.uid.substring(0, 8)}`;
+                        if (await checkProfanity(username)) username = `User${user.uid.substring(0, 8)}`;
+                        
+                        let finalUsername = username;
+                        let counter = 1;
+                        while (await isUsernameTaken(finalUsername)) {
+                            finalUsername = `${username.slice(0, 14)}_${counter++}`;
+                        }
+
+                        const docCreated = await createUserDocument(user, providerName, finalUsername);
+                        if (docCreated) {
+                            // Since this is a new social user, they are already "verified"
+                            // and have passed the beta check. Log them in.
+                            await setPersistence(auth, browserLocalPersistence);
+                            navigateToDashboard();
+                        } else {
+                            throw new Error('Failed to create user document for social auth.');
+                        }
+                    }
+                } catch (error) {
+                    let msg = `A problem occurred during social sign-in.`;
+                    if (error.code === 'auth/account-exists-with-different-credential') {
+                        msg = 'An account with this email already exists using a different sign-in method. Please sign in with the provider you originally used.';
+                    } else if (error.code === 'auth/popup-closed-by-user') {
+                        return; // User cancelled, do nothing.
+                    }
+                    // Show error on the currently visible panel
+                    const visibleMessageDiv = messageDivs.login.offsetParent ? messageDivs.login : messageDivs.username;
+                    showMessage(visibleMessageDiv, msg);
+                }
+            };
+
+            document.getElementById('googleAuthBtn').addEventListener('click', () => handleSocialAuth(new GoogleAuthProvider()));
+            document.getElementById('githubAuthBtn').addEventListener('click', () => handleSocialAuth(new GithubAuthProvider()));
+            document.getElementById('twitterAuthBtn').addEventListener('click', () => handleSocialAuth(new TwitterAuthProvider()));
+            document.getElementById('microsoftAuthBtn').addEventListener('click', () => handleSocialAuth(new OAuthProvider('microsoft.com')));
+            
         });
     </script>
 </body>
