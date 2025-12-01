@@ -1852,9 +1852,39 @@
             mouths: ['default-mouth.png', 'drool.png', 'meh.png', 'no-clue.png', 'sad.png', 'wow.png'],
             hats: ['strawhat.png', 'tophat.png', 'partyhat.png', 'halo.png', 'toiletpaper.png'],
             colors: [
-                '#EF4444', '#F97316', '#F59E0B', '#22C55E', '#3B82F6', 
-                '#6366F1', '#A855F7', '#EC4899', '#FFFFFF'
-            ]
+    // --- REDS / PINKS / MAROON ---
+    '#EF4444', // Red
+    '#F43F5E', // Rose
+    '#EC4899', // Pink
+    '#800000', // Maroon (Replacement for Black)
+
+    // --- ORANGES / AMBERS ---
+    '#F97316', // Orange
+    '#F59E0B', // Amber
+
+    // --- YELLOWS / LIMES ---
+    '#EAB308', // Yellow
+    '#84CC16', // Lime
+
+    // --- GREENS / TEALS / CYANS ---
+    '#22C55E', // Green
+    '#14B8A6', // Teal
+    '#06B6D4', // Cyan
+
+    // --- BLUES / SKY ---
+    '#0EA5E9', // Sky
+    '#3B82F6', // Blue
+
+    // --- INDIGOS / VIOLETS ---
+    '#6366F1', // Indigo
+    '#7C3AED', // Violet
+    '#A855F7', // Purple
+    '#E879F9', // Fuchsia
+    
+    // --- NEUTRALS (White/Gray) ---
+    '#6B7280', // Gray
+    '#FFFFFF'  // White
+]
         };
 
         const updateMibiPreview = () => {
