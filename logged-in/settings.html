@@ -529,16 +529,22 @@
         }
         
         .color-palette-grid {
-            display: grid;
-            /* MODIFICATION: Forces exactly 10 columns. 
-               The 1fr ensures they are equally spaced, and minmax(40px, 1fr) ensures 
-               the circle size doesn't drop below 40px. */
-            grid-template-columns: repeat(10, minmax(40px, 1fr));
+            /* NEW: Switched to Flexbox for reliable wrapping and no scrollbar */
+            display: flex; 
+            flex-wrap: wrap; 
+            
+            /* Max width calculation for 10 items: 
+               10 * (40px width) + 9 * (10px gap) = 490px.
+               This forces the 11th item to wrap onto the next line. */
+            max-width: 490px;
+            
             gap: 10px;
-            width: 100%;
+            /* width: 100%; is no longer needed/useful with max-width */
             margin-top: 10px;
         }
         .color-option {
+            /* Note: Individual color options no longer need a fluid width (1fr) 
+               and can be kept at their fixed 40px size. */
             width: 40px;
             height: 40px;
             border-radius: 50%;
