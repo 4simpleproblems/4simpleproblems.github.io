@@ -530,8 +530,14 @@
         
         /* --- Color Palette Styles --- */
         .color-palette-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            /* 1. Sets up the Grid layout */
+            display: grid; 
+            
+            /* 2. Allows for automatic, responsive wrapping */
+            /* This ensures as many 40px columns as possible fit, and when they don't, 
+               the rest automatically move to the next row (wrapping). */
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); 
+            
             gap: 10px;
             width: 100%;
             margin-top: 10px;
