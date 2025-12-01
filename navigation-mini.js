@@ -138,6 +138,9 @@ if (noFilterThemes.includes(themeToApply.name)) {
 
 // --- Self-invoking function to encapsulate all logic ---
 
+/**
+ * NEW FUNCTION: applyCounterZoom
+ * This calculates the browser's current zoom level (devicePixelRatio) and applies
  * an inverse scale transform to the navbar. This forces the navbar to appear the
  * same physical size regardless of zoom.
  */
