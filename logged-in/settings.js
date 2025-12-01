@@ -61,6 +61,7 @@
         const sidebarTabs = document.querySelectorAll('.settings-tab');
         const mainView = document.getElementById('settings-main-view');
         let currentUser = null; // To store the authenticated user object
+        let isUserAdmin = false; // Stores admin status result to prevent race conditions
         
         // --- NEW: Global var for loading overlay (from index.html) ---
         let loadingTimeout = null;
@@ -1380,6 +1381,15 @@
          * (Client-side implementation without Cloud Functions)
          */
         async function loadManagementTab() {
+            // Safety check: Ensure we don't run this logic if not an admin (even if tab is somehow visible)
+            // This relies on initializeAuth correctly setting isUserAdmin
+            if (!isUserAdmin) {
+                console.warn("loadManagementTab called but user is not an admin.");
+                // Optionally clear the view or show an error
+                document.getElementById('settings-main-view').innerHTML = '<p class="text-red-500 p-4">Access Denied: Insufficient permissions.</p>';
+                return;
+            }
+
             const SUPERADMIN_EMAIL = '4simpleproblems@gmail.com';
             const MAX_SUPERADMINS = 2; // Primary superadmin + 2 others
 
@@ -4449,6 +4459,22 @@ const performAccountDeletion = async (credential) => {
 
 
         // --- AUTHENTICATION/REDIRECT LOGIC (Retained and Modified) ---
+
+        /**
+         * Checks if the current user is an admin by fetching their admin document.
+         * This is crucial to prevent race conditions where admin-only queries run before permissions are confirmed.
+         */
+        async function checkAdminStatus(uid) {
+            try {
+                const adminDocRef = doc(db, 'admins', uid);
+                const adminSnap = await getDoc(adminDocRef);
+                return adminSnap.exists();
+            } catch (e) {
+                console.error("Error checking admin status:", e);
+                return false;
+            }
+        }
+
         function initializeAuth() {
             onAuthStateChanged(auth, async (user) => {
                 if (!user) {
@@ -4457,17 +4483,14 @@ const performAccountDeletion = async (credential) => {
                 } else {
                     currentUser = user; 
                     
-                    // --- NEW: Check Admin Status (Direct Firestore) ---
-                    try {
-                        const adminDocRef = doc(db, 'admins', user.uid);
-                        const adminSnap = await getDoc(adminDocRef);
-                        
-                        if (adminSnap.exists()) {
-                            const adminTab = document.getElementById('tab-management');
-                            if (adminTab) adminTab.classList.remove('hidden');
-                        }
-                    } catch (e) {
-                        console.log("Admin check skipped or failed:", e);
+                    // --- MODIFIED: Mandatory Admin Status Check ---
+                    // We MUST await this check before proceeding to load tabs that might require admin privileges.
+                    // This prevents "Missing or insufficient permissions" errors due to race conditions.
+                    isUserAdmin = await checkAdminStatus(user.uid);
+
+                    if (isUserAdmin) {
+                        const adminTab = document.getElementById('tab-management');
+                        if (adminTab) adminTab.classList.remove('hidden');
                     }
 
                     // Set initial state to 'General' (or the first tab)
