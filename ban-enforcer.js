@@ -37,7 +37,31 @@ let currentBanData = null; // Store current ban data for the guard to use
     document.documentElement.appendChild(shield);
     document.documentElement.style.overflow = 'hidden'; // Lock scrolling immediately
 
-    console.log("Debug: Invisible barrier deployed. Interaction locked.");
+    // Add a simple loading spinner
+    const spinner = document.createElement('div');
+    spinner.id = 'ban-enforcer-spinner';
+    spinner.style.position = 'absolute';
+    spinner.style.top = '50%';
+    spinner.style.left = '50%';
+    spinner.style.transform = 'translate(-50%, -50%)';
+    spinner.style.border = '4px solid rgba(255, 255, 255, 0.3)';
+    spinner.style.borderTop = '4px solid #ffffff'; // White spinner
+    spinner.style.borderRadius = '50%';
+    spinner.style.width = '40px';
+    spinner.style.height = '40px';
+    spinner.style.animation = 'spin 1s linear infinite';
+    shield.appendChild(spinner);
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    console.log("Debug: Invisible barrier deployed with spinner. Interaction locked.");
 })();
 
 // --- 2. Font Injection (Geist) ---
@@ -70,7 +94,8 @@ function unlockPage() {
     const elements = [
         'ban-enforcer-shield',
         'ban-enforcer-message',
-        'ban-enforcer-home-button'
+        'ban-enforcer-home-button',
+        'ban-enforcer-spinner'
     ];
 
     elements.forEach(id => {
@@ -285,8 +310,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Debug: User logged in. Waiting for Firestore...");
                 
                 waitForFirestore((dbInstance) => {
-                    // Real-time listener
+                    let banCheckCompleted = false;
+                    const BAN_CHECK_TIMEOUT_MS = 5000; // 5 seconds
+
+                    const timeoutId = setTimeout(() => {
+                        if (!banCheckCompleted) {
+                            console.warn("Debug: Ban check timed out. Unlocking page.");
+                            unlockPage();
+                        }
+                    }, BAN_CHECK_TIMEOUT_MS);
+
                     dbInstance.collection('bans').doc(user.uid).onSnapshot(doc => {
+                        clearTimeout(timeoutId); // Clear timeout if snapshot resolves
+                        banCheckCompleted = true;
                         if (doc.exists) {
                             console.warn("Debug: User is BANNED.");
                             lockPageAsBanned(doc.data());
@@ -295,6 +331,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             unlockPage();
                         }
                     }, error => {
+                        clearTimeout(timeoutId); // Clear timeout on error
+                        banCheckCompleted = true;
                         console.error("Debug: Ban listener error.", error);
                         unlockPage();
                     });

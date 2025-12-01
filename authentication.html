@@ -260,6 +260,32 @@
         const db = getFirestore(app);
         setLogLevel('debug'); // Enable Firestore logging
 
+        let hasRedirected = false;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // User is signed in.
+                if (!hasRedirected && window.location.pathname.endsWith('authentication.html')) {
+                    const userDoc = await getDoc(getUserDocRef(user.uid));
+                    if (userDoc.exists()) {
+                        // Ensure user document exists before redirecting
+                        hasRedirected = true;
+                        navigateToDashboard();
+                    } else {
+                        // This might happen if a social login succeeds but user doc creation fails.
+                        // Or if a user was created via email/password but doc is missing.
+                        // In this case, log out the user and show an error.
+                        console.error("User logged in but no user document found. Logging out.");
+                        await signOut(auth);
+                        showMessage(messageDivs.login, 'Authentication failed: No user record found. Please try again or contact support.');
+                    }
+                }
+            } else {
+                // User is signed out.
+                hasRedirected = false;
+            }
+        });
+
 
 
         // --- Unified Data Model ---
@@ -324,10 +350,9 @@
             
             const isProviderLogin = user.providerData.some(p => ['google.com', 'github.com', 'twitter.com', 'microsoft.com'].includes(p.providerId));
             
-            if (user.emailVerified || isProviderLogin) {
-                navigateToDashboard();
-            } else {
-                showMessage(messageDivs.login, 'Your email is not verified. Please check your inbox. <a href="#" id="resend-link" class="underline cursor-pointer">Resend email</a>', 'error');
+                        if (user.emailVerified || isProviderLogin) {                                                                                                                   
+                            // navigateToDashboard(); // Redirection will now be handled by onAuthStateChanged listener
+                        } else {                showMessage(messageDivs.login, 'Your email is not verified. Please check your inbox. <a href="#" id="resend-link" class="underline cursor-pointer">Resend email</a>', 'error');
                 document.getElementById('resend-link').addEventListener('click', async (e) => {
                     e.preventDefault();
                     try {
@@ -521,7 +546,7 @@
                             // Since this is a new social user, they are already "verified"
                             // and have passed the beta check. Log them in.
                             await setPersistence(auth, browserLocalPersistence);
-                            navigateToDashboard();
+                            // navigateToDashboard(); // Redirection will now be handled by onAuthStateChanged listener
                         } else {
                             throw new Error('Failed to create user document for social auth.');
                         }

@@ -74,8 +74,8 @@ const DEFAULT_THEME = {
 const PAGE_CONFIG_URL = '../page-identification.json';
 const PINNED_PAGE_KEY = 'navbar_pinnedPage';
 const PIN_BUTTON_HIDDEN_KEY = 'navbar_pinButtonHidden';
-const THEME_STORAGE_KEY = 'user-navbar-theme';
-const lightThemeNames = ['Light', 'Lavender', 'Rose Gold', 'Mint', 'Pink'];
+
+
 
 window.applyTheme = (theme) => {
     const root = document.documentElement;
@@ -85,22 +85,22 @@ window.applyTheme = (theme) => {
     // Determine if it's a light theme
     const isLightTheme = lightThemeNames.includes(themeToApply.name);
 
-    for (const [key, value] of Object.entries(themeToApply)) {
-        if (key !== 'logo-src' && key !== 'name') {
-            root.style.setProperty(`--${key}`, value);
-        }
-    }
-
-    // Apply specific colors for light themes
-    if (isLightTheme) {
-        root.style.setProperty('--menu-username-text', '#000000'); // Black for username
-        root.style.setProperty('--menu-email-text', '#333333');   // Dark grey for email
-    } else {
-        // Revert to theme's default or global default
-        root.style.setProperty('--menu-username-text', themeToApply['menu-username-text'] || DEFAULT_THEME['menu-username-text']);
-        root.style.setProperty('--menu-email-text', themeToApply['menu-email-text'] || DEFAULT_THEME['menu-email-text']);
-    }
-
+        // The navigation-mini.js should not manage general theme styles, only logo and tint.
+        // for (const [key, value] of Object.entries(themeToApply)) {                                                                                                             
+        //     if (key !== 'logo-src' && key !== 'name') {                                                                                                                        
+        //         root.style.setProperty(`--${key}`, value);                                                                                                                     
+        //     }                                                                                                                                                                  
+        // }                                                                                                                                                                      
+                                                                                                                                                                               
+        // The navigation-mini.js should not manage general theme styles, only logo and tint.
+        // if (isLightTheme) {                                                                                                                                                    
+        //     root.style.setProperty('--menu-username-text', '#000000'); // Black for username                                                                                   
+        //     root.style.setProperty('--menu-email-text', '#333333');   // Dark grey for email                                                                                   
+        // } else {                                                                                                                                                               
+        //     // Revert to theme's default or global default                                                                                                                     
+        //     root.style.setProperty('--menu-username-text', themeToApply['menu-username-text'] || DEFAULT_THEME['menu-username-text']);                                         
+        //     root.style.setProperty('--menu-email-text', themeToApply['menu-email-text'] || DEFAULT_THEME['menu-email-text']);                                                  
+        // }
     const logoImg = document.getElementById('navbar-logo');
     if (logoImg) {
         let newLogoSrc;
@@ -249,15 +249,8 @@ const applyCounterZoom = () => {
             injectStyles();
             setupContainer(); 
 
-            let savedTheme;
-            try {
-                savedTheme = JSON.parse(localStorage.getItem(THEME_STORAGE_KEY));
-            } catch (e) {
-                savedTheme = null;
-                console.warn("Could not parse saved theme from Local Storage.");
-            }
-            window.applyTheme(savedTheme || DEFAULT_THEME);
-            
+                        // Theme loading has been moved to navigation.js.
+                        // window.applyTheme(DEFAULT_THEME); // Apply default theme or a minimal theme for logo/tint            
             // Now that scripts are loaded, we can use the `firebase` global object
             initializeApp(); // No longer passing pages here as allPages is global
             
