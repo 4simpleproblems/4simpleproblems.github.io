@@ -67,7 +67,7 @@
             'privacy': { title: 'Privacy & Security', icon: 'fa-shield-halved' },
             'personalization': { title: 'Personalization', icon: 'fa-palette' },
             'data': { title: 'Data Management', icon: 'fa-database' },
-            'admin': { title: 'Banned Users (Admin)', icon: 'fa-gavel' },
+            'management': { title: 'Management', icon: 'fa-users-gear' },
             'about': { title: 'About 4SP', icon: 'fa-circle-info' },
         };
         
@@ -1197,39 +1197,66 @@
         /**
          * NEW: Generates the HTML for the "Admin" section.
          */
-        function getAdminContent() {
+                 function getManagementContent() {            return `
+        function getManagementContent() {
             return `
-                <h2 class="text-3xl font-bold text-white mb-6">Admin Dashboard</h2>
+                <h2 class="text-3xl font-bold text-white mb-6">Management</h2>
                 
-                <div class="w-full">
-                    <!-- Stats / Quick Actions -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                        <div class="settings-box p-4 flex items-center gap-4 bg-red-900/10 border-red-700/30">
-                            <div class="p-3 rounded-full bg-red-900/20 text-red-400">
-                                <i class="fa-solid fa-user-slash fa-xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-400">Banned Users</p>
-                                <p class="text-2xl font-bold text-white" id="admin-banned-count">-</p>
+                <!-- Admin Management Section -->
+                <div class="w-full mb-8">
+                    <h3 class="text-xl font-bold text-white mb-2">Admin Management</h3>
+                    <div class="settings-box p-4">
+                        <p class="text-sm font-light text-gray-400 mb-4">
+                            Manage website administrators. Superadmins can add/remove other admins and designate additional superadmins.
+                        </p>
+
+                        <!-- Current Admins List -->
+                        <div class="mb-4">
+                            <label class="block text-gray-400 text-sm font-light mb-2">Current Administrators</label>
+                            <div id="current-admins-list" class="flex flex-col gap-2">
+                                <!-- Admins will be loaded here by JavaScript -->
+                                <p class="text-gray-500 italic">Loading admins...</p>
                             </div>
                         </div>
-                        <div class="settings-box p-4 flex items-center gap-4 bg-blue-900/10 border-blue-700/30">
-                            <div class="p-3 rounded-full bg-blue-900/20 text-blue-400">
-                                <i class="fa-solid fa-users fa-xl"></i>
+
+                        <!-- Add Admin Section -->
+                        <div class="border-t border-[#252525] pt-4 mt-4">
+                            <label for="newAdminEmail" class="block text-gray-400 text-sm font-light mb-2">Add New Admin (by Email)</label>
+                            <div class="flex gap-2">
+                                <input type="email" id="newAdminEmail" class="input-text-style flex-grow" placeholder="Enter email address">
+                                <button id="addAdminBtn" class="btn-toolbar-style btn-primary-override w-24">
+                                    <i class="fa-solid fa-user-plus"></i> Add
+                                </button>
                             </div>
-                            <div>
-                                <p class="text-sm text-gray-400">Total Users</p>
-                                <p class="text-2xl font-bold text-white" id="admin-total-count">-</p>
+                            <p id="adminMessage" class="general-message-area text-sm mt-2"></p>
+                        </div>
+
+                        <!-- Superadmin Controls (only visible to superadmin) -->
+                        <div id="superadmin-controls" class="hidden border-t border-[#252525] pt-4 mt-4">
+                            <h4 class="text-lg font-bold text-white mb-2">Superadmin Actions</h4>
+                            <p class="text-sm font-light text-gray-400 mb-4">
+                                Only the primary superadmin can manage other superadmins and strip admin privileges.
+                            </p>
+                            <div class="flex flex-col gap-3">
+                                <div class="flex gap-2 items-center">
+                                    <input type="email" id="newSuperadminEmail" class="input-text-style flex-grow" placeholder="Email for new superadmin">
+                                    <button id="addSuperadminBtn" class="btn-toolbar-style btn-primary-override w-36">
+                                        <i class="fa-solid fa-user-gear"></i> Add Superadmin
+                                    </button>
+                                </div>
+                                <p id="superadminMessage" class="general-message-area text-sm mt-2"></p>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <h3 class="text-xl font-bold text-white mb-4">User Management</h3>
-                    
+                <!-- Banned User Management Section -->
+                <div class="w-full">
+                    <h3 class="text-xl font-bold text-white mb-2">Banned User Management</h3>
                     <div class="settings-box p-4 mb-4">
                         <div class="flex gap-2 mb-4">
-                            <input type="text" id="admin-user-search" placeholder="Search by Username, Email, or UID..." class="input-text-style flex-grow">
-                            <button id="admin-refresh-btn" class="btn-toolbar-style">
+                            <input type="text" id="management-user-search" placeholder="Search by Username, Email, or UID..." class="input-text-style flex-grow">
+                            <button id="management-refresh-btn" class="btn-toolbar-style">
                                 <i class="fa-solid fa-arrows-rotate"></i>
                             </button>
                         </div>
@@ -1244,7 +1271,7 @@
                                         <th class="p-3 font-medium text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="admin-users-list">
+                                <tbody id="management-users-list">
                                     <tr>
                                         <td colspan="4" class="p-8 text-center text-gray-500">
                                             <i class="fa-solid fa-spinner fa-spin fa-2x mb-2"></i>
@@ -1256,13 +1283,13 @@
                         </div>
                     </div>
                     
-                    <div id="adminMessage" class="general-message-area text-sm"></div>
+                    <p id="bannedUserMessage" class="general-message-area text-sm"></p>
                 </div>
                 
                 <!-- Ban Modal -->
-                <div id="adminBanModal" class="modal">
+                <div id="managementBanModal" class="modal">
                     <div class="modal-content text-left">
-                        <span class="modal-close" id="adminBanClose">&times;</span>
+                        <span class="modal-close" id="managementBanClose">&times;</span>
                         <h3 class="text-xl font-bold text-white mb-4">Ban User</h3>
                         <p id="banTargetName" class="text-gray-400 mb-4">Target: ...</p>
                         
@@ -1277,8 +1304,8 @@
                         <textarea id="banReason" class="input-text-style mb-4 h-24" placeholder="Violation of terms..."></textarea>
                         
                         <div class="flex justify-end gap-2">
-                            <button class="btn-toolbar-style" id="adminBanCancel">Cancel</button>
-                            <button class="btn-toolbar-style btn-primary-override-danger" id="adminBanConfirm">
+                            <button class="btn-toolbar-style" id="managementBanCancel">Cancel</button>
+                            <button class="btn-toolbar-style btn-primary-override-danger" id="managementBanConfirm">
                                 <i class="fa-solid fa-gavel mr-2"></i> Ban User
                             </button>
                         </div>
@@ -1291,29 +1318,87 @@
          * NEW: Loads data and adds event listeners for the Admin tab.
          * (Client-side implementation without Cloud Functions)
          */
-        async function loadAdminTab() {
-            const listContainer = document.getElementById('admin-users-list');
-            const searchInput = document.getElementById('admin-user-search');
-            const refreshBtn = document.getElementById('admin-refresh-btn');
+        async function loadManagementTab() {
+            const SUPERADMIN_EMAIL = '4simpleproblems@gmail.com';
+            const MAX_SUPERADMINS = 2; // Primary superadmin + 2 others
+
+            const currentAdminsList = document.getElementById('current-admins-list');
+            const newAdminEmailInput = document.getElementById('newAdminEmail');
+            const addAdminBtn = document.getElementById('addAdminBtn');
             const adminMessage = document.getElementById('adminMessage');
+            const superadminControls = document.getElementById('superadmin-controls');
+            const newSuperadminEmailInput = document.getElementById('newSuperadminEmail');
+            const addSuperadminBtn = document.getElementById('addSuperadminBtn');
+            const superadminMessage = document.getElementById('superadminMessage');
+
+            const listContainer = document.getElementById('management-users-list');
+            const searchInput = document.getElementById('management-user-search');
+            const refreshBtn = document.getElementById('management-refresh-btn');
+            const bannedUserMessage = document.getElementById('bannedUserMessage');
             
-            const banModal = document.getElementById('adminBanModal');
-            const banClose = document.getElementById('adminBanClose');
-            const banCancel = document.getElementById('adminBanCancel');
-            const banConfirm = document.getElementById('adminBanConfirm');
+            const banModal = document.getElementById('managementBanModal');
+            const banClose = document.getElementById('managementBanClose');
+            const banCancel = document.getElementById('managementBanCancel');
+            const banConfirm = document.getElementById('managementBanConfirm');
             const banTargetName = document.getElementById('banTargetName');
             const banDuration = document.getElementById('banDuration');
             const banReason = document.getElementById('banReason');
             
-            let allUsers = []; 
+            let allUsers = [];
+            let allAdmins = []; // Store all admin user objects (with email/username)
             let targetUserForBan = null;
+            let targetUserForAdminAction = null;
+            let isPrimarySuperadmin = currentUser.email === SUPERADMIN_EMAIL;
 
-            // --- Helper: Render User List ---
-            const renderList = (users) => {
+            // --- Helper: Render Admin List ---
+            const renderAdminList = () => {
+                currentAdminsList.innerHTML = '';
+                if (allAdmins.length === 0) {
+                    currentAdminsList.innerHTML = `<p class="text-gray-500 italic">No administrators found (besides yourself if you are one).</p>`;
+                    return;
+                }
+
+                allAdmins.forEach(admin => {
+                    const isAdminUser = admin.isAdmin; // true for all entries in allAdmins
+                    const isSuperadmin = admin.isSuperadmin;
+                    const isCurrentUser = admin.uid === currentUser.uid;
+
+                    let actionsHtml = '';
+                    if (isPrimarySuperadmin && !isCurrentUser) { // Primary superadmin can manage other admins/superadmins
+                        if (isSuperadmin) {
+                            // Only primary superadmin can remove other superadmins
+                            actionsHtml += `<button class="btn-toolbar-style btn-primary-override-danger w-24" onclick="window.handleRemoveSuperadmin('${admin.uid}', '${admin.email}')"><i class="fa-solid fa-user-slash mr-1"></i> Remove SA</button>`;
+                        } else {
+                            actionsHtml += `<button class="btn-toolbar-style btn-primary-override-danger w-24" onclick="window.handleRemoveAdmin('${admin.uid}', '${admin.username || admin.email}')"><i class="fa-solid fa-user-minus mr-1"></i> Remove Admin</button>`;
+                        }
+                    } else if (!isPrimarySuperadmin && !isCurrentUser) {
+                        actionsHtml = `<span class="text-gray-500 text-sm">No actions</span>`;
+                    } else if (isCurrentUser) {
+                        actionsHtml = `<span class="text-gray-500 text-sm">(You)</span>`;
+                    }
+                    
+                    const adminEntry = document.createElement('div');
+                    adminEntry.className = 'flex justify-between items-center bg-[#0a0a0a] border border-[#1a1a1a] rounded-md p-3';
+                    adminEntry.innerHTML = `
+                        <div>
+                            <span class="font-medium text-white">${admin.username || admin.email}</span>
+                            ${isSuperadmin ? '<span class="text-xs text-yellow-400 ml-2 font-normal">(Superadmin)</span>' : ''}
+                            ${isCurrentUser ? '<span class="text-xs text-blue-400 ml-2 font-normal">(Current User)</span>' : ''}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${actionsHtml}
+                        </div>
+                    `;
+                    currentAdminsList.appendChild(adminEntry);
+                });
+            };
+
+            // --- Helper: Render User List (Non-Admins) ---
+            const renderUserList = (users) => {
                 const filteredUsers = users.filter(user => !user.isAdmin);
 
                 if (filteredUsers.length === 0) {
-                    listContainer.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500">No users found.</td></tr>`;
+                    listContainer.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500">No non-admin users found.</td></tr>`;
                     return;
                 }
                 
@@ -1324,10 +1409,10 @@
                         : `<span class="text-green-400 bg-green-900/20 px-2 py-1 rounded text-xs font-bold">ACTIVE</span>`;
                     
                     const banBtnHtml = isBanned
-                        ? `<button class="btn-toolbar-style w-10 h-10 flex items-center justify-center p-0" onclick="window.handleAdminUnban('${user.uid}')" title="Unban User"><i class="fa-solid fa-lock-open"></i></button>`
-                        : `<button class="btn-toolbar-style btn-primary-override-danger w-10 h-10 flex items-center justify-center p-0" onclick="window.handleAdminBan('${user.uid}', '${user.username || 'User'}')" title="Ban User"><i class="fa-solid fa-gavel"></i></button>`;
+                        ? `<button class="btn-toolbar-style w-10 h-10 flex items-center justify-center p-0" onclick="window.handleUnbanUser('${user.uid}')" title="Unban User"><i class="fa-solid fa-lock-open"></i></button>`
+                        : `<button class="btn-toolbar-style btn-primary-override-danger w-10 h-10 flex items-center justify-center p-0" onclick="window.handleBanUser('${user.uid}', '${user.username || 'User'}')" title="Ban User"><i class="fa-solid fa-gavel"></i></button>`;
                     
-                    const makeAdminBtnHtml = `<button class="btn-toolbar-style btn-primary-override w-10 h-10 flex items-center justify-center p-0" onclick="window.handleMakeAdmin('${user.uid}', '${user.username || 'User'}')" title="Make Admin"><i class="fa-solid fa-user-shield"></i></button>`;
+                    const makeAdminBtnHtml = `<button class="btn-toolbar-style btn-primary-override w-10 h-10 flex items-center justify-center p-0" onclick="window.handleMakeAdmin('${user.uid}', '${user.username || 'User'}', '${user.email || ''}')" title="Make Admin"><i class="fa-solid fa-user-shield"></i></button>`;
 
                     const safeUsername = user.username ? user.username.replace(/</g, "&lt;") : 'No Username';
                     const safeEmail = user.email ? user.email.replace(/</g, "&lt;") : 'No Email';
@@ -1351,16 +1436,14 @@
                         </tr>
                     `;
                 }).join('');
-                
-                document.getElementById('admin-total-count').textContent = filteredUsers.length;
-                document.getElementById('admin-banned-count').textContent = filteredUsers.filter(u => u.banned).length;
             };
 
-            // --- Fetch Users (Direct Firestore) ---
-            const fetchUsers = async () => {
+            // --- Fetch Users and Admins ---
+            const fetchUsersAndAdmins = async () => {
                 listContainer.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500"><i class="fa-solid fa-spinner fa-spin fa-2x mb-2"></i><p>Loading users...</p></td></tr>`;
+                currentAdminsList.innerHTML = `<p class="text-gray-500 italic">Loading admins...</p>`;
+
                 try {
-                    // 1. Fetch all collections concurrently
                     const [usersSnap, bansSnap, adminsSnap] = await Promise.all([
                         getDocs(collection(db, 'users')),
                         getDocs(collection(db, 'bans')),
@@ -1370,26 +1453,57 @@
                     const bansMap = new Map();
                     bansSnap.forEach(doc => bansMap.set(doc.id, doc.data()));
 
-                    const adminsSet = new Set();
-                    adminsSnap.forEach(doc => adminsSet.add(doc.id));
+                    const adminsMap = new Map(); // Store full admin data for display
+                    adminsSnap.forEach(doc => adminsMap.set(doc.id, doc.data()));
 
                     allUsers = [];
+                    allAdmins = [];
+
                     usersSnap.forEach(doc => {
                         const uid = doc.id;
                         const userData = doc.data();
-                        allUsers.push({
+                        const isUserAdmin = adminsMap.has(uid);
+                        const isUserSuperadmin = isUserAdmin && (adminsMap.get(uid).email === SUPERADMIN_EMAIL || adminsMap.get(uid).role === 'superadmin'); // Check for primary SA or explicit role
+
+                        const userEntry = {
                             uid: uid,
-                            username: userData.username || 'Unknown',
-                            email: userData.email || 'No Email', 
+                            username: userData.username || null, // Can be null
+                            email: userData.email || null, // Can be null
                             banned: bansMap.has(uid),
-                            isAdmin: adminsSet.has(uid)
-                        });
+                            isAdmin: isUserAdmin,
+                            isSuperadmin: isUserSuperadmin
+                        };
+
+                        if (isUserAdmin) {
+                            allAdmins.push(userEntry);
+                        } else {
+                            allUsers.push(userEntry);
+                        }
                     });
 
-                    renderList(allUsers);
+                    // Sort admins to put primary superadmin first, then other superadmins, then regular admins
+                    allAdmins.sort((a, b) => {
+                        if (a.email === SUPERADMIN_EMAIL) return -1;
+                        if (b.email === SUPERADMIN_EMAIL) return 1;
+                        if (a.isSuperadmin && !b.isSuperadmin) return -1;
+                        if (!a.isSuperadmin && b.isSuperadmin) return 1;
+                        return (a.username || '').localeCompare(b.username || '');
+                    });
+
+                    renderAdminList();
+                    renderUserList(allUsers);
+                    
+                    // Show superadmin controls if current user is primary superadmin
+                    if (isPrimarySuperadmin) {
+                        superadminControls.classList.remove('hidden');
+                    } else {
+                        superadminControls.classList.add('hidden');
+                    }
+
                 } catch (error) {
-                    console.error("Error fetching users:", error);
+                    console.error("Error fetching users and admins:", error);
                     listContainer.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-400">Error loading users: ${error.message}</td></tr>`;
+                    currentAdminsList.innerHTML = `<p class="text-red-400">Error loading admins: ${error.message}</p>`;
                 }
             };
             
@@ -1400,34 +1514,38 @@
                     (u.email && u.email.toLowerCase().includes(term)) ||
                     (u.uid && u.uid.toLowerCase().includes(term))
                 );
-                renderList(filtered);
+                renderUserList(filtered);
             });
             
-            refreshBtn.addEventListener('click', fetchUsers);
+            refreshBtn.addEventListener('click', fetchUsersAndAdmins);
             
-            // --- Handlers (Direct Firestore Writes) ---
-            window.handleAdminBan = (uid, username) => {
+            // --- Handlers for User Actions (Ban, Unban, Make Admin) ---
+            window.handleBanUser = (uid, username) => {
+                if (allAdmins.some(admin => admin.uid === uid)) {
+                    showMessage(bannedUserMessage, 'Admins cannot be banned.', 'error');
+                    return;
+                }
                 targetUserForBan = uid;
                 banTargetName.textContent = `Target: ${username} (${uid})`;
-                banReason.value = ''; 
+                banReason.value = '';
                 banModal.style.display = 'flex';
             };
             
-            window.handleAdminUnban = async (uid) => {
+            window.handleUnbanUser = async (uid) => {
                 if (!confirm("Are you sure you want to unban this user?")) return;
                 
-                showMessage(adminMessage, `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Unbanning user...`, 'warning');
+                showMessage(bannedUserMessage, `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Unbanning user...`, 'warning');
                 try {
                     await deleteDoc(doc(db, 'bans', uid));
-                    showMessage(adminMessage, 'User unbanned successfully.', 'success');
-                    fetchUsers(); 
+                    showMessage(bannedUserMessage, 'User unbanned successfully.', 'success');
+                    fetchUsersAndAdmins();
                 } catch (error) {
                     console.error("Unban error:", error);
-                    showMessage(adminMessage, `Failed to unban: ${error.message}`, 'error');
+                    showMessage(bannedUserMessage, `Failed to unban: ${error.message}`, 'error');
                 }
             };
 
-            window.handleMakeAdmin = async (uid, username) => {
+            window.handleMakeAdmin = async (uid, username, email) => {
                 if (!confirm(`Are you sure you want to make ${username} an admin? They will gain access to this dashboard.`)) return;
 
                 showMessage(adminMessage, `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Granting admin privileges...`, 'warning');
@@ -1435,15 +1553,172 @@
                     await setDoc(doc(db, 'admins', uid), {
                         role: 'admin',
                         addedBy: currentUser.uid,
-                        addedAt: serverTimestamp()
+                        addedAt: serverTimestamp(),
+                        username: username,
+                        email: email
                     });
                     showMessage(adminMessage, `${username} is now an admin.`, 'success');
-                    fetchUsers(); 
+                    fetchUsersAndAdmins();
                 } catch (error) {
                     console.error("Add Admin error:", error);
                     showMessage(adminMessage, `Failed to add admin: ${error.message}`, 'error');
                 }
             };
+
+            // --- Handlers for Admin Management Actions (Add/Remove Admin, Add/Remove Superadmin) ---
+            window.handleRemoveAdmin = async (uid, username) => {
+                if (!isPrimarySuperadmin) {
+                    showMessage(adminMessage, 'You do not have permission to remove admins.', 'error');
+                    return;
+                }
+                if (!confirm(`Are you sure you want to remove ${username} as an admin?`)) return;
+
+                showMessage(adminMessage, `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Removing admin privileges...`, 'warning');
+                try {
+                    await deleteDoc(doc(db, 'admins', uid));
+                    showMessage(adminMessage, `${username}'s admin privileges have been removed.`, 'success');
+                    fetchUsersAndAdmins();
+                } catch (error) {
+                    console.error("Remove Admin error:", error);
+                    showMessage(adminMessage, `Failed to remove admin: ${error.message}`, 'error');
+                }
+            };
+
+            addAdminBtn.addEventListener('click', async () => {
+                const email = newAdminEmailInput.value.trim();
+                if (!email) {
+                    showMessage(adminMessage, 'Please enter an email address.', 'error');
+                    return;
+                }
+                if (allAdmins.some(admin => admin.email === email)) {
+                    showMessage(adminMessage, 'This user is already an admin.', 'error');
+                    return;
+                }
+
+                showMessage(adminMessage, `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Searching for user and adding as admin...`, 'warning');
+                addAdminBtn.disabled = true;
+
+                try {
+                    const usersQuery = query(collection(db, 'users'), where('email', '==', email));
+                    const usersSnapshot = await getDocs(usersQuery);
+
+                    if (usersSnapshot.empty) {
+                        showMessage(adminMessage, 'No user found with that email address.', 'error');
+                    } else {
+                        const userDoc = usersSnapshot.docs[0];
+                        const uid = userDoc.id;
+                        const username = userDoc.data().username || email; // Use email if no username
+
+                        await setDoc(doc(db, 'admins', uid), {
+                            role: 'admin',
+                            addedBy: currentUser.uid,
+                            addedAt: serverTimestamp(),
+                            username: username,
+                            email: email
+                        });
+                        showMessage(adminMessage, `${username} has been added as an admin.`, 'success');
+                        newAdminEmailInput.value = '';
+                        fetchUsersAndAdmins();
+                    }
+                } catch (error) {
+                    console.error("Add Admin by email error:", error);
+                    showMessage(adminMessage, `Failed to add admin: ${error.message}`, 'error');
+                } finally {
+                    addAdminBtn.disabled = false;
+                }
+            });
+
+            window.handleRemoveSuperadmin = async (uid, email) => {
+                if (!isPrimarySuperadmin) {
+                    showMessage(superadminMessage, 'You do not have permission to remove superadmins.', 'error');
+                    return;
+                }
+                if (email === SUPERADMIN_EMAIL) { // Cannot remove primary superadmin
+                    showMessage(superadminMessage, 'The primary superadmin cannot be removed.', 'error');
+                    return;
+                }
+                if (!confirm(`Are you sure you want to remove ${email} as a superadmin? They will revert to a regular admin.`)) return;
+
+                showMessage(superadminMessage, `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Removing superadmin privileges...`, 'warning');
+                try {
+                    await updateDoc(doc(db, 'admins', uid), {
+                        role: 'admin', // Revert to regular admin
+                        superadminRemovedBy: currentUser.uid,
+                        superadminRemovedAt: serverTimestamp()
+                    });
+                    showMessage(superadminMessage, `${email}'s superadmin privileges have been removed.`, 'success');
+                    fetchUsersAndAdmins();
+                } catch (error) {
+                    console.error("Remove Superadmin error:", error);
+                    showMessage(superadminMessage, `Failed to remove superadmin: ${error.message}`, 'error');
+                }
+            };
+            
+            addSuperadminBtn.addEventListener('click', async () => {
+                const email = newSuperadminEmailInput.value.trim();
+                if (!email) {
+                    showMessage(superadminMessage, 'Please enter an email address.', 'error');
+                    return;
+                }
+                if (!isPrimarySuperadmin) {
+                    showMessage(superadminMessage, 'You do not have permission to add superadmins.', 'error');
+                    return;
+                }
+
+                // Check current superadmin count
+                const currentSuperadmins = allAdmins.filter(admin => admin.isSuperadmin);
+                if (currentSuperadmins.length >= MAX_SUPERADMINS + (SUPERADMIN_EMAIL === currentUser.email ? 0 : 1) && email !== SUPERADMIN_EMAIL) {
+                    showMessage(superadminMessage, `Cannot add more than ${MAX_SUPERADMINS} additional superadmins.`, 'error');
+                    return;
+                }
+
+                showMessage(superadminMessage, `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Searching for user and adding as superadmin...`, 'warning');
+                addSuperadminBtn.disabled = true;
+
+                try {
+                    const usersQuery = query(collection(db, 'users'), where('email', '==', email));
+                    const usersSnapshot = await getDocs(usersQuery);
+
+                    if (usersSnapshot.empty) {
+                        showMessage(superadminMessage, 'No user found with that email address.', 'error');
+                    } else {
+                        const userDoc = usersSnapshot.docs[0];
+                        const uid = userDoc.id;
+                        const username = userDoc.data().username || email;
+
+                        // Check if already an admin
+                        const adminDocRef = doc(db, 'admins', uid);
+                        const adminDocSnap = await getDoc(adminDocRef);
+
+                        if (adminDocSnap.exists()) {
+                            // Already an admin, just upgrade role
+                            await updateDoc(adminDocRef, {
+                                role: 'superadmin',
+                                superadminAddedBy: currentUser.uid,
+                                superadminAddedAt: serverTimestamp()
+                            });
+                            showMessage(superadminMessage, `${username} has been promoted to superadmin.`, 'success');
+                        } else {
+                            // Not an admin yet, add as superadmin
+                            await setDoc(adminDocRef, {
+                                role: 'superadmin',
+                                addedBy: currentUser.uid,
+                                addedAt: serverTimestamp(),
+                                username: username,
+                                email: email
+                            });
+                            showMessage(superadminMessage, `${username} has been added as a superadmin.`, 'success');
+                        }
+                        newSuperadminEmailInput.value = '';
+                        fetchUsersAndAdmins();
+                    }
+                } catch (error) {
+                    console.error("Add Superadmin error:", error);
+                    showMessage(superadminMessage, `Failed to add superadmin: ${error.message}`, 'error');
+                } finally {
+                    addSuperadminBtn.disabled = false;
+                }
+            });
             
             // --- Ban Modal Actions ---
             const closeBanModal = () => { banModal.style.display = 'none'; };
@@ -1460,34 +1735,27 @@
                 }
                 
                 closeBanModal();
-                showMessage(adminMessage, `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Banning user...`, 'warning');
+                showMessage(bannedUserMessage, `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Banning user...`, 'warning');
                 
                 try {
-                    // Calculate Expiration
-                    let expiresAt = null;
-                    // Note: Simple calculation, precise logic can be added if date-fns available
-                    // For now we rely on manual unbans or implicit duration logic in enforcer if updated
-                    // Actually, storing the string is fine for display, logic is enforcement
-                    
                     await setDoc(doc(db, 'bans', targetUserForBan), {
                         uid: targetUserForBan,
                         reason: reason || 'No reason provided',
                         bannedBy: currentUser.uid,
                         bannedAt: serverTimestamp(),
                         duration: duration,
-                        // expiresAt: expiresAt // Optional: Implement if auto-unban logic exists
                     });
 
-                    showMessage(adminMessage, 'User banned successfully.', 'success');
-                    fetchUsers(); 
+                    showMessage(bannedUserMessage, 'User banned successfully.', 'success');
+                    fetchUsersAndAdmins();
                 } catch (error) {
                     console.error("Ban error:", error);
-                    showMessage(adminMessage, `Failed to ban: ${error.message}`, 'error');
+                    showMessage(bannedUserMessage, `Failed to ban: ${error.message}`, 'error');
                 }
             };
 
             // Initial Fetch
-            await fetchUsers();
+            await fetchUsersAndAdmins();
         }
 
 
@@ -4035,10 +4303,10 @@
                 mainView.innerHTML = getDataManagementContent(); // Render HTML
                 await loadDataTab(); // Load data and add listeners
             }
-            else if (tabId === 'admin') {
-                // --- NEW: Load Admin Tab ---
-                mainView.innerHTML = getAdminContent();
-                await loadAdminTab();
+            else if (tabId === 'management') {
+                // --- NEW: Load Management Tab ---
+                mainView.innerHTML = getManagementContent();
+                await loadManagementTab();
             }
             else if (tabId === 'about') {
                 mainView.innerHTML = getAboutContent();
@@ -4079,7 +4347,7 @@
                         const adminSnap = await getDoc(adminDocRef);
                         
                         if (adminSnap.exists()) {
-                            const adminTab = document.getElementById('tab-admin');
+                            const adminTab = document.getElementById('tab-management');
                             if (adminTab) adminTab.classList.remove('hidden');
                         }
                     } catch (e) {
