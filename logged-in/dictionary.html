@@ -31,7 +31,7 @@
             font-family: 'Geist', sans-serif; 
             background-color: var(--bg-page);
             color: var(--text-primary);
-            font-weight: 300; /* Thinner base font matching notes.html */
+            font-weight: 300;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -39,7 +39,6 @@
             font-size: 16px;
         }
 
-        /* Thinner bold/headings matching notes.html */
         h1, h2, h3, .font-bold, .font-semibold, strong, .tracking-widest {
             font-weight: 400 !important;
         }
@@ -48,7 +47,7 @@
         .btn-toolbar-style {
             background: var(--menu-bg, #0000000);
             border: 1px solid var(--menu-border, #333);
-            border-radius: 0.75rem; /* Matches Notes Toolbar Radius */
+            border-radius: 0.75rem;
             color: var(--menu-text, #d1d5db);
             padding: 0.5rem 1rem;
             font-weight: 500;
@@ -60,14 +59,12 @@
             gap: 0.5rem;
         }
         
-        /* UPDATED HOVER: Keeps black background, highlights text (Matches Notes) */
         .btn-toolbar-style:hover {
             background-color: var(--menu-bg, #000000);
             border-color: var(--menu-border, #fff);
             color: var(--tab-hover-text, #ffffff);
         }
         
-        /* Primary Override (Matches Notes Active Tab Texture) */
         .btn-toolbar-style.btn-primary-override {
             background-color: var(--tab-active-bg, rgba(79, 70, 229, 0.1));
             border: 1px solid var(--tab-active-border, #4f46e5);
@@ -84,17 +81,17 @@
             width: 100%; 
             padding: 1rem 1.5rem; 
             border: 1px solid #1a1a1a; 
-            background-color: #0d0d0d; /* Matches Note Editor BG */
-            border-radius: 0.75rem; /* Matches Notes Radius */
+            background-color: #0d0d0d; 
+            border-radius: 0.75rem; 
             color: #c0c0c0; 
             transition: all 0.2s;
             font-size: 1.1rem;
-            font-weight: 300; /* Match body weight */
+            font-weight: 300;
         }
         .input-text-style:focus {
             border-color: #505050; 
             outline: none;
-            box-shadow: none; /* Removed purple shadow to match Notes clean focus */
+            box-shadow: none;
         }
 
         /* --- LAYOUT UTILS --- */
@@ -104,7 +101,6 @@
             flex-direction: column;
         }
 
-        /* Exact Header Match from notes.html */
         header {
             display: flex;
             justify-content: space-between;
@@ -126,70 +122,104 @@
             align-self: center;
         }
 
-        /* Matches #note-editor styles */
+        /* Content Box - Matches #note-editor */
         .dictionary-content-box {
             background-color: #0d0d0d;
             border: 1px solid #1a1a1a;
-            border-radius: 0.75rem; /* Matches toolbar radius */
+            border-radius: 0.75rem;
             padding: 2rem;
             min-height: 50vh;
             color: #c0c0c0;
-            /* Fix for fontName persistence issue: ensure default style is not applied on new lines */
-            font-family: inherit;
+            line-height: 1.6;
         }
 
-        /* --- DICTIONARY SPECIFIC STYLES --- */
+        /* --- DICTIONARY SPECIFIC STYLES (REDESIGNED) --- */
+        
         .pronunciation-text {
             font-family: 'Playfair Display', serif;
             font-style: italic;
-            color: #9ca3af;
+            color: #707070; /* Subtle text, not bright */
             transition: color 0.2s ease;
             cursor: default; 
+            font-size: 1.25rem;
         }
         
+        /* Links inside definitions */
         .highlighted-word {
             text-decoration: underline;
-            text-decoration-color: rgba(79, 70, 229, 0.5);
+            text-decoration-color: rgba(79, 70, 229, 0.4);
             text-underline-offset: 3px;
             cursor: pointer;
-            transition: background-color 0.15s ease;
+            color: #c0c0c0;
+            transition: all 0.2s ease;
         }
         .highlighted-word:hover {
-            background-color: rgba(79, 70, 229, 0.1);
-            border-radius: 4px;
             color: #ffffff;
+            text-decoration-color: #4f46e5;
         }
         
+        /* Synonyms list styling */
         .synonym-tag {
             cursor: pointer;
+            color: #9ca3af;
             transition: all 0.2s;
         }
         .synonym-tag:hover {
-             color: var(--color-indigo); 
+             color: #ffffff; 
              text-decoration: underline;
+             text-decoration-color: #4f46e5;
+             text-underline-offset: 3px;
         }
         
         .audio-icon {
-            font-size: 0.8em;
-            margin-left: 8px;
-            color: var(--color-indigo);
+            font-size: 0.6em;
+            margin-left: 12px;
+            color: #4f46e5;
             cursor: pointer;
-            opacity: 0.8;
+            opacity: 0.6;
             transition: opacity 0.2s;
+            vertical-align: middle;
         }
         .audio-icon:hover { opacity: 1; }
         
+        /* CLEANED UP: Part of Speech Label */
         .part-of-speech-label {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background-color: var(--color-indigo);
-            color: #ffffff;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            font-size: 1.2rem;
+            display: block;
+            width: 100%;
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
             margin-bottom: 1rem;
+            
+            /* No background, simple text header style */
+            background-color: transparent;
+            color: #4f46e5; 
+            
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-bottom: 1px solid #1a1a1a; /* Subtle separator line */
+        }
+        
+        /* Ordered List numbers */
+        ol.definition-list {
+            counter-reset: item;
+            list-style: none;
+            padding-left: 0;
+        }
+        ol.definition-list li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #c0c0c0;
+        }
+        ol.definition-list li::before {
+            content: counter(item) ".";
+            counter-increment: item;
+            position: absolute;
+            left: 0;
+            color: #505050; /* Subtle numbering color */
+            font-weight: 300;
         }
     </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1D4F692C1Q"></script>
@@ -205,7 +235,7 @@
 <body class="min-h-screen">
     
     <div id="loading-screen" class="fixed inset-0 bg-[#040404] flex items-center justify-center z-50">
-        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+        <i class="fa-solid fa-spinner fa-spin fa-2x text-white"></i>
     </div>
 
     <div id="page-content" class="hidden">
@@ -268,8 +298,6 @@
         let currentAudio = null; 
 
         // --- URL HASH MANAGEMENT ---
-        
-        // Gets the word from the URL hash (e.g., #word=apple)
         function getWordFromHash() {
             const hash = window.location.hash;
             if (hash.startsWith('#word=')) {
@@ -278,27 +306,22 @@
             return '';
         }
 
-        // Updates the URL hash without reloading the page
         function updateUrlHash(word) {
             const newHash = word ? `#word=${encodeURIComponent(word.toLowerCase())}` : '';
-            // Use replaceState if the hash hasn't changed to avoid adding duplicate history entries
             if (window.location.hash === newHash) return;
             history.pushState(null, '', newHash);
         }
 
-        // Checks the URL hash on load or when the hash changes
         function checkUrlHashForWord() {
             const word = getWordFromHash();
             if (word) {
                 searchInput.value = word;
                 fetchDefinition(word);
             } else {
-                // If hash is empty, ensure the search box is clear
                 searchInput.value = '';
             }
         }
 
-        // Listen for browser back/forward buttons when hash changes
         window.addEventListener('popstate', checkUrlHashForWord);
 
 
@@ -308,13 +331,12 @@
             const trimmedWord = word.trim().toLowerCase();
             if (!trimmedWord) return;
             
-            // Set the URL hash immediately when starting a search
             updateUrlHash(trimmedWord);
 
             definitionOutput.innerHTML = `
                 <div class="h-full flex flex-col items-center justify-center pt-12">
                     <i class="fa-solid fa-spinner fa-spin fa-2x text-indigo-500 mb-4"></i>
-                    <p class="text-lg font-light text-gray-400">Searching for '${trimmedWord}'...</p>
+                    <p class="text-lg font-light text-gray-400">Searching...</p>
                 </div>
             `;
             searchInput.value = trimmedWord;
@@ -348,7 +370,7 @@
                 definitionOutput.innerHTML = `
                     <div class="text-center pt-12">
                         <p class="text-red-400 mb-2"><i class="fa-solid fa-bug mr-2"></i>An error occurred.</p>
-                        <p class="text-sm text-gray-500">Check your Cloud Function (${CLOUD_FUNCTION_URL}) and console for errors.</p>
+                        <p class="text-sm text-gray-500">Check console for details.</p>
                     </div>
                 `;
             }
@@ -419,7 +441,7 @@
         function displayDefinition(word, dictData, thesData) {
             const primaryEntry = dictData[0];
             
-            // Headword with replacement for stress/dots (replace * with ·)
+            // Headword
             const hw = primaryEntry.hwi ? primaryEntry.hwi.hw.replace(/\*/g, '·') : word;
             
             // Pronunciation
@@ -428,46 +450,43 @@
             const audioUrl = prs && prs.sound ? getAudioUrl(prs.sound.audio) : null;
             
             let htmlContent = `
-                <div class="space-y-6 fade-in">
-                    <div class="border-b border-[#252525] pb-4 space-y-2">
-                        <h2 class="text-5xl text-indigo-400 capitalize font-normal">${hw}
-                            ${audioUrl ? `<i class="fa-solid fa-volume-high audio-icon text-3xl ml-4" title="Listen" data-audio="${audioUrl}"></i>` : ''}
+                <div class="space-y-4 fade-in">
+                    <div class="border-b border-[#1a1a1a] pb-6">
+                        <h2 class="text-4xl text-white capitalize font-normal tracking-wide">${hw}
+                            ${audioUrl ? `<i class="fa-solid fa-volume-high audio-icon" title="Listen" data-audio="${audioUrl}"></i>` : ''}
                         </h2>
                         
-                        ${mwPron ? `<p class="text-2xl text-gray-500 pronunciation-text font-serif italic">/${mwPron}/</p>` : ''}
+                        ${mwPron ? `<p class="mt-2 pronunciation-text">/${mwPron}/</p>` : ''}
                     </div>
             `;
             
-            // --- Definitions Grouped by Part of Speech (Functional Label) ---
-            
+            // --- Definitions Grouped ---
             const groupedDefinitions = {};
             dictData.slice(0, 5).forEach(entry => {
                 if (typeof entry === 'string') return;
-                const fl = entry.fl ? entry.fl.toUpperCase() : 'DEFINITION'; 
+                const fl = entry.fl ? entry.fl.toLowerCase() : 'definition'; 
                 if (!groupedDefinitions[fl]) {
                     groupedDefinitions[fl] = [];
                 }
                 groupedDefinitions[fl].push(entry);
             });
             
-            htmlContent += `<div class="space-y-8">`; 
+            htmlContent += `<div class="mt-2">`; 
             
             for (const fl in groupedDefinitions) {
                 if (groupedDefinitions.hasOwnProperty(fl) && groupedDefinitions[fl][0].shortdef) {
                     const entries = groupedDefinitions[fl];
                     
-                    // Part of Speech Header
+                    // CLEAN Part of Speech Header (No Box)
                     htmlContent += `
-                        <div class="pt-4">
-                            <span class="part-of-speech-label">${fl}</span>
-                        </div>
-                        <ol class="list-decimal list-outside ml-6 mt-4 space-y-4 text-xl">
+                        <div class="part-of-speech-label">${fl}</div>
+                        <ol class="definition-list">
                     `;
 
                     entries.forEach(entry => {
                         entry.shortdef.forEach(def => {
                             htmlContent += `
-                                <li class="text-gray-300 font-light leading-relaxed text-lg">
+                                <li>
                                     ${highlightDefinitionText(def)}
                                 </li>
                             `;
@@ -480,7 +499,7 @@
             
             htmlContent += `</div>`; 
 
-            // --- Synonyms (From Thesaurus Data) ---
+            // --- Synonyms ---
             let allSynonyms = [];
             if (thesData && thesData.length > 0 && typeof thesData[0] !== 'string') {
                 thesData.forEach(entry => {
@@ -498,12 +517,12 @@
             if (allSynonyms.length > 0) {
                 const synonymTags = allSynonyms.slice(0, 15).map(s => 
                     `<span class="synonym-tag" data-word="${s}">${s}</span>`
-                ).join('<span class="text-gray-600 mx-2">•</span>');
+                ).join('<span class="text-[#333] mx-2">|</span>');
 
                 htmlContent += `
-                    <div class="mt-8 pt-4 border-t border-[#252525]">
-                        <p class="text-sm text-gray-500 font-medium uppercase mb-3">Synonyms</p>
-                        <div class="flex flex-wrap items-center leading-loose text-gray-400">
+                    <div class="mt-12 pt-6 border-t border-[#1a1a1a]">
+                        <p class="text-xs text-[#505050] font-medium uppercase mb-3 tracking-widest">Synonyms</p>
+                        <div class="leading-loose text-[#9ca3af]">
                             ${synonymTags}
                         </div>
                     </div>
@@ -518,7 +537,6 @@
         function handleSearch() {
             const query = searchInput.value.trim().toLowerCase();
             if (query) {
-                 // The fetchDefinition function now handles updating the hash
                 fetchDefinition(query); 
             }
         }
@@ -529,16 +547,12 @@
         
         searchButton.addEventListener('click', handleSearch);
 
-        // Delegation for clicks (Words, Audio)
         definitionOutput.addEventListener('click', (event) => {
             const target = event.target;
-            
             if (target.dataset.word) {
-                // When a linked word is clicked, update the input and search
                 searchInput.value = target.dataset.word; 
                 fetchDefinition(target.dataset.word);
             }
-            
             if (target.classList.contains('audio-icon') && target.dataset.audio) {
                 playAudio(target.dataset.audio);
             }
@@ -564,7 +578,6 @@
                     loadingScreen.style.display = 'none';
                     pageContent.classList.remove('hidden');
                     pageContent.style.display = 'flex'; 
-                    // New: Check URL hash once authentication is ready
                     checkUrlHashForWord(); 
                 }, 300);
             } else {
