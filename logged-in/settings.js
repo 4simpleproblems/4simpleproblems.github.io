@@ -856,7 +856,7 @@
                         <p class="text-sm font-light text-gray-400 mb-4">
                             Configure up to 3 panic keys. Pressing the specified key (without Shift, Ctrl, or Alt) on any page will redirect you to the URL you set.
                             <br>
-                            <span class="text-yellow-400">Valid keys:</span> a-z, 0-9, and \` - = [ ] \\ ; ' , . /
+                            <span class="text-yellow-400">Valid keys:</span> a-z, 0-9, and &#96; - = [ ] \\ ; ' , . /
                         </p>
                         
                         <div class="flex items-center gap-4 px-2 mb-2">
@@ -1198,8 +1198,7 @@
          * NEW: Generates the HTML for the "Admin" section.
          */
                  function getManagementContent() {            return `
-        function getManagementContent() {
-            return `
+
                 <h2 class="text-3xl font-bold text-white mb-6">Management</h2>
                 
                 <!-- Admin Management Section -->
