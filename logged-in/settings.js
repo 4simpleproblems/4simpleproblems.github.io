@@ -1515,11 +1515,21 @@
                 currentAdminsList.innerHTML = `<p class="text-gray-500 italic">Loading admins...</p>`;
 
                 try {
-                    const [usersSnap, bansSnap, adminsSnap] = await Promise.all([
+                    // Fetch users and admins first (these should work if admin)
+                    const [usersSnap, adminsSnap] = await Promise.all([
                         getDocs(collection(db, 'users')),
-                        getDocs(collection(db, 'bans')),
                         getDocs(collection(db, 'admins'))
                     ]);
+
+                    // Try to fetch bans, but handle permission error gracefully
+                    // (The 'bans' collection rules might restrict listing even for admins)
+                    let bansSnap = { forEach: () => {} }; // Default empty mock
+                    try {
+                        bansSnap = await getDocs(collection(db, 'bans'));
+                    } catch (banError) {
+                        console.warn("Could not list 'bans' collection (likely permission issue). Proceeding without ban data.", banError);
+                        // Optionally notify the user in the UI, or just silently fail for this part
+                    }
 
                     const bansMap = new Map();
                     bansSnap.forEach(doc => bansMap.set(doc.id, doc.data()));
