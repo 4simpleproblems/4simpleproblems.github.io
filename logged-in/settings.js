@@ -3276,84 +3276,86 @@
             const primaryProviderId = currentUser.providerData[0].providerId;
 
 
-            const performAccountDeletion = async () => {
-                showMessage(deleteMessage, '', 'success');
-                showMessage(deleteMessage, '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Deleting account and all traces...', 'warning');
+            // --- ACCOUNT DELETION LOGIC --- 
 
-                try {
-                    const uid = auth.currentUser.uid;
-                    
-                    // --- 1. Firestore Cleanup (Batch) ---
-                    const batch = writeBatch(db);
-                    
-                    // A. User Profile
-                    batch.delete(doc(db, 'users', uid));
-                    
-                    // B. Admin & Ban Records (Try to delete, no error if missing)
-                    batch.delete(doc(db, 'admins', uid));
-                    batch.delete(doc(db, 'bans', uid));
-                    
-                    // C. Friend Code
-                    // Note: We assume appId is '4sp-default-app' based on project conventions
-                    const appId = '4sp-default-app';
-                    const friendCodesQuery = query(
-                        collection(db, 'artifacts', appId, 'public', 'data', 'friend_codes'), 
-                        where('userId', '==', uid)
-                    );
-                    const friendCodesSnap = await getDocs(friendCodesQuery);
-                    friendCodesSnap.forEach(d => batch.delete(d.ref));
+/**
+ * Executes the full account deletion process.
+ * 1. Collects and executes a batch delete for all associated Firestore data.
+ * 2. Deletes the Firebase Auth user (MUST BE LAST).
+ * 3. Cleans up local data.
+ * 4. Redirects the user.
+ */
+const performAccountDeletion = async (credential) => {
+    try {
+        const userId = auth.currentUser.uid;
+        // Assuming showLoading() is defined elsewhere in your file
+        showLoading("Permanently deleting your account and all associated data...");
 
-                    // D. Daily Photos
-                    const photosQuery = query(
-                        collection(db, 'daily_photos'),
-                        where('creatorUid', '==', uid)
-                    );
-                    const photosSnap = await getDocs(photosQuery);
-                    photosSnap.forEach(d => batch.delete(d.ref));
+        // NOTE: All Firestore deletion queries and commits MUST run before deleteUser(auth.currentUser)
+        
+        // --- 1. FIRESTORE DELETION (BATCH WRITE) ---
+        // This is the FIRST action, ensuring permissions are valid while deleting.
+        const batch = writeBatch(db); 
 
-                    // Commit Firestore Changes
-                    await batch.commit();
+        // A. Delete User Profile Document 
+        const userDocRef = doc(db, 'users', userId); 
+        batch.delete(userDocRef);
 
-                    // --- 2. Local Storage Cleanup ---
-                    localStorage.clear();
+        // B. Query and Queue Deletion for Daily Photos
+        const photosQuery = query(collection(db, 'dailyPhotos'), where('userId', '==', userId));
+        const photosSnapshot = await getDocs(photosQuery);
+        photosSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
 
-                    // --- 3. IndexedDB Cleanup ---
-                    try {
-                        if (window.indexedDB && window.indexedDB.databases) {
-                            const dbs = await window.indexedDB.databases();
-                            for (const dbInfo of dbs) {
-                                if (dbInfo.name) {
-                                    window.indexedDB.deleteDatabase(dbInfo.name);
-                                }
-                            }
-                        } else {
-                            // Fallback for browsers without databases() API
-                            const knownDBs = ['userLocalSettingsDB', '4spNotesDB', '4spCountdownDB'];
-                            knownDBs.forEach(name => window.indexedDB.deleteDatabase(name));
-                        }
-                    } catch (e) {
-                        console.warn("IndexedDB cleanup partial error:", e);
-                    }
-                    
-                    // --- 4. Auth Deletion ---
-                    await deleteUser(auth.currentUser);
+        // C. Query and Queue Deletion for Friend Requests (as sender or recipient)
+        const sentRequestsQuery = query(collection(db, 'friendRequests'), where('senderId', '==', userId));
+        const receivedRequestsQuery = query(collection(db, 'friendRequests'), where('recipientId', '==', userId));
+        
+        const sentSnapshot = await getDocs(sentRequestsQuery);
+        sentSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        
+        const receivedSnapshot = await getDocs(receivedRequestsQuery);
+        receivedSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        
+        // EXECUTE THE BATCH: The permissions check happens here, with a valid token.
+        await batch.commit(); 
 
-                    // --- 5. Sign Out & Redirect ---
-                    await signOut(auth);
-                    window.location.href = '../authentication.html';
+        // --- 2. AUTH DELETION (LAST STEP) ---
+        // This is done after Firestore deletion to maintain permissions.
+        await deleteUser(auth.currentUser); 
 
-                } catch (error) {
-                    console.error("Error deleting account:", error);
-                    let msg = "Failed to delete account completely. Please try again or sign in again.";
-                    if (error.code === 'auth/requires-recent-login') {
-                        msg = 'Deletion failed: Please sign out and sign in again immediately to proceed with deletion.';
-                    }
-                    showMessage(deleteMessage, msg, 'error');
-                    // Re-enable/reset UI elements
-                    if (reauthenticateBtn) reauthenticateBtn.classList.remove('hidden');
-                    if (finalDeleteBtn) finalDeleteBtn.classList.add('hidden');
-                }
-            };
+        // --- 3. Local Storage/IndexedDB Cleanup ---
+        localStorage.clear();
+
+        // --- 4. Sign Out & Redirect ---
+        await signOut(auth);
+        window.location.href = '../authentication.html';
+
+    } catch (error) {
+        console.error("Error deleting account:", error); 
+        let msg = "Failed to delete account completely. Please sign out and sign in again immediately to proceed with deletion.";
+
+        // Handle re-login requirement specifically for security-sensitive operations
+        if (error.code === 'auth/requires-recent-login') {
+            msg = 'Deletion failed: For security, please sign out, sign in again, and then immediately try the deletion process.';
+        } else if (error.code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')) {
+            msg = 'Deletion failed due to insufficient server permissions. Please ensure your Firestore rules and code order are correct.';
+        }
+        
+        // Use the existing message display function
+        // Assuming deleteMessage is the UI element for displaying deletion errors
+        showMessage(deleteMessage, msg, 'error'); 
+
+        // Re-enable/reset UI elements (Requested Addition)
+        if (reauthenticateBtn) reauthenticateBtn.classList.remove('hidden');
+        if (finalDeleteBtn) finalDeleteBtn.classList.add('hidden');
+    }
+};
 
 
             // --- Email/Password Primary Deletion Logic ---
