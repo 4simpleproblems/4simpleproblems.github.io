@@ -29,6 +29,15 @@
             setDoc,
             writeBatch
         } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { 
+            getStorage, 
+            ref, 
+            listAll, 
+            getDownloadURL, 
+            uploadString, 
+            deleteObject, 
+            uploadBytes 
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
         
         // --- Import Firebase Config (Assumed to exist in a relative file) ---
         import { firebaseConfig } from "../firebase-config.js"; 
@@ -46,6 +55,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
         // --- Global State and Element References ---
         const sidebarTabs = document.querySelectorAll('.settings-tab');
@@ -1310,6 +1320,58 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Sound Management Section -->
+                <div class="w-full mt-8 border-t border-[#252525] pt-8">
+                    <h3 class="text-xl font-bold text-white mb-2">Sound Management</h3>
+                    <p class="text-sm font-light text-gray-400 mb-4">
+                        Manage soundboard sounds. Upload, rename, or delete sounds.
+                    </p>
+
+                    <!-- Navigation for Sound Manager -->
+                     <div class="flex items-center gap-4 mb-4">
+                        <button id="showCreate" class="btn-toolbar-style btn-primary-override">Create Sound</button>
+                        <button id="showManage" class="btn-toolbar-style">Manage Sounds</button>
+                        <button id="showUtils" class="btn-toolbar-style">Utilities</button>
+                    </div>
+
+                    <!-- Create Section -->
+                    <section id="create-section" class="settings-box p-4 mb-4">
+                        <h4 class="text-lg font-bold text-white mb-4">Create New Sound</h4>
+                        <div class="flex flex-col gap-4">
+                            <input type="text" id="soundTitle" placeholder="Sound Title" class="input-text-style">
+                            <input type="file" id="soundFile" accept="audio/*" class="input-text-style">
+                            <div id="waveform" class="mt-4 bg-gray-800 rounded-lg"></div>
+                            <div id="trim-info" class="text-sm text-gray-400 h-4"></div>
+                            <button id="deployBtn" class="btn-toolbar-style btn-primary-override self-end">Deploy</button>
+                        </div>
+                    </section>
+
+                    <!-- Manage Section -->
+                    <section id="manage-section" class="hidden settings-box p-4 mb-4">
+                        <div class="grid grid-cols-1 gap-8">
+                            <div class="mb-4">
+                                <h4 class="text-lg font-bold text-white mb-2">General Sync Status</h4>
+                                <div id="general-status" class="text-sm text-gray-400"></div>
+                            </div>
+                            <div class="mb-4">
+                                <h4 class="text-lg font-bold text-white mb-2">JSON File Sounds</h4>
+                                <div id="json-sounds" class="text-sm text-gray-400"></div>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-white mb-2">Sounds Folder Files</h4>
+                                <div id="storage-sounds" class="text-sm text-gray-400"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Utils Section -->
+                    <section id="utils-section" class="hidden settings-box p-4 mb-4">
+                         <h4 class="text-lg font-bold text-white mb-4">Sound Utilities</h4>
+                         <p class="text-gray-400 mb-4 text-sm">Run utilities to manage sound data.</p>
+                         <button id="normalizeNamesBtn" class="btn-toolbar-style">Normalize All JSON Sound Names</button>
+                    </section>
+                </div>
             `;
         }
         
@@ -1755,6 +1817,9 @@
 
             // Initial Fetch
             await fetchUsersAndAdmins();
+            
+            // Load Sound Management
+            loadSoundManagement();
         }
 
 
@@ -4413,3 +4478,426 @@ const performAccountDeletion = async (credential) => {
         
         // Use a short timeout to allow the rest of the script to run before auth check
         setTimeout(() => { initializeAuth(); }, 100); 
+
+        /**
+         * Logic for Sound Management (Soundboard)
+         */
+        async function loadSoundManagement() {
+             // Section Toggling
+            const sections = {
+                create: document.getElementById('create-section'),
+                manage: document.getElementById('manage-section'),
+                utils: document.getElementById('utils-section'),
+            };
+            const navButtons = {
+                create: document.getElementById('showCreate'),
+                manage: document.getElementById('showManage'),
+                utils: document.getElementById('showUtils'),
+            };
+
+            function showSection(sectionName) {
+                if (!sections[sectionName]) return;
+                Object.values(sections).forEach(s => s.classList.add('hidden'));
+                Object.values(navButtons).forEach(b => b.classList.remove('btn-primary-override'));
+                
+                sections[sectionName].classList.remove('hidden');
+                navButtons[sectionName].classList.add('btn-primary-override');
+                
+                if (sectionName === 'manage') {
+                    loadSoundData();
+                }
+            }
+
+            if (navButtons.create) navButtons.create.addEventListener('click', () => showSection('create'));
+            if (navButtons.manage) navButtons.manage.addEventListener('click', () => showSection('manage'));
+            if (navButtons.utils) navButtons.utils.addEventListener('click', () => showSection('utils'));
+
+            // --- Create Sound Logic ---
+            const deployBtn = document.getElementById('deployBtn');
+            const fileInput = document.getElementById('soundFile');
+            const titleInput = document.getElementById('soundTitle');
+            const waveformDiv = document.getElementById('waveform');
+            const trimInfoDiv = document.getElementById('trim-info');
+            
+            let wavesurfer, activeRegion;
+
+            if (fileInput) {
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    if (wavesurfer) {
+                        wavesurfer.destroy();
+                    }
+                    
+                    if (typeof WaveSurfer === 'undefined') {
+                        alert("WaveSurfer library not loaded.");
+                        return;
+                    }
+
+                    wavesurfer = WaveSurfer.create({
+                        container: waveformDiv,
+                        waveColor: 'rgb(200, 200, 200)',
+                        progressColor: 'rgb(100, 100, 100)',
+                        url: URL.createObjectURL(file),
+                    });
+
+                    const wsRegions = wavesurfer.registerPlugin(WaveSurfer.Regions.create());
+
+                    wavesurfer.on('ready', () => {
+                        wsRegions.clearRegions();
+                        activeRegion = wsRegions.addRegion({
+                            start: 0,
+                            end: wavesurfer.getDuration(),
+                            color: 'rgba(79, 70, 229, 0.2)',
+                            drag: true,
+                            resize: true,
+                        });
+                        trimInfoDiv.textContent = `Full duration: ${wavesurfer.getDuration().toFixed(2)}s. Drag handles to trim.`;
+                    });
+
+                    wsRegions.on('region-updated', (region) => {
+                        activeRegion = region;
+                        trimInfoDiv.textContent = `Trimmed selection: ${region.start.toFixed(2)}s to ${region.end.toFixed(2)}s`;
+                    });
+                });
+            }
+
+            if (deployBtn) {
+                deployBtn.addEventListener('click', async () => {
+                    const title = titleInput.value.trim();
+                    const file = fileInput.files[0];
+
+                    if (!title || !file) {
+                        alert('Please provide a title and a file.');
+                        return;
+                    }
+
+                    if (!wavesurfer || !activeRegion) {
+                        alert('Please upload a file and wait for the waveform to load.');
+                        return;
+                    }
+
+                    const startTime = activeRegion.start;
+                    const endTime = activeRegion.end;
+
+                    deployBtn.disabled = true;
+                    deployBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deploying...';
+
+                    try {
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                            const arrayBuffer = e.target.result;
+                            const audioContext = new AudioContext();
+                            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                            const startOffset = Math.floor(startTime * audioBuffer.sampleRate);
+                            const endOffset = Math.floor(endTime * audioBuffer.sampleRate);
+                            const frameCount = endOffset - startOffset;
+
+                            const newBuffer = audioContext.createBuffer(audioBuffer.numberOfChannels, frameCount, audioBuffer.sampleRate);
+                            for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+                                const channelData = audioBuffer.getChannelData(i);
+                                const newChannelData = newBuffer.getChannelData(i);
+                                newChannelData.set(channelData.subarray(startOffset, endOffset));
+                            }
+                            
+                            if (typeof lamejs === 'undefined') {
+                                throw new Error("lamejs library not loaded.");
+                            }
+
+                            const mp3encoder = new lamejs.Mp3Encoder(newBuffer.numberOfChannels, newBuffer.sampleRate, 64);
+                            const samples = [];
+                            for(let i = 0; i < newBuffer.numberOfChannels; i++) {
+                                samples.push(newBuffer.getChannelData(i));
+                            }
+                            const mp3Data = [];
+
+                            const sampleBlockSize = 1152;
+                            for (let i = 0; i < samples[0].length; i += sampleBlockSize) {
+                                const leftChunk = samples[0].subarray(i, i + sampleBlockSize);
+                                const rightChunk = samples.length > 1 ? samples[1].subarray(i, i + sampleBlockSize) : leftChunk;
+                                const mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+                                if (mp3buf.length > 0) {
+                                    mp3Data.push(mp3buf);
+                                }
+                            }
+                            const mp3buf = mp3encoder.flush();
+                            if (mp3buf.length > 0) {
+                                mp3Data.push(mp3buf);
+                            }
+
+                            const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+                            const fileName = title.replace(/ /g, '_') + '.mp3';
+                            const storageRef = ref(storage, `Soundboard/Sounds/${fileName}`);
+                            
+                            await uploadBytes(storageRef, blob);
+
+                            // Update JSON
+                            const jsonRef = ref(storage, 'Soundboard/SoundboardNames.json');
+                            const jsonUrl = await getDownloadURL(jsonRef);
+                            const response = await fetch(jsonUrl, { cache: "no-store" });
+                            const soundData = await response.json();
+                            
+                            // Initialize if missing
+                            if (!soundData.NormalSounds) soundData.NormalSounds = [];
+
+                            soundData.NormalSounds.push(fileName);
+                            
+                            const newJsonString = JSON.stringify(soundData, null, 2);
+                            await uploadString(jsonRef, newJsonString, 'raw', { contentType: 'application/json' });
+
+                            alert('Sound deployed successfully!');
+                            // Reset
+                            titleInput.value = '';
+                            fileInput.value = '';
+                            if(wavesurfer) wavesurfer.destroy();
+                            trimInfoDiv.textContent = '';
+                            
+                        };
+                        reader.readAsArrayBuffer(file);
+
+                    } catch (error) {
+                        console.error("Deploy error:", error);
+                        alert(`Error: ${error.message}`);
+                    } finally {
+                        deployBtn.disabled = false;
+                        deployBtn.innerHTML = 'Deploy';
+                    }
+                });
+            }
+            
+            // --- Manage Logic ---
+            async function loadSoundData() {
+                const jsonSoundsDiv = document.getElementById('json-sounds');
+                const storageSoundsDiv = document.getElementById('storage-sounds');
+                const generalStatusDiv = document.getElementById('general-status');
+
+                jsonSoundsDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+                storageSoundsDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+                generalStatusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+
+                try {
+                    // 1. Fetch and parse the JSON file
+                    const jsonRef = ref(storage, 'Soundboard/SoundboardNames.json');
+                    const jsonUrl = await getDownloadURL(jsonRef);
+                    const response = await fetch(jsonUrl, { cache: "no-store" });
+                    const soundData = await response.json();
+                    
+                    const createJsonListItem = (file, category) =>
+                        `<li class="flex items-center justify-between bg-[#0a0a0a] border border-[#1a1a1a] p-2 mb-1 rounded">
+                            <span>${file}</span>
+                            <div>
+                                <button data-file="${file}" data-category="${category}" class="rename-json-btn text-blue-500 hover:text-blue-400 mr-2 text-sm">Rename</button>
+                                <button data-file="${file}" data-category="${category}" class="delete-json-btn text-red-500 hover:text-red-400 text-sm">Remove</button>
+                            </div>
+                        </li>`;
+
+                    jsonSoundsDiv.innerHTML = `
+                        <h5 class="font-bold text-md text-white mt-2">Normal Sounds</h5>
+                        <ul class="mb-2">${(soundData.NormalSounds || []).map(f => createJsonListItem(f, 'NormalSounds')).join('')}</ul>
+                        <h5 class="font-bold text-md text-white mt-2">Explicit Sounds</h5>
+                        <ul>${(soundData.ExplicitSounds || []).map(f => createJsonListItem(f, 'ExplicitSounds')).join('')}</ul>
+                    `;
+
+                    // 2. List files in the storage folder
+                    const soundsFolderRef = ref(storage, 'Soundboard/Sounds/');
+                    const res = await listAll(soundsFolderRef);
+                    const storageFiles = res.items.map(item => item.name);
+                    
+                    storageSoundsDiv.innerHTML = `<ul>${storageFiles.map(f => 
+                        `<li class="flex items-center justify-between bg-[#0a0a0a] border border-[#1a1a1a] p-2 mb-1 rounded">
+                            <span>${f}</span> 
+                            <button data-file="${f}" class="delete-storage-btn text-red-500 hover:text-red-400 text-sm">Delete</button>
+                        </li>`).join('')}</ul>`;
+
+                    // 3. Compare and show sync status
+                    const jsonFiles = [...(soundData.NormalSounds || []), ...(soundData.ExplicitSounds || [])];
+                    const jsonSet = new Set(jsonFiles);
+                    const storageSet = new Set(storageFiles);
+
+                    const missingFromStorage = jsonFiles.filter(f => !storageSet.has(f));
+                    const missingFromJson = storageFiles.filter(f => !jsonSet.has(f));
+
+                    let statusHtml = '';
+                    if (missingFromStorage.length > 0) {
+                        statusHtml += `<h3 class="font-bold text-lg text-red-500">Missing from Storage</h3>
+                                    <p>${missingFromStorage.join(', ')}</p>`;
+                    }
+                    if (missingFromJson.length > 0) {
+                        statusHtml += `<h3 class="font-bold text-lg text-yellow-500 mt-4">Not in JSON (Untracked)</h3>
+                                    <p>${missingFromJson.join(', ')}</p>`;
+                    }
+                    if (statusHtml === '') {
+                        statusHtml = '<p class="text-green-500">All sounds are perfectly synced!</p>';
+                    }
+                    generalStatusDiv.innerHTML = statusHtml;
+
+                    // 4. Add event listeners
+                    jsonSoundsDiv.querySelectorAll('.delete-json-btn').forEach(btn => btn.addEventListener('click', handleDeleteFromJson));
+                    jsonSoundsDiv.querySelectorAll('.rename-json-btn').forEach(btn => btn.addEventListener('click', handleRename));
+                    storageSoundsDiv.querySelectorAll('.delete-storage-btn').forEach(btn => btn.addEventListener('click', handleDeleteFromStorage));
+
+                } catch (error) {
+                    console.error("Error loading sound data:", error);
+                    generalStatusDiv.innerHTML = `<p class="text-red-500">Error loading data: ${error.message}</p>`;
+                }
+            }
+
+            async function handleRename(event) {
+                const oldFile = event.target.dataset.file;
+                const category = event.target.dataset.category;
+                const newTitle = prompt(`Enter new title for "${oldFile}"`);
+
+                if (!newTitle || newTitle.trim() === '') return;
+
+                const newFile = newTitle.trim().replace(/ /g, '_') + '.mp3';
+
+                if (confirm(`This will rename "${oldFile}" to "${newFile}". This involves re-uploading the file. Continue?`)) {
+                    event.target.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                    event.target.disabled = true;
+
+                    try {
+                        // 1. Download old file
+                        const oldFileRef = ref(storage, `Soundboard/Sounds/${oldFile}`);
+                        const url = await getDownloadURL(oldFileRef);
+                        const response = await fetch(url);
+                        const blob = await response.blob();
+
+                        // 2. Upload as new file
+                        const newFileRef = ref(storage, `Soundboard/Sounds/${newFile}`);
+                        await uploadBytes(newFileRef, blob);
+
+                        // 3. Delete old file
+                        await deleteObject(oldFileRef);
+
+                        // 4. Update JSON
+                        const jsonRef = ref(storage, 'Soundboard/SoundboardNames.json');
+                        const jsonUrl = await getDownloadURL(jsonRef);
+                        const jsonResponse = await fetch(jsonUrl, { cache: "no-store" });
+                        const soundData = await jsonResponse.json();
+
+                        soundData[category] = soundData[category].map(f => f === oldFile ? newFile : f);
+
+                        const newJsonString = JSON.stringify(soundData, null, 2);
+                        await uploadString(jsonRef, newJsonString, 'raw', { contentType: 'application/json' });
+
+                        alert('File renamed successfully.');
+                        loadSoundData();
+
+                    } catch (error) {
+                        console.error("Error renaming file:", error);
+                        alert(`Rename failed: ${error.message}`);
+                        event.target.innerHTML = 'Rename';
+                        event.target.disabled = false;
+                    }
+                }
+            }
+
+            async function handleDeleteFromJson(event) {
+                const file = event.target.dataset.file;
+                const category = event.target.dataset.category;
+
+                if (confirm(`Are you sure you want to remove "${file}" from the JSON file?`)) {
+                    try {
+                        const jsonRef = ref(storage, 'Soundboard/SoundboardNames.json');
+                        const jsonUrl = await getDownloadURL(jsonRef);
+                        const response = await fetch(jsonUrl, { cache: "no-store" });
+                        const soundData = await response.json();
+
+                        soundData[category] = soundData[category].filter(f => f !== file);
+
+                        const newJsonString = JSON.stringify(soundData, null, 2);
+                        await uploadString(jsonRef, newJsonString, 'raw', { contentType: 'application/json' });
+
+                        alert('File removed from JSON successfully.');
+                        loadSoundData();
+                    } catch (error) {
+                        console.error("Error deleting from JSON:", error);
+                        alert(`Error: ${error.message}`);
+                    }
+                }
+            }
+
+            async function handleDeleteFromStorage(event) {
+                const file = event.target.dataset.file;
+                if (confirm(`Are you sure you want to permanently delete "${file}" from storage? This cannot be undone.`)) {
+                    try {
+                        const fileRef = ref(storage, `Soundboard/Sounds/${file}`);
+                        await deleteObject(fileRef);
+                        alert('File deleted from storage successfully.');
+                        loadSoundData();
+                    } catch (error) {
+                        console.error("Error deleting from storage:", error);
+                        alert(`Error: ${error.message}`);
+                    }
+                }
+            }
+
+            // --- Utils Logic ---
+            const normalizeBtn = document.getElementById('normalizeNamesBtn');
+            if(normalizeBtn) {
+                normalizeBtn.addEventListener('click', async (e) => {
+                    const btn = e.target;
+                    if (!confirm("This will scan the JSON for names with spaces and try to rename the corresponding files in storage to use underscores. This can be risky. Are you sure?")) return;
+
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Normalizing...';
+
+                    try {
+                        const jsonRef = ref(storage, 'Soundboard/SoundboardNames.json');
+                        const jsonUrl = await getDownloadURL(jsonRef);
+                        const response = await fetch(jsonUrl, { cache: "no-store" });
+                        const soundData = await response.json();
+                        let changed = false;
+
+                        const normalizeCategory = async (category) => {
+                            if (!soundData[category]) return;
+                            const promises = soundData[category].map(async (file) => {
+                                if (file.includes(' ')) {
+                                    const newFile = file.replace(/ /g, '_');
+                                    console.log(`Normalizing: ${file} -> ${newFile}`);
+                                    
+                                    try {
+                                        const oldFileRef = ref(storage, `Soundboard/Sounds/${file}`);
+                                        const newFileRef = ref(storage, `Soundboard/Sounds/${newFile}`);
+
+                                        const fileUrl = await getDownloadURL(oldFileRef);
+                                        const fileRes = await fetch(fileUrl);
+                                        const blob = await fileRes.blob();
+                                        await uploadBytes(newFileRef, blob);
+                                        await deleteObject(oldFileRef);
+                                        
+                                        changed = true;
+                                        return newFile;
+                                    } catch (err) {
+                                        console.error(`Failed to normalize ${file}:`, err);
+                                        return file; // Keep old name if failed
+                                    }
+                                }
+                                return file;
+                            });
+                            soundData[category] = await Promise.all(promises);
+                        };
+
+                        await normalizeCategory('NormalSounds');
+                        await normalizeCategory('ExplicitSounds');
+
+                        if (changed) {
+                            const newJsonString = JSON.stringify(soundData, null, 2);
+                            await uploadString(jsonRef, newJsonString, 'raw', { contentType: 'application/json' });
+                            alert('Normalization complete! Some names were fixed.');
+                            loadSoundData();
+                        } else {
+                            alert('No names needed normalization.');
+                        }
+                    } catch (error) {
+                        console.error("Normalization error:", error);
+                        alert(`Error: ${error.message}`);
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = 'Normalize All JSON Sound Names';
+                    }
+                });
+            }
+        }
