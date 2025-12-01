@@ -592,7 +592,7 @@
 
         // --- Firestore Document References & Collections ---
         const getUserProfileDocRef = (userId) => doc(db, 'users', userId);
-        const getFriendCodeDocRef = (code) => doc(db, 'artifacts', appId, 'public', 'data', 'friend_codes', code);
+        const getFriendCodeDocRef = (code) => doc(db, 'friend_codes', code);
         const DAILY_PHOTO_COLLECTION = collection(db, 'daily_photos');
 
         // =========================================================================
@@ -819,7 +819,7 @@
                     }, { merge: true }); // Use set with merge to add fields without overwriting existing ones
                 }
 
-                const codeQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'friend_codes'), where('userId', '==', user.uid), limit(1));
+                const codeQuery = query(collection(db, 'friend_codes'), where('userId', '==', user.uid), limit(1));
                 const codeQuerySnap = await getDocs(codeQuery);
                 
                 let existingCode = codeQuerySnap.empty ? null : codeQuerySnap.docs[0].id;
