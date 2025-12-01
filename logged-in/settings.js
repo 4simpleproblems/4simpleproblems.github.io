@@ -1852,36 +1852,26 @@
             mouths: ['default-mouth.png', 'drool.png', 'meh.png', 'no-clue.png', 'sad.png', 'wow.png'],
             hats: ['strawhat.png', 'tophat.png', 'partyhat.png', 'halo.png', 'toiletpaper.png'],
             colors: [
-    // --- REDS / PINKS / MAROON ---
+    // --- RAINBOW ORDER ---
     '#EF4444', // Red
-    '#F43F5E', // Rose
-    '#EC4899', // Pink
-    '#800000', // Maroon (Replacement for Black)
-
-    // --- ORANGES / AMBERS ---
     '#F97316', // Orange
     '#F59E0B', // Amber
-
-    // --- YELLOWS / LIMES ---
     '#EAB308', // Yellow
     '#84CC16', // Lime
-
-    // --- GREENS / TEALS / CYANS ---
     '#22C55E', // Green
     '#14B8A6', // Teal
     '#06B6D4', // Cyan
-
-    // --- BLUES / SKY ---
     '#0EA5E9', // Sky
     '#3B82F6', // Blue
-
-    // --- INDIGOS / VIOLETS ---
     '#6366F1', // Indigo
     '#7C3AED', // Violet
     '#A855F7', // Purple
     '#E879F9', // Fuchsia
-    
-    // --- NEUTRALS (White/Gray) ---
+    '#EC4899', // Pink
+    '#F43F5E', // Rose
+    '#800000', // Maroon
+
+    // --- NEUTRALS ---
     '#6B7280', // Gray
     '#FFFFFF'  // White
 ]
@@ -1931,8 +1921,8 @@
             grid.innerHTML = ''; // Clear existing
 
             if (category === 'bg') {
-                // Switch to Flex for Colors (Single Row, scrollable if needed)
-                grid.className = 'flex flex-nowrap gap-1 items-center overflow-x-auto pb-2 custom-scrollbar';
+                // Switch to Flex for Colors (Wrapping, no scrollbar)
+                grid.className = 'flex flex-wrap gap-2 justify-center p-2';
 
                 // Color Palette
                 MIBI_ASSETS.colors.forEach(color => {
