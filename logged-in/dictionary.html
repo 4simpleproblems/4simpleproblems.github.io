@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="../navigation.js"></script>
     <script src="../injector.js"></script>
 
     <style>
@@ -281,7 +280,7 @@
         import { firebaseConfig } from "../firebase-config.js"; 
 
         // --- CONFIGURATION ---
-        const CLOUD_FUNCTION_URL = "https://us-central1-project-zirconium.cloudfunctions.net/getWordData";
+        const CLOUD_FUNCTION_URL = "https://corsproxy.io/?https://us-central1-project-zirconium.cloudfunctions.net/getWordData";
 
         // --- Firebase Setup ---
         const app = initializeApp(firebaseConfig);
@@ -564,7 +563,7 @@
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
-                    await signInAnonymously(auth);
+                    // await signInAnonymously(auth);
                 }
             } catch (error) {
                 console.error("Auth Error:", error);
