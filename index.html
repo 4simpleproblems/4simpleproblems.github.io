@@ -235,6 +235,62 @@
             </div>
         </div>
     </div>
+
+    <!-- MOBILE WARNING OVERLAY -->
+    <div id="mobile-warning-overlay" class="fixed inset-0 bg-black/95 z-[10000] flex items-center justify-center p-6" style="display: none;">
+        <div class="max-w-md w-full text-center space-y-6">
+            <div class="text-5xl mb-4">📱</div>
+            <h2 class="text-3xl font-light text-white tracking-tight">Device Not Recommended</h2>
+            <p class="text-gray-400 text-lg font-light leading-relaxed">
+                4SP (4simpleproblems) is not meant for phones or other devices with a tall aspect ratio.
+                <br><br>
+                It is highly recommended to switch to a wide-screen device like a laptop or desktop for the intended experience.
+            </p>
+            <button id="dismiss-mobile-warning" class="inline-flex items-center justify-center px-8 py-3 border border-gray-600 text-base font-normal rounded-xl text-white bg-transparent hover:bg-white/10 transition duration-200">
+                Dismiss, I don't care
+            </button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const mobileOverlay = document.getElementById('mobile-warning-overlay');
+            const dismissBtn = document.getElementById('dismiss-mobile-warning');
+            const STORAGE_KEY = '4sp-mobile-warning-dismissed';
+
+            function checkAspectRatio() {
+                // Check if user has already dismissed it
+                if (localStorage.getItem(STORAGE_KEY) === 'true') {
+                    return;
+                }
+
+                // Check if height is greater than width (Portrait/Tall)
+                if (window.innerHeight > window.innerWidth) {
+                    mobileOverlay.style.display = 'flex';
+                    document.body.style.overflow = 'hidden'; // Lock scroll
+                } else {
+                    mobileOverlay.style.display = 'none';
+                    document.body.style.overflow = ''; // Unlock scroll
+                }
+            }
+
+            // Check on load
+            checkAspectRatio();
+
+            // Check on resize (optional, but good if they rotate device)
+            window.addEventListener('resize', checkAspectRatio);
+
+            // Handle dismissal
+            if (dismissBtn) {
+                dismissBtn.addEventListener('click', () => {
+                    mobileOverlay.style.display = 'none';
+                    document.body.style.overflow = '';
+                    localStorage.setItem(STORAGE_KEY, 'true');
+                });
+            }
+        })();
+    </script>
+    
     <script type="module" src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
 

@@ -1,70 +1,23 @@
 /**
- * ban-enforcer.js (v4.0 - Invisible Barrier & Real-Time Enforcement)
+ * ban-enforcer.js (v4.1 - Real-Time Enforcement)
  *
- * This script protects the website by immediately injecting an invisible barrier
- * that blocks all interaction until the user's ban status is verified.
+ * This script protects the website by blocking interaction ONLY 
+ * when the user's ban status is verified as true.
  *
  * Key Features:
- * 1. Immediate "Invisible Shield" injection on script load.
- * 2. Real-time Firestore listener (onSnapshot) for ban status.
- * 3. Automatic visual updates if ban details change.
- * 4. Anti-tamper guard to prevent removing the ban screen.
- * 5. Geist Font & Modern UI (Bottom-Left Text, Bottom-Right Home Button).
+ * 1. Real-time Firestore listener (onSnapshot) for ban status.
+ * 2. Automatic visual updates if ban details change.
+ * 3. Anti-tamper guard to prevent removing the ban screen.
+ * 4. Geist Font & Modern UI (Bottom-Left Text, Bottom-Right Home Button).
  */
 
-console.log("Debug: ban-enforcer.js v4.0 loaded.");
+console.log("Debug: ban-enforcer.js v4.1 loaded.");
 
 // --- Global State ---
 let banGuardInterval = null;
 let currentBanData = null; // Store current ban data for the guard to use
 
-// --- 1. Immediate Barrier Injection (The "Lock") ---
-(function() {
-    if (document.getElementById('ban-enforcer-shield')) return;
-
-    const shield = document.createElement('div');
-    shield.id = 'ban-enforcer-shield';
-    // Full-screen, transparent, high z-index
-    shield.style.position = 'fixed';
-    shield.style.top = '0';
-    shield.style.left = '0';
-    shield.style.width = '100vw';
-    shield.style.height = '100vh';
-    shield.style.zIndex = '2147483646';
-    shield.style.backgroundColor = 'transparent'; // Invisible initially
-    shield.style.cursor = 'wait'; // Indicate loading/blocking state
-
-    document.documentElement.appendChild(shield);
-    document.documentElement.style.overflow = 'hidden'; // Lock scrolling immediately
-
-    // Add a simple loading spinner
-    const spinner = document.createElement('div');
-    spinner.id = 'ban-enforcer-spinner';
-    spinner.style.position = 'absolute';
-    spinner.style.top = '50%';
-    spinner.style.left = '50%';
-    spinner.style.transform = 'translate(-50%, -50%)';
-    spinner.style.border = '4px solid rgba(255, 255, 255, 0.3)';
-    spinner.style.borderTop = '4px solid #ffffff'; // White spinner
-    spinner.style.borderRadius = '50%';
-    spinner.style.width = '40px';
-    spinner.style.height = '40px';
-    spinner.style.animation = 'spin 1s linear infinite';
-    shield.appendChild(spinner);
-
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-    `;
-    document.head.appendChild(style);
-
-    console.log("Debug: Invisible barrier deployed with spinner. Interaction locked.");
-})();
-
-// --- 2. Font Injection (Geist) ---
+// --- 1. Font Injection (Geist) ---
 (function() {
     if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Geist"]')) {
         const link = document.createElement('link');
@@ -274,8 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (attempts < maxRetries) {
                     setTimeout(check, 200); // Wait 200ms and try again
                 } else {
-                    console.error("Ban Enforcer: Firestore failed to load. Unlocking.");
-                    unlockPage();
+                    console.error("Ban Enforcer: Firestore failed to load.");
+                    // Do NOT lock page on failure, just fail silently or log error
+                    // unlockPage() is not needed because we never locked it.
                 }
             }
         };
@@ -284,17 +238,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (typeof firebase === 'undefined') {
         // If Firebase object itself is missing, we might be loading completely async.
-        // We'll try waiting a bit, otherwise fail safe.
+        // We'll try waiting a bit.
         const checkFirebase = () => {
             if (typeof firebase !== 'undefined') {
                 initListener();
             } else {
-                // Retry a few times or just unlock
                 setTimeout(() => {
                     if (typeof firebase !== 'undefined') initListener();
                     else { 
-                        console.error("Ban Enforcer: Firebase not found after wait. Unlocking.");
-                        unlockPage(); 
+                        console.error("Ban Enforcer: Firebase not found after wait.");
                     }
                 }, 1000);
             }
@@ -307,39 +259,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function initListener() {
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
-                console.log("Debug: User logged in. Waiting for Firestore...");
+                console.log("Debug: User logged in. Checking ban status...");
                 
                 waitForFirestore((dbInstance) => {
-                    let banCheckCompleted = false;
-                    const BAN_CHECK_TIMEOUT_MS = 5000; // 5 seconds
-
-                    const timeoutId = setTimeout(() => {
-                        if (!banCheckCompleted) {
-                            console.warn("Debug: Ban check timed out. Unlocking page.");
-                            unlockPage();
-                        }
-                    }, BAN_CHECK_TIMEOUT_MS);
-
                     dbInstance.collection('bans').doc(user.uid).onSnapshot(doc => {
-                        clearTimeout(timeoutId); // Clear timeout if snapshot resolves
-                        banCheckCompleted = true;
                         if (doc.exists) {
                             console.warn("Debug: User is BANNED.");
                             lockPageAsBanned(doc.data());
                         } else {
                             console.log("Debug: User is NOT banned.");
-                            unlockPage();
+                            unlockPage(); // Ensure any existing ban screen is removed if status changes
                         }
                     }, error => {
-                        clearTimeout(timeoutId); // Clear timeout on error
-                        banCheckCompleted = true;
                         console.error("Debug: Ban listener error.", error);
                         unlockPage();
                     });
                 });
 
             } else {
-                console.log("Debug: No user. Page unlocked.");
+                // User logged out
                 unlockPage();
             }
         });
