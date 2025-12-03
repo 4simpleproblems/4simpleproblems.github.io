@@ -1,0 +1,122 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------------------
+    // I. Helper Functions
+    // ----------------------------------------------------------------------------------
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdminOrSuperAdmin() {
+      // Defines the path to the user's admin document
+      // Note: In rules, variable definitions like 'let' are not supported in all versions/contexts similarly to JS.
+      // Direct path construction is safer.
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+    }
+    
+    // ----------------------------------------------------------------------------------
+    // II. User Profiles Collection (`users`)
+    // ----------------------------------------------------------------------------------
+    match /users/{userId} {
+      allow read: if isAuthenticated(); 
+      // Allow listing only for admins
+      allow list: if isAdminOrSuperAdmin(); 
+      
+      // Allow creation if user is setting up their own profile
+      allow create: if isOwner(userId)
+                      && request.resource.id == request.auth.uid
+                      && 'username' in request.resource.data;
+      
+      // Allow update/delete if user owns the profile
+      allow update, delete: if isOwner(userId);
+    }
+
+    // ----------------------------------------------------------------------------------
+    // III. Friend Codes Collection (`friend_codes`)
+    // ----------------------------------------------------------------------------------
+    match /friend_codes/{code} {
+      allow read: if isAuthenticated();
+      // Allow creating if it links to the authenticated user
+      allow create: if isAuthenticated() 
+                      && request.resource.data.userId == request.auth.uid;
+      // Allow deletion if the code belongs to the user (for cleanup)
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow update: if false; 
+    }
+
+    // ----------------------------------------------------------------------------------
+    // IV. Admin Status Collection (`admins`)
+    // ----------------------------------------------------------------------------------
+    match /admins/{userId} {
+      allow read: if isOwner(userId) || isAdminOrSuperAdmin();
+      allow list: if isAdminOrSuperAdmin(); 
+      allow create, update, delete: if isAdminOrSuperAdmin(); 
+    }
+
+    // ----------------------------------------------------------------------------------
+    // V. Daily Photos Collection (`daily_photos`) - Standard Collection
+    // ----------------------------------------------------------------------------------
+    match /daily_photos/{photoId} {
+      allow create: if isAuthenticated() && request.resource.data.creatorUid == request.auth.uid;
+      // Allow delete if creator
+      allow update, delete: if isAuthenticated() && resource.data.creatorUid == request.auth.uid;
+      allow read: if isAuthenticated(); 
+    }
+
+    // ----------------------------------------------------------------------------------
+    // VI. Daily Photos Collection (`dailyPhotos`) - Alternate/Legacy Collection
+    // ----------------------------------------------------------------------------------
+    // Covering the case used in settings.js
+    match /dailyPhotos/{photoId} {
+      allow create: if isAuthenticated() && (
+        (request.resource.data.creatorUid == request.auth.uid) || 
+        (request.resource.data.userId == request.auth.uid)
+      );
+      // Allow delete if creatorUid OR userId matches
+      allow update, delete: if isAuthenticated() && (
+        (resource.data.creatorUid == request.auth.uid) || 
+        (resource.data.userId == request.auth.uid)
+      );
+      allow read: if isAuthenticated(); 
+    }
+
+    // ----------------------------------------------------------------------------------
+    // VII. Friend Requests Collection (`friendRequests`) - Alternate/Legacy Collection
+    // ----------------------------------------------------------------------------------
+    // Covering the case used in settings.js
+    match /friendRequests/{requestId} {
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
+      // Allow deletion if user is sender OR recipient
+      allow delete: if isAuthenticated() && (
+        (resource.data.senderId == request.auth.uid) || 
+        (resource.data.recipientId == request.auth.uid)
+      );
+      allow read: if isAuthenticated() && (
+        (resource.data.senderId == request.auth.uid) || 
+        (resource.data.recipientId == request.auth.uid)
+      );
+      allow update: if false;
+    }
+    
+    // ----------------------------------------------------------------------------------
+    // VIII. Banned Users & Bans
+    // ----------------------------------------------------------------------------------
+    match /banned_users/{userId} {
+      allow read, create, update, delete: if isAdminOrSuperAdmin();
+    }
+    
+    match /bans/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create, update, delete: if isAdminOrSuperAdmin();
+    }
+  }
+}
