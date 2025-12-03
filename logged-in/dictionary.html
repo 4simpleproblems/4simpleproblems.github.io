@@ -350,7 +350,15 @@
                 if (!dictResponse.ok) throw new Error(`Dictionary API Error: ${dictResponse.status}`);
                 // Thesaurus error shouldn't break the whole thing, but we'll treat it as such for simplicity or handle gracefully.
                 
-                const dictEntries = await dictResponse.json();
+                const dictText = await dictResponse.text();
+                let dictEntries;
+                try {
+                    dictEntries = JSON.parse(dictText);
+                } catch (e) {
+                    console.error("Dictionary API returned non-JSON response:", dictText);
+                    throw new Error("Dictionary service error: The API returned an invalid response (likely an invalid API key).");
+                }
+
                 let thesEntries = [];
                 try {
                     if (thesResponse.ok) {
