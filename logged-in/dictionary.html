@@ -280,7 +280,8 @@
         import { firebaseConfig } from "../firebase-config.js"; 
 
         // --- CONFIGURATION ---
-        const CLOUD_FUNCTION_URL = "https://corsproxy.io/?https://us-central1-project-zirconium.cloudfunctions.net/getWordData";
+        const DICT_KEY = 'e9433acb-a413-4034-b379-c04f65ba4728';
+        const THES_KEY = '14361996-c9fa-4e29-ac53-bb70eb0647e7';
 
         // --- Firebase Setup ---
         const app = initializeApp(firebaseConfig);
@@ -341,16 +342,21 @@
             searchInput.value = trimmedWord;
 
             try {
-                const response = await fetch(`${CLOUD_FUNCTION_URL}?word=${encodeURIComponent(trimmedWord)}`);
+                const [dictResponse, thesResponse] = await Promise.all([
+                    fetch(`https://www.dictionaryapi.com/api/v3/references/collegiate/json/${encodeURIComponent(trimmedWord)}?key=${DICT_KEY}`),
+                    fetch(`https://www.dictionaryapi.com/api/v3/references/thesaurus/json/${encodeURIComponent(trimmedWord)}?key=${THES_KEY}`)
+                ]);
 
-                if (!response.ok) {
-                    throw new Error(`Cloud Function Error: ${response.status}`);
-                }
-
-                const data = await response.json();
+                if (!dictResponse.ok) throw new Error(`Dictionary API Error: ${dictResponse.status}`);
+                // Thesaurus error shouldn't break the whole thing, but we'll treat it as such for simplicity or handle gracefully.
                 
-                const dictEntries = data.dictionary;
-                const thesEntries = data.thesaurus;
+                const dictEntries = await dictResponse.json();
+                let thesEntries = [];
+                try {
+                    if (thesResponse.ok) {
+                        thesEntries = await thesResponse.json();
+                    }
+                } catch (e) { console.warn("Thesaurus fetch failed", e); }
 
                 if (!dictEntries || dictEntries.length === 0) {
                      displayNotFound(trimmedWord);
