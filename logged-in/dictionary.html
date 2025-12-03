@@ -344,7 +344,7 @@
             try {
                 const [dictResponse, thesResponse] = await Promise.all([
                     fetch(`https://www.dictionaryapi.com/api/v3/references/sd3/json/${encodeURIComponent(trimmedWord)}?key=${DICT_KEY}`),
-                    fetch(`https://www.dictionaryapi.com/api/v3/references/ithes/json/${encodeURIComponent(trimmedWord)}?key=${THES_KEY}`)
+                    fetch(`https://www.dictionaryapi.com/api/v3/references/ithesaurus/json/${encodeURIComponent(trimmedWord)}?key=${THES_KEY}`)
                 ]);
 
                 if (!dictResponse.ok) throw new Error(`Dictionary API Error: ${dictResponse.status}`);
