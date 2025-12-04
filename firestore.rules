@@ -15,9 +15,6 @@ service cloud.firestore {
     }
 
     function isAdminOrSuperAdmin() {
-      // Defines the path to the user's admin document
-      // Note: In rules, variable definitions like 'let' are not supported in all versions/contexts similarly to JS.
-      // Direct path construction is safer.
       return isAuthenticated() && 
              exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
@@ -36,8 +33,15 @@ service cloud.firestore {
                       && request.resource.id == request.auth.uid
                       && 'username' in request.resource.data;
       
-      // Allow update/delete if user owns the profile
-      allow update, delete: if isOwner(userId);
+      // Allow update if:
+      // 1. User owns the profile (covers Mibi, Custom PFP, generic settings)
+      // 2. OR Authenticated user is updating 'pending_requests' (Friend Requests)
+      // 3. OR Authenticated user is updating 'friends' (Accepting/Removing Friends)
+      allow update: if isOwner(userId) || 
+                    (isAuthenticated() && 
+                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pending_requests', 'friends']));
+
+      allow delete: if isOwner(userId);
     }
 
     // ----------------------------------------------------------------------------------
@@ -45,10 +49,8 @@ service cloud.firestore {
     // ----------------------------------------------------------------------------------
     match /friend_codes/{code} {
       allow read: if isAuthenticated();
-      // Allow creating if it links to the authenticated user
       allow create: if isAuthenticated() 
                       && request.resource.data.userId == request.auth.uid;
-      // Allow deletion if the code belongs to the user (for cleanup)
       allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow update: if false; 
     }
@@ -67,21 +69,28 @@ service cloud.firestore {
     // ----------------------------------------------------------------------------------
     match /daily_photos/{photoId} {
       allow create: if isAuthenticated() && request.resource.data.creatorUid == request.auth.uid;
+      
+      // Allow update if:
+      // 1. User is the creator (full control)
+      // 2. OR User is authenticated and ONLY updating 'hearts' or 'comments' (Likes/Comments)
+      allow update: if isAuthenticated() && (
+        resource.data.creatorUid == request.auth.uid ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hearts', 'comments'])
+      );
+
       // Allow delete if creator
-      allow update, delete: if isAuthenticated() && resource.data.creatorUid == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.creatorUid == request.auth.uid;
       allow read: if isAuthenticated(); 
     }
 
     // ----------------------------------------------------------------------------------
     // VI. Daily Photos Collection (`dailyPhotos`) - Alternate/Legacy Collection
     // ----------------------------------------------------------------------------------
-    // Covering the case used in settings.js
     match /dailyPhotos/{photoId} {
       allow create: if isAuthenticated() && (
         (request.resource.data.creatorUid == request.auth.uid) || 
         (request.resource.data.userId == request.auth.uid)
       );
-      // Allow delete if creatorUid OR userId matches
       allow update, delete: if isAuthenticated() && (
         (resource.data.creatorUid == request.auth.uid) || 
         (resource.data.userId == request.auth.uid)
@@ -92,10 +101,8 @@ service cloud.firestore {
     // ----------------------------------------------------------------------------------
     // VII. Friend Requests Collection (`friendRequests`) - Alternate/Legacy Collection
     // ----------------------------------------------------------------------------------
-    // Covering the case used in settings.js
     match /friendRequests/{requestId} {
       allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
-      // Allow deletion if user is sender OR recipient
       allow delete: if isAuthenticated() && (
         (resource.data.senderId == request.auth.uid) || 
         (resource.data.recipientId == request.auth.uid)
