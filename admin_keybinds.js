@@ -1,7 +1,8 @@
-(async function() {
-    console.log("Admin Keybinds Script Loaded");
 
-    // Firebase Config (Duplicated to avoid path resolution issues in mixed contexts)
+(async function() {
+    console.log("[Admin Keybinds] Script Loaded");
+
+    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyAZBKAckVa4IMvJGjcyndZx6Y1XD52lgro",
         authDomain: "project-zirconium.firebaseapp.com",
@@ -12,11 +13,11 @@
         measurementId: "G-1D4F692C1Q"
     };
 
-    // Dynamic Imports for Firebase
+    // Dynamic Imports
     const [
         { initializeApp },
         { getAuth, onAuthStateChanged },
-        { getFirestore, doc, getDoc, updateDoc, setDoc, onSnapshot }
+        { getFirestore, doc, getDoc, setDoc, onSnapshot }
     ] = await Promise.all([
         import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
         import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"),
@@ -26,11 +27,9 @@
     // Initialize Firebase
     let app;
     try {
-        // Use a unique name for this app instance to avoid conflicts
         app = initializeApp(firebaseConfig, "adminKeybindsApp");
     } catch (e) {
-        console.warn("Admin Keybinds: App might already be initialized", e);
-        app = initializeApp(firebaseConfig); // Fallback
+        app = initializeApp(firebaseConfig); 
     }
 
     const auth = getAuth(app);
@@ -42,8 +41,38 @@
     let isAdmin = false;
     let adminUnsubscribe = null;
     let configUnsubscribe = null;
+    
+    const OWNER_EMAIL = "4simpleproblems@gmail.com";
 
-    // Cleanup function
+    // Visual Feedback Helper
+    function showAdminToast(message, color = "blue") {
+        const existing = document.getElementById("admin-keybind-toast");
+        if (existing) existing.remove();
+
+        const toast = document.createElement("div");
+        toast.id = "admin-keybind-toast";
+        toast.style.position = "fixed";
+        toast.style.bottom = "20px";
+        toast.style.right = "20px";
+        toast.style.backgroundColor = color === "red" ? "rgba(220, 38, 38, 0.9)" : (color === "green" ? "rgba(22, 163, 74, 0.9)" : "rgba(30, 30, 30, 0.9)");
+        toast.style.color = "white";
+        toast.style.padding = "12px 24px";
+        toast.style.borderRadius = "8px";
+        toast.style.zIndex = "999999";
+        toast.style.fontFamily = "sans-serif";
+        toast.style.fontWeight = "bold";
+        toast.style.boxShadow = "0 4px 6px rgba(0,0,0,0.3)";
+        toast.style.transition = "opacity 0.3s ease";
+        toast.innerText = message;
+        
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
     function cleanupListeners() {
         if (adminUnsubscribe) {
             adminUnsubscribe();
@@ -56,10 +85,8 @@
         isAdmin = false;
     }
 
-    // Monitor Global Setting
     function subscribeToConfig() {
-        if (configUnsubscribe) return; // Already subscribed
-
+        if (configUnsubscribe) return;
         configUnsubscribe = onSnapshot(doc(db, 'config', 'soundboard'), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
@@ -69,79 +96,89 @@
             } else {
                 explicitEnabled = true;
             }
-        }, (error) => {
-            console.error("Admin Keybinds: Config listener error", error);
-        });
+        }, (error) => console.error("Config Listen Error:", error));
     }
 
     // Keybind Listener
-    // We attach this once. The logic inside checks isAdmin.
     document.addEventListener('keydown', async (e) => {
-        // Check for Ctrl + Alt + E
-        if (e.ctrlKey && e.altKey && (e.key.toLowerCase() === 'e')) {
-            e.preventDefault(); // Always prevent default if key matches, to avoid browser conflicts
+        // Trigger: Ctrl + Alt + E
+        // Using e.code as fallback for better Chrome/Layout support
+        if (e.ctrlKey && e.altKey && (e.key.toLowerCase() === 'e' || e.code === 'KeyE')) {
+            e.preventDefault();
             
-            if (!isAdmin) return; // Security check at usage time
+            if (!isAdmin) {
+                console.warn("[Admin Keybinds] Access denied. Not an admin.");
+                return;
+            }
 
-            console.log("Admin Keybinds: Trigger detected.");
+            console.log("[Admin Keybinds] Ctrl+Alt+E detected.");
 
             if (explicitEnabled) {
-                // Currently Enabled -> Disable Instantly
-                console.log("Admin Keybinds: Disabling explicit sounds...");
+                // Currently ON -> Turn OFF immediately
+                console.log("[Admin Keybinds] Disabling explicit sounds...");
                 try {
                     await setDoc(doc(db, 'config', 'soundboard'), { explicitEnabled: false }, { merge: true });
+                    showAdminToast("Explicit Sounds: DISABLED", "red");
                     lastEnablePressTime = 0;
                 } catch (err) {
-                    console.error("Admin Keybinds: Failed to disable.", err);
+                    console.error("[Admin Keybinds] Failed to disable:", err);
+                    showAdminToast("Error: Failed to disable", "red");
                 }
             } else {
-                // Currently Disabled -> Require Double Press to Enable
+                // Currently OFF -> Turn ON (Double press logic)
                 const now = Date.now();
-                if (now - lastEnablePressTime < 1500) { // 1.5 second window
-                    console.log("Admin Keybinds: Enabling explicit sounds...");
+                if (now - lastEnablePressTime < 1500) { 
+                    // Second press
+                    console.log("[Admin Keybinds] Enabling explicit sounds...");
                     try {
                         await setDoc(doc(db, 'config', 'soundboard'), { explicitEnabled: true }, { merge: true });
-                        lastEnablePressTime = 0; // Reset
+                        showAdminToast("Explicit Sounds: ENABLED", "green");
+                        lastEnablePressTime = 0;
                     } catch (err) {
-                        console.error("Admin Keybinds: Failed to enable.", err);
+                        console.error("[Admin Keybinds] Failed to enable:", err);
+                        showAdminToast("Error: Failed to enable", "red");
                     }
                 } else {
-                    console.log("Admin Keybinds: Press again to enable.");
+                    // First press
+                    console.log("[Admin Keybinds] Waiting for confirm...");
+                    showAdminToast("Press Ctrl+Alt+E again to ENABLE", "blue");
                     lastEnablePressTime = now;
                 }
             }
         }
     });
 
-    // Main logic flow
+    // Auth & Role Check
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // Real-time admin check
+            // 1. Hardcoded Owner Check
+            if (user.email === OWNER_EMAIL) {
+                console.log(`[Admin Keybinds] Owner recognized: ${OWNER_EMAIL}`);
+                isAdmin = true;
+                subscribeToConfig();
+                return; 
+            }
+
+            // 2. DB Admin Check (for others)
             adminUnsubscribe = onSnapshot(doc(db, 'admins', user.uid), (docSnap) => {
                 if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    const role = data.role;
-                    // Robust check for specific roles
+                    const role = docSnap.data().role;
                     if (role === 'admin' || role === 'superadmin') {
-                        if (!isAdmin) console.log("Admin Keybinds: Admin privileges active.");
+                        if (!isAdmin) console.log("[Admin Keybinds] Admin privileges active.");
                         isAdmin = true;
                         subscribeToConfig();
                     } else {
-                        // Doc exists but role is wrong (shouldn't happen with current logic but safe to check)
-                        console.log("Admin Keybinds: Insufficient role.");
+                        console.log("[Admin Keybinds] Insufficient role.");
                         cleanupListeners();
                     }
                 } else {
-                    // Not an admin
-                    if (isAdmin) console.log("Admin Keybinds: Admin privileges revoked.");
                     cleanupListeners();
                 }
             }, (error) => {
-                console.error("Admin Keybinds: Admin check error", error);
+                console.error("[Admin Keybinds] Admin check error:", error);
                 cleanupListeners();
             });
         } else {
-            // Logged out
             cleanupListeners();
         }
     });
