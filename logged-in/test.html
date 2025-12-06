@@ -55,22 +55,21 @@
         .dashboard-widget {
             border: 1px solid var(--border-color);
             background-color: var(--bg-container);
-            padding: 2rem 3rem; /* Reduced padding slightly to fit content */
+            padding: 2.5rem 4rem; /* Balanced padding */
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
             border-radius: 32px; 
             
-            /* Sizing */
-            width: auto;
-            min-width: 680px; /* Ensure enough width for side-by-side */
+            /* Sizing & Layout */
+            width: fit-content; /* Shrink to content size */
             max-width: 95vw;
             box-sizing: border-box;
 
-            /* Flex Layout for Clock | Weather */
+            /* Flex Layout */
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 3rem;
+            gap: 3.5rem; /* Space between clock, line, and weather */
         }
 
         .dashboard-widget:hover {
@@ -82,15 +81,20 @@
         /* --- CLOCK STYLES --- */
         .clock-section {
             text-align: right;
-            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /* No flex: 1, let it be natural width */
         }
 
         .time-display {
             font-family: 'Geist', sans-serif;
             font-weight: 300;
-            line-height: 1;
+            line-height: 0.9;
             color: var(--text-light-grey);
-            font-variant-numeric: tabular-nums; 
+            font-variant-numeric: tabular-nums;
+            font-size: 5.5rem; /* Unified size */
+            white-space: nowrap;
         }
         
         .date-display {
@@ -98,15 +102,16 @@
             margin-top: 0.5rem;
             letter-spacing: 0.05em;
             text-transform: uppercase;
-            font-size: 1rem;
+            font-size: 1.1rem;
             color: var(--text-light-grey); 
             opacity: 0.8;
         }
         
         .seconds-display {
+            /* Inherit font size from parent to be same size */
             font-weight: 300;
-            font-size: 0.5em;
-            margin-left: 0.5rem;
+            font-size: 1em; 
+            margin-left: 0.2rem;
             color: var(--text-light-grey);
             opacity: 0.8;
         }
@@ -114,43 +119,47 @@
         /* --- VERTICAL DIVIDER --- */
         .vertical-divider {
             width: 1px;
-            height: 120px; /* Fixed height for the line */
+            height: 100px; 
             background-color: #262626;
         }
 
         /* --- WEATHER STYLES --- */
         .weather-section {
             text-align: left;
-            flex: 1;
             display: flex;
             flex-direction: column;
+            justify-content: center;
             gap: 0.5rem;
-            min-width: 200px;
+            /* No flex: 1, let it be natural width */
         }
 
         .weather-main {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 1.2rem;
         }
 
         .weather-icon {
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             color: var(--text-light-grey);
+            width: 50px; /* Fixed width to prevent jumping */
+            text-align: center;
         }
 
         .weather-temp {
-            font-size: 3rem;
+            font-size: 3.5rem;
             line-height: 1;
             color: #fff;
+            min-width: 80px; /* Prevent jitter on load */
         }
 
         .weather-details {
             display: flex;
             flex-direction: column;
             gap: 0.25rem;
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #888;
+            padding-left: 0.5rem; /* Slight indent to align with visual weight */
         }
 
         .weather-detail-row {
@@ -162,7 +171,7 @@
         .wind-arrow {
             display: inline-block;
             transition: transform 0.5s ease;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             color: var(--accent-color);
         }
     </style>
@@ -177,7 +186,7 @@
         <div id="dashboard-widget" class="dashboard-widget">
             
             <div class="clock-section">
-                <div id="clock-time" class="time-display text-7xl">--:--</div>
+                <div id="clock-time" class="time-display">--:--<span class="seconds-display">--</span></div>
                 <div id="clock-date" class="date-display">--------</div>
             </div>
 
@@ -237,7 +246,10 @@
             const dateString = now.toLocaleDateString('en-US', dateOptions);
 
             if (clockTimeEl) {
-                clockTimeEl.innerHTML = `${timeOnly}<span class="seconds-display">${seconds} ${amPm}</span>`;
+                // Render time and seconds in same container with same size class, 
+                // but kept seconds in span for spacing/opacity control if needed later.
+                // Note: CSS enforces font-size: 1em for .seconds-display now.
+                clockTimeEl.innerHTML = `${timeOnly}<span class="seconds-display">:${seconds} ${amPm}</span>`;
             }
             if (clockDateEl) {
                 clockDateEl.innerText = dateString;
@@ -267,7 +279,7 @@
                     lon = ipData.longitude;
                 }
 
-                if(!lat || !lon) return; // Silent fail
+                if(!lat || !lon) return; 
 
                 // 2. Try NWS
                 try {
@@ -304,18 +316,12 @@
             const hourlyData = await hourlyRes.json();
 
             const current = hourlyData.properties.periods[0];
-            const daily = dailyData.properties.periods; 
             
-            // NWS separates day/night periods. Find the high (isDaytime=true) and low.
-            // Rough logic: Look at first 2 periods to find high/low context.
-            let high = daily[0].temperature;
-            let low = daily[0].temperature;
-            
-            // Simple scan of first 24h to find high/low for display
+            // Calculate High/Low from first 24h of hourly data for accuracy
             const first24 = hourlyData.properties.periods.slice(0, 24);
             const temps = first24.map(p => p.temperature);
-            high = Math.max(...temps);
-            low = Math.min(...temps);
+            const high = Math.max(...temps);
+            const low = Math.min(...temps);
 
             updateWeatherUI({
                 temp: current.temperature,
@@ -323,8 +329,8 @@
                 isDay: current.isDaytime,
                 high: high,
                 low: low,
-                windSpeed: current.windSpeed, // e.g., "5 mph"
-                windDir: current.windDirection, // e.g., "NW"
+                windSpeed: current.windSpeed, 
+                windDir: current.windDirection,
                 isNWS: true
             });
         }
@@ -342,35 +348,30 @@
                 high: Math.round(data.daily.temperature_2m_max[0]),
                 low: Math.round(data.daily.temperature_2m_min[0]),
                 windSpeed: Math.round(data.current.wind_speed_10m) + " mph",
-                windDir: data.current.wind_direction_10m, // Degrees
+                windDir: data.current.wind_direction_10m,
                 isNWS: false
             });
         }
 
         // --- UI UPDATE ---
         function updateWeatherUI(data) {
-            // Temp
             wTemp.innerText = `${data.temp}°`;
             wHigh.innerText = `${data.high}°`;
             wLow.innerText = `${data.low}°`;
             wWindSpeed.innerText = data.windSpeed;
 
-            // Icon
             let iconClass = 'fa-cloud';
             if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
             else iconClass = getIconFromWMO(data.iconCode, data.isDay);
             wIcon.innerHTML = `<i class="${iconClass}"></i>`;
 
-            // Wind Direction Arrow
             const rotation = getWindRotation(data.windDir);
             wWindArrow.style.transform = `rotate(${rotation}deg)`;
         }
 
         // --- HELPERS ---
         function getWindRotation(dir) {
-            if (typeof dir === 'number') return dir; // Open-Meteo gives degrees
-            
-            // NWS gives text (N, NE, etc)
+            if (typeof dir === 'number') return dir; 
             const map = {
                 'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
                 'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
@@ -403,11 +404,8 @@
 
         // --- INIT ---
         window.addEventListener('load', () => {
-            // Start Clock Immediately
             updateDateTime();
             setInterval(updateDateTime, 1000);
-
-            // Trigger Weather (Async, no loader)
             initWeather();
         });
 
