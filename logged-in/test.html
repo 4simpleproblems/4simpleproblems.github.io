@@ -241,11 +241,9 @@
             <div class="ad-placeholder">
                 <!-- Vertical Ads -->
                 <ins class="adsbygoogle"
-                     style="display:block"
+                     style="display:inline-block;width:120px;height:600px"
                      data-ad-client="ca-pub-6659160370587814"
-                     data-ad-slot="7252834287"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
+                     data-ad-slot="7252834287"></ins>
             </div>
         </div>
 
@@ -291,11 +289,9 @@
             <div class="ad-placeholder">
                 <!-- Vertical Ads -->
                 <ins class="adsbygoogle"
-                     style="display:block"
+                     style="display:inline-block;width:120px;height:600px"
                      data-ad-client="ca-pub-6659160370587814"
-                     data-ad-slot="7252834287"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
+                     data-ad-slot="7252834287"></ins>
             </div>
         </div>
     </div>
@@ -392,12 +388,13 @@
         // --- LOCATION FETCH (IP Fallback) ---
         async function initWeather() {
             try {
-                // 1. Get Location using IP (Default)
-                const ipRes = await fetch('https://ipapi.co/json/');
+                // 1. Get Location using IP (Default) from ip-api.com (CORS friendly)
+                const ipRes = await fetch('https://ip-api.com/json/');
                 const ipData = await ipRes.json();
                 
-                CURRENT_LAT = ipData.latitude;
-                CURRENT_LON = ipData.longitude;
+                // ip-api.com uses 'lat' and 'lon'
+                CURRENT_LAT = ipData.lat;
+                CURRENT_LON = ipData.lon;
                 
                 if(!CURRENT_LAT || !CURRENT_LON) return; 
 
