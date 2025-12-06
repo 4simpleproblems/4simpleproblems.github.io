@@ -308,11 +308,15 @@
             
             // Check if sidebars are visible (display != none)
             if (adSidebars.length > 0 && window.getComputedStyle(adSidebars[0]).display !== 'none') {
-                ads.forEach(() => {
+                ads.forEach((ad) => {
                     try {
-                        (adsbygoogle = window.adsbygoogle || []).push({});
+                        // Check if ad is already filled to avoid "All 'ins' elements..." error
+                        if (!ad.innerHTML.trim() || ad.getAttribute('data-ad-status') === 'unfilled') {
+                             (window.adsbygoogle = window.adsbygoogle || []).push({});
+                        }
                     } catch (e) {
-                        console.error("AdSense push error:", e);
+                        // Suppress errors from ad blockers or double-push
+                        console.debug("AdSense push skipped or failed:", e);
                     }
                 });
             }
@@ -441,15 +445,7 @@
 
         // --- FALLBACK LOGIC ---
         async function loadWeatherWithFallback(lat, lon) {
-            // 1. Google Weather (using Firebase API Key)
-            try {
-                await fetchGoogleWeather(lat, lon);
-                return;
-            } catch(e) {
-                console.warn("Google Weather fallback skipped:", e);
-            }
-
-            // 2. NWS
+            // 1. NWS
             try {
                 await fetchNWS(lat, lon);
                 return;
@@ -457,50 +453,12 @@
                 console.warn("NWS fallback skipped:", e);
             }
 
-            // 3. Open-Meteo
+            // 2. Open-Meteo
             try {
                 await fetchOpenMeteo(lat, lon);
             } catch(e) {
                 console.error("All weather sources failed", e);
             }
-        }
-
-        // --- GOOGLE WEATHER FETCH ---
-        async function fetchGoogleWeather(lat, lon) {
-            const apiKey = firebaseConfig.apiKey;
-            const url = `https://weather.googleapis.com/v1/currentConditions:lookup?key=${apiKey}&location.latitude=${lat}&location.longitude=${lon}`;
-            
-            const res = await fetch(url);
-            if (!res.ok) {
-                const errText = await res.text();
-                console.error("Google Weather API Failed. Details:", errText);
-                throw new Error(`Google Weather Error: ${res.status} - ${errText}`);
-            }
-            
-            const data = await res.json();
-            if (!data.currentConditions) throw new Error("Invalid Google Weather Data");
-
-            const curr = data.currentConditions;
-            
-            // Conversions and Defaults (Google usually metric C)
-            let tempF = curr.temperature?.value;
-            if (curr.temperature?.unit === 'celsius' || curr.temperature?.unit === 'C') {
-                tempF = (tempF * 9/5) + 32;
-            }
-            
-            const weatherCode = curr.weatherCondition || "CLOUDY"; 
-
-            updateWeatherUI({
-                temp: Math.round(tempF || 0),
-                iconCode: weatherCode,
-                isDay: true, // Approximation
-                high: "--", 
-                low: "--",
-                windSpeed: (curr.windSpeed?.value || 0) + " mph",
-                windDir: curr.windDirection || 0,
-                isNWS: false,
-                isGoogle: true
-            });
         }
 
         // --- NWS FETCH ---
@@ -562,8 +520,7 @@
             wWindSpeed.innerText = data.windSpeed;
 
             let iconClass = 'fa-cloud';
-            if(data.isGoogle) iconClass = getIconFromGoogle(data.iconCode);
-            else if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
+            if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
             else iconClass = getIconFromWMO(data.iconCode, data.isDay);
             
             wIcon.innerHTML = `<i class="${iconClass}"></i>`;
@@ -582,18 +539,6 @@
                 'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
             };
             return map[dir] || 0;
-        }
-
-        function getIconFromGoogle(condition) {
-             if (!condition) return 'fa-solid fa-cloud';
-             const c = condition.toLowerCase();
-             if (c.includes('clear') || c.includes('sunny')) return 'fa-solid fa-sun';
-             if (c.includes('cloud')) return 'fa-solid fa-cloud';
-             if (c.includes('rain')) return 'fa-solid fa-cloud-rain';
-             if (c.includes('snow')) return 'fa-solid fa-snowflake';
-             if (c.includes('storm') || c.includes('thunder')) return 'fa-solid fa-cloud-bolt';
-             if (c.includes('fog') || c.includes('mist')) return 'fa-solid fa-smog';
-             return 'fa-solid fa-cloud';
         }
 
         function getIconFromWMO(code, isDay) {
