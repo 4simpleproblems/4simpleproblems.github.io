@@ -246,9 +246,6 @@
                      data-ad-slot="7252834287"
                      data-ad-format="auto"
                      data-full-width-responsive="true"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
             </div>
         </div>
 
@@ -299,12 +296,28 @@
                      data-ad-slot="7252834287"
                      data-ad-format="auto"
                      data-full-width-responsive="true"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
             </div>
         </div>
     </div>
+
+    <script>
+        // Initialize Ads only when visible to prevent "No slot size" errors
+        window.addEventListener('load', () => {
+            const adSidebars = document.querySelectorAll('.ad-sidebar');
+            const ads = document.querySelectorAll('.adsbygoogle');
+            
+            // Check if sidebars are visible (display != none)
+            if (adSidebars.length > 0 && window.getComputedStyle(adSidebars[0]).display !== 'none') {
+                ads.forEach(() => {
+                    try {
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    } catch (e) {
+                        console.error("AdSense push error:", e);
+                    }
+                });
+            }
+        });
+    </script>
 
     <script type="module">
         import { firebaseConfig } from '../firebase-config.js';
