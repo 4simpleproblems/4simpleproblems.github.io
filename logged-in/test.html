@@ -306,8 +306,8 @@
                 
                 if(!CURRENT_LAT || !CURRENT_LON) return; 
 
-                // 2. Load weather with default NWS priority
-                loadWeatherWithTimeout(CURRENT_LAT, CURRENT_LON);
+                // 2. Load weather with Fallback Chain
+                loadWeatherWithFallback(CURRENT_LAT, CURRENT_LON);
 
             } catch (err) {
                 console.warn("Initial weather load failed", err);
@@ -321,12 +321,11 @@
                 return;
             }
             
-            wLocLink.innerText = "Loading...";
+            // wLocLink.innerText = "Loading..."; // REMOVED
             resetWeatherDisplay();
 
             try {
                 const pos = await new Promise((resolve, reject) => {
-                    // Set a very short timeout for a quick initial attempt
                     navigator.geolocation.getCurrentPosition(resolve, reject, { 
                         timeout: 5000, 
                         maximumAge: 60000 
@@ -335,53 +334,78 @@
                 
                 CURRENT_LAT = pos.coords.latitude;
                 CURRENT_LON = pos.coords.longitude;
-                wLocLink.innerText = "Location Updated (Click to Re-scan)";
                 
-                loadWeatherWithTimeout(CURRENT_LAT, CURRENT_LON, true); // Forced NWS check
+                // wLocLink.innerText = "Location Updated (Click to Re-scan)"; // REMOVED
+                
+                loadWeatherWithFallback(CURRENT_LAT, CURRENT_LON);
 
             } catch(e) {
                 console.error("Geolocation failed:", e);
-                wLocLink.innerText = "Location Access Denied or Timeout (Using IP)";
+                // wLocLink.innerText = "Location Access Denied or Timeout (Using IP)"; // REMOVED
                 
                 // Fallback to IP data if browser location fails
                 initWeather(); 
             }
         }
 
-        // --- NWS/OPEN-METEO Fallback Logic ---
-        async function loadWeatherWithTimeout(lat, lon, forceNWS = false) {
-            let nwsSuccess = false;
-            const timeoutPromise = new Promise(resolve => 
-                setTimeout(() => resolve('timeout'), 1000)
-            );
-
+        // --- FALLBACK LOGIC ---
+        async function loadWeatherWithFallback(lat, lon) {
+            // 1. Google Weather (using Firebase API Key)
             try {
-                // Try NWS with a race condition against a 1-second timeout
-                const nwsPromise = fetchNWS(lat, lon);
-                const result = await Promise.race([nwsPromise, timeoutPromise]);
-
-                if (result !== 'timeout') {
-                    nwsSuccess = true;
-                    // NWS succeeded, UI is already updated by fetchNWS
-                } else if (!forceNWS) {
-                    // Timeout occurred, and we were not explicitly trying to force NWS.
-                    // Proceed to Open-Meteo for a faster result if NWS is slow.
-                    await fetchOpenMeteo(lat, lon);
-                } else {
-                    // Timeout occurred, but we were forced (by user click). 
-                    // Let the longer NWS attempt finish to give it a chance
-                    try {
-                        await nwsPromise;
-                        nwsSuccess = true;
-                    } catch(nwsError) {
-                        // NWS failed after the timeout, proceed to Open-Meteo
-                        await fetchOpenMeteo(lat, lon);
-                    }
-                }
-            } catch(nwsError) {
-                // NWS failed immediately, fall back to Open-Meteo
-                await fetchOpenMeteo(lat, lon);
+                await fetchGoogleWeather(lat, lon);
+                return;
+            } catch(e) {
+                console.warn("Google Weather fallback skipped:", e);
             }
+
+            // 2. NWS
+            try {
+                await fetchNWS(lat, lon);
+                return;
+            } catch(e) {
+                console.warn("NWS fallback skipped:", e);
+            }
+
+            // 3. Open-Meteo
+            try {
+                await fetchOpenMeteo(lat, lon);
+            } catch(e) {
+                console.error("All weather sources failed", e);
+            }
+        }
+
+        // --- GOOGLE WEATHER FETCH ---
+        async function fetchGoogleWeather(lat, lon) {
+            const apiKey = firebaseConfig.apiKey;
+            const url = `https://weather.googleapis.com/v1/currentConditions:lookup?key=${apiKey}&location.latitude=${lat}&location.longitude=${lon}`;
+            
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`Google Weather Error: ${res.status}`);
+            
+            const data = await res.json();
+            if (!data.currentConditions) throw new Error("Invalid Google Weather Data");
+
+            const curr = data.currentConditions;
+            
+            // Conversions and Defaults (Google usually metric C)
+            let tempF = curr.temperature?.value;
+            if (curr.temperature?.unit === 'celsius' || curr.temperature?.unit === 'C') {
+                tempF = (tempF * 9/5) + 32;
+            }
+            
+            const weatherCode = curr.weatherCondition || "CLOUDY"; 
+
+            updateWeatherUI({
+                temp: Math.round(tempF || 0),
+                iconCode: weatherCode,
+                isDay: true, // Approximation
+                high: "--", 
+                low: "--",
+                windSpeed: (curr.windSpeed?.value || 0) + " mph",
+                windDir: curr.windDirection || 0,
+                isNWS: false,
+                isGoogle: true
+            });
         }
 
         // --- NWS FETCH ---
@@ -443,8 +467,10 @@
             wWindSpeed.innerText = data.windSpeed;
 
             let iconClass = 'fa-cloud';
-            if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
+            if(data.isGoogle) iconClass = getIconFromGoogle(data.iconCode);
+            else if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
             else iconClass = getIconFromWMO(data.iconCode, data.isDay);
+            
             wIcon.innerHTML = `<i class="${iconClass}"></i>`;
 
             const rotation = getWindRotation(data.windDir);
@@ -461,6 +487,18 @@
                 'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
             };
             return map[dir] || 0;
+        }
+
+        function getIconFromGoogle(condition) {
+             if (!condition) return 'fa-solid fa-cloud';
+             const c = condition.toLowerCase();
+             if (c.includes('clear') || c.includes('sunny')) return 'fa-solid fa-sun';
+             if (c.includes('cloud')) return 'fa-solid fa-cloud';
+             if (c.includes('rain')) return 'fa-solid fa-cloud-rain';
+             if (c.includes('snow')) return 'fa-solid fa-snowflake';
+             if (c.includes('storm') || c.includes('thunder')) return 'fa-solid fa-cloud-bolt';
+             if (c.includes('fog') || c.includes('mist')) return 'fa-solid fa-smog';
+             return 'fa-solid fa-cloud';
         }
 
         function getIconFromWMO(code, isDay) {
