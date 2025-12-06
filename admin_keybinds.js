@@ -1,4 +1,3 @@
-
 (async function() {
     console.log("Admin Keybinds Script Loaded");
 
@@ -25,14 +24,11 @@
     ]);
 
     // Initialize Firebase
-    // We use a unique name for this app instance to avoid conflicts with the page's default app
     let app;
     try {
+        // Use a unique name for this app instance to avoid conflicts
         app = initializeApp(firebaseConfig, "adminKeybindsApp");
     } catch (e) {
-        // If already initialized with this name (shouldn't happen usually), reuse it or fall back
-        // Actually, if we use the default name, we might conflict. 
-        // Using a specific name is safer for an injected script.
         console.warn("Admin Keybinds: App might already be initialized", e);
         app = initializeApp(firebaseConfig); // Fallback
     }
@@ -41,82 +37,112 @@
     const db = getFirestore(app);
 
     // State
-    let explicitEnabled = true; // Default assumption
+    let explicitEnabled = true;
     let lastEnablePressTime = 0;
     let isAdmin = false;
+    let adminUnsubscribe = null;
+    let configUnsubscribe = null;
+
+    // Cleanup function
+    function cleanupListeners() {
+        if (adminUnsubscribe) {
+            adminUnsubscribe();
+            adminUnsubscribe = null;
+        }
+        if (configUnsubscribe) {
+            configUnsubscribe();
+            configUnsubscribe = null;
+        }
+        isAdmin = false;
+    }
 
     // Monitor Global Setting
     function subscribeToConfig() {
-        onSnapshot(doc(db, 'config', 'soundboard'), (docSnap) => {
+        if (configUnsubscribe) return; // Already subscribed
+
+        configUnsubscribe = onSnapshot(doc(db, 'config', 'soundboard'), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 if (data.explicitEnabled !== undefined) {
                     explicitEnabled = data.explicitEnabled;
-                    // console.log("Admin Keybinds: Explicit sounds are now", explicitEnabled ? "ENABLED" : "DISABLED");
                 }
             } else {
-                // If doc doesn't exist, assume enabled and maybe create it?
-                // For now, just assume enabled locally.
                 explicitEnabled = true;
             }
+        }, (error) => {
+            console.error("Admin Keybinds: Config listener error", error);
         });
     }
 
     // Keybind Listener
-    function setupKeybinds() {
-        document.addEventListener('keydown', async (e) => {
-            // Check for Ctrl + Alt + E
-            if (e.ctrlKey && e.altKey && (e.key.toLowerCase() === 'e')) {
-                e.preventDefault();
-                console.log("Admin Keybinds: Trigger detected.");
+    // We attach this once. The logic inside checks isAdmin.
+    document.addEventListener('keydown', async (e) => {
+        // Check for Ctrl + Alt + E
+        if (e.ctrlKey && e.altKey && (e.key.toLowerCase() === 'e')) {
+            e.preventDefault(); // Always prevent default if key matches, to avoid browser conflicts
+            
+            if (!isAdmin) return; // Security check at usage time
 
-                if (explicitEnabled) {
-                    // Currently Enabled -> Disable Instantly
-                    console.log("Admin Keybinds: Disabling explicit sounds...");
+            console.log("Admin Keybinds: Trigger detected.");
+
+            if (explicitEnabled) {
+                // Currently Enabled -> Disable Instantly
+                console.log("Admin Keybinds: Disabling explicit sounds...");
+                try {
+                    await setDoc(doc(db, 'config', 'soundboard'), { explicitEnabled: false }, { merge: true });
+                    lastEnablePressTime = 0;
+                } catch (err) {
+                    console.error("Admin Keybinds: Failed to disable.", err);
+                }
+            } else {
+                // Currently Disabled -> Require Double Press to Enable
+                const now = Date.now();
+                if (now - lastEnablePressTime < 1500) { // 1.5 second window
+                    console.log("Admin Keybinds: Enabling explicit sounds...");
                     try {
-                        await setDoc(doc(db, 'config', 'soundboard'), { explicitEnabled: false }, { merge: true });
-                        // Reset double press timer just in case
-                        lastEnablePressTime = 0;
+                        await setDoc(doc(db, 'config', 'soundboard'), { explicitEnabled: true }, { merge: true });
+                        lastEnablePressTime = 0; // Reset
                     } catch (err) {
-                        console.error("Admin Keybinds: Failed to disable.", err);
+                        console.error("Admin Keybinds: Failed to enable.", err);
                     }
                 } else {
-                    // Currently Disabled -> Require Double Press to Enable
-                    const now = Date.now();
-                    if (now - lastEnablePressTime < 1500) { // 1.5 second window
-                        console.log("Admin Keybinds: Enabling explicit sounds...");
-                        try {
-                            await setDoc(doc(db, 'config', 'soundboard'), { explicitEnabled: true }, { merge: true });
-                            lastEnablePressTime = 0; // Reset
-                        } catch (err) {
-                            console.error("Admin Keybinds: Failed to enable.", err);
-                        }
-                    } else {
-                        console.log("Admin Keybinds: Press again to enable.");
-                        lastEnablePressTime = now;
-                    }
+                    console.log("Admin Keybinds: Press again to enable.");
+                    lastEnablePressTime = now;
                 }
             }
-        });
-    }
+        }
+    });
 
     // Main logic flow
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, (user) => {
         if (user) {
-            try {
-                // Check if user is admin
-                const adminDocRef = doc(db, 'admins', user.uid);
-                const adminDoc = await getDoc(adminDocRef);
-
-                if (adminDoc.exists()) {
-                    console.log("Admin Keybinds: Admin authenticated.");
-                    isAdmin = true;
-                    subscribeToConfig();
-                    setupKeybinds();
+            // Real-time admin check
+            adminUnsubscribe = onSnapshot(doc(db, 'admins', user.uid), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const role = data.role;
+                    // Robust check for specific roles
+                    if (role === 'admin' || role === 'superadmin') {
+                        if (!isAdmin) console.log("Admin Keybinds: Admin privileges active.");
+                        isAdmin = true;
+                        subscribeToConfig();
+                    } else {
+                        // Doc exists but role is wrong (shouldn't happen with current logic but safe to check)
+                        console.log("Admin Keybinds: Insufficient role.");
+                        cleanupListeners();
+                    }
+                } else {
+                    // Not an admin
+                    if (isAdmin) console.log("Admin Keybinds: Admin privileges revoked.");
+                    cleanupListeners();
                 }
-            } catch (err) {
-                console.error("Admin Keybinds: Error checking admin status", err);
-            }
+            }, (error) => {
+                console.error("Admin Keybinds: Admin check error", error);
+                cleanupListeners();
+            });
+        } else {
+            // Logged out
+            cleanupListeners();
         }
     });
 
