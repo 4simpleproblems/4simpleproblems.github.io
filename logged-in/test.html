@@ -23,6 +23,7 @@
             --text-primary: #c0c0c0;
             --text-light-grey: #d1d5db;
             --accent-color: #6366f1;
+            --text-link: #888;
         }
 
         body { 
@@ -89,9 +90,8 @@
         .time-display {
             font-family: 'Geist', sans-serif;
             font-weight: 300;
-            /* Changed to flex container */
             display: flex;
-            align-items: flex-end; /* Align all children (minutes and seconds/AMPM) to the bottom */
+            align-items: flex-end; 
             line-height: 0.9;
             color: var(--text-light-grey);
             font-variant-numeric: tabular-nums;
@@ -110,13 +110,11 @@
         }
         
         .seconds-display {
-            /* Now vertically aligned by parent (.time-display) */
             font-weight: 300;
             font-size: 3.5rem; 
             margin-left: 0.2rem;
             color: var(--text-light-grey);
             opacity: 0.8;
-            /* Removed vertical-align: top */
         }
 
         /* --- VERTICAL DIVIDER --- */
@@ -160,7 +158,7 @@
             flex-direction: column;
             gap: 0.25rem;
             font-size: 1rem;
-            color: #888;
+            color: var(--text-link); /* Base grey color */
             padding-left: 0.5rem; 
         }
 
@@ -175,6 +173,20 @@
             transition: transform 0.5s ease;
             font-size: 0.9rem;
             color: var(--accent-color);
+        }
+
+        #w-location-link {
+            font-size: 0.7rem;
+            color: var(--text-link);
+            cursor: pointer;
+            text-align: left;
+            margin-top: 0.5rem;
+            padding-left: 0.5rem;
+            transition: color 0.2s ease;
+        }
+
+        #w-location-link:hover {
+            color: var(--text-light-grey);
         }
     </style>
 
@@ -211,6 +223,10 @@
                         <span id="w-wind-speed">-- mph</span>
                     </div>
                 </div>
+                
+                <div id="w-location-link" onclick="getUserBrowserLocation()">
+                    Use Current Location
+                </div>
             </div>
 
         </div>
@@ -218,6 +234,10 @@
 
     <script type="module">
         import { firebaseConfig } from '../firebase-config.js';
+
+        // --- GLOBAL STATE ---
+        let CURRENT_LAT = null;
+        let CURRENT_LON = null;
 
         // --- FIREBASE INIT ---
         if (typeof firebase !== 'undefined') {
@@ -248,8 +268,6 @@
             const dateString = now.toLocaleDateString('en-US', dateOptions);
 
             if (clockTimeEl) {
-                // The colon is included in the seconds display span
-                // HTML structure change: timeOnly is the first text node child, the span is the second element.
                 clockTimeEl.innerHTML = `${timeOnly}<span class="seconds-display">:${seconds} ${amPm}</span>`;
             }
             if (clockDateEl) {
@@ -264,42 +282,106 @@
         const wLow = document.getElementById('w-low');
         const wWindSpeed = document.getElementById('w-wind-speed');
         const wWindArrow = document.getElementById('w-wind-arrow');
+        const wLocLink = document.getElementById('w-location-link');
 
+        // Resets display to placeholders
+        function resetWeatherDisplay() {
+            wTemp.innerText = `--°`;
+            wHigh.innerText = `--°`;
+            wLow.innerText = `--°`;
+            wWindSpeed.innerText = `-- mph`;
+            wIcon.innerHTML = `<i class="fa-solid fa-cloud"></i>`;
+            wWindArrow.style.transform = `rotate(0deg)`;
+        }
+
+        // --- LOCATION FETCH (IP Fallback) ---
         async function initWeather() {
             try {
-                // 1. Get Location (Browser or IP)
-                let lat, lon;
-                try {
-                    const pos = await getBrowserLocation();
-                    lat = pos.coords.latitude;
-                    lon = pos.coords.longitude;
-                } catch(e) {
-                    const ipRes = await fetch('https://ipapi.co/json/');
-                    const ipData = await ipRes.json();
-                    lat = ipData.latitude;
-                    lon = ipData.longitude;
-                }
+                // 1. Get Location using IP (Default)
+                const ipRes = await fetch('https://ipapi.co/json/');
+                const ipData = await ipRes.json();
+                
+                CURRENT_LAT = ipData.latitude;
+                CURRENT_LON = ipData.longitude;
+                
+                if(!CURRENT_LAT || !CURRENT_LON) return; 
 
-                if(!lat || !lon) return; 
-
-                // 2. Try NWS
-                try {
-                    await fetchNWS(lat, lon);
-                } catch(nwsError) {
-                    // 3. Fallback to OpenMeteo
-                    await fetchOpenMeteo(lat, lon);
-                }
+                // 2. Load weather with default NWS priority
+                loadWeatherWithTimeout(CURRENT_LAT, CURRENT_LON);
 
             } catch (err) {
-                console.warn("Weather load failed", err);
+                console.warn("Initial weather load failed", err);
             }
         }
 
-        function getBrowserLocation() {
-            return new Promise((resolve, reject) => {
-                if (!navigator.geolocation) reject("Not supported");
-                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000 });
-            });
+        // --- LOCATION FETCH (Browser Geolocation) ---
+        window.getUserBrowserLocation = async function() {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by this browser.");
+                return;
+            }
+            
+            wLocLink.innerText = "Loading...";
+            resetWeatherDisplay();
+
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    // Set a very short timeout for a quick initial attempt
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { 
+                        timeout: 5000, 
+                        maximumAge: 60000 
+                    });
+                });
+                
+                CURRENT_LAT = pos.coords.latitude;
+                CURRENT_LON = pos.coords.longitude;
+                wLocLink.innerText = "Location Updated (Click to Re-scan)";
+                
+                loadWeatherWithTimeout(CURRENT_LAT, CURRENT_LON, true); // Forced NWS check
+
+            } catch(e) {
+                console.error("Geolocation failed:", e);
+                wLocLink.innerText = "Location Access Denied or Timeout (Using IP)";
+                
+                // Fallback to IP data if browser location fails
+                initWeather(); 
+            }
+        }
+
+        // --- NWS/OPEN-METEO Fallback Logic ---
+        async function loadWeatherWithTimeout(lat, lon, forceNWS = false) {
+            let nwsSuccess = false;
+            const timeoutPromise = new Promise(resolve => 
+                setTimeout(() => resolve('timeout'), 1000)
+            );
+
+            try {
+                // Try NWS with a race condition against a 1-second timeout
+                const nwsPromise = fetchNWS(lat, lon);
+                const result = await Promise.race([nwsPromise, timeoutPromise]);
+
+                if (result !== 'timeout') {
+                    nwsSuccess = true;
+                    // NWS succeeded, UI is already updated by fetchNWS
+                } else if (!forceNWS) {
+                    // Timeout occurred, and we were not explicitly trying to force NWS.
+                    // Proceed to Open-Meteo for a faster result if NWS is slow.
+                    await fetchOpenMeteo(lat, lon);
+                } else {
+                    // Timeout occurred, but we were forced (by user click). 
+                    // Let the longer NWS attempt finish to give it a chance
+                    try {
+                        await nwsPromise;
+                        nwsSuccess = true;
+                    } catch(nwsError) {
+                        // NWS failed after the timeout, proceed to Open-Meteo
+                        await fetchOpenMeteo(lat, lon);
+                    }
+                }
+            } catch(nwsError) {
+                // NWS failed immediately, fall back to Open-Meteo
+                await fetchOpenMeteo(lat, lon);
+            }
         }
 
         // --- NWS FETCH ---
