@@ -55,13 +55,13 @@
         .dashboard-widget {
             border: 1px solid var(--border-color);
             background-color: var(--bg-container);
-            padding: 2.5rem 4rem; /* Balanced padding */
+            padding: 2.5rem 4rem; 
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
             border-radius: 32px; 
             
             /* Sizing & Layout */
-            width: fit-content; /* Shrink to content size */
+            width: fit-content;
             max-width: 95vw;
             box-sizing: border-box;
 
@@ -69,7 +69,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 3.5rem; /* Space between clock, line, and weather */
+            gap: 3.5rem; 
         }
 
         .dashboard-widget:hover {
@@ -84,7 +84,6 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            /* No flex: 1, let it be natural width */
         }
 
         .time-display {
@@ -93,7 +92,7 @@
             line-height: 0.9;
             color: var(--text-light-grey);
             font-variant-numeric: tabular-nums;
-            font-size: 5.5rem; /* Unified size */
+            font-size: 5.5rem; 
             white-space: nowrap;
         }
         
@@ -108,12 +107,15 @@
         }
         
         .seconds-display {
-            /* Inherit font size from parent to be same size */
+            /* Updated to match temperature font size (3.5rem) */
             font-weight: 300;
-            font-size: 1em; 
+            font-size: 3.5rem; 
             margin-left: 0.2rem;
             color: var(--text-light-grey);
             opacity: 0.8;
+            /* Adjust alignment to sit better next to minutes */
+            display: inline-block;
+            vertical-align: top; 
         }
 
         /* --- VERTICAL DIVIDER --- */
@@ -130,7 +132,6 @@
             flex-direction: column;
             justify-content: center;
             gap: 0.5rem;
-            /* No flex: 1, let it be natural width */
         }
 
         .weather-main {
@@ -142,15 +143,15 @@
         .weather-icon {
             font-size: 2.8rem;
             color: var(--text-light-grey);
-            width: 50px; /* Fixed width to prevent jumping */
+            width: 50px; 
             text-align: center;
         }
 
         .weather-temp {
-            font-size: 3.5rem;
+            font-size: 3.5rem; /* Reference size for clock seconds/AMPM */
             line-height: 1;
             color: #fff;
-            min-width: 80px; /* Prevent jitter on load */
+            min-width: 80px; 
         }
 
         .weather-details {
@@ -159,7 +160,7 @@
             gap: 0.25rem;
             font-size: 1rem;
             color: #888;
-            padding-left: 0.5rem; /* Slight indent to align with visual weight */
+            padding-left: 0.5rem; 
         }
 
         .weather-detail-row {
@@ -246,9 +247,7 @@
             const dateString = now.toLocaleDateString('en-US', dateOptions);
 
             if (clockTimeEl) {
-                // Render time and seconds in same container with same size class, 
-                // but kept seconds in span for spacing/opacity control if needed later.
-                // Note: CSS enforces font-size: 1em for .seconds-display now.
+                // The colon is included in the seconds display span
                 clockTimeEl.innerHTML = `${timeOnly}<span class="seconds-display">:${seconds} ${amPm}</span>`;
             }
             if (clockDateEl) {
@@ -317,7 +316,6 @@
 
             const current = hourlyData.properties.periods[0];
             
-            // Calculate High/Low from first 24h of hourly data for accuracy
             const first24 = hourlyData.properties.periods.slice(0, 24);
             const temps = first24.map(p => p.temperature);
             const high = Math.max(...temps);
