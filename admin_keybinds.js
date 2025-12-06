@@ -1,4 +1,3 @@
-
 (async function() {
     console.log("[Admin Keybinds] Script Loaded");
 
@@ -74,6 +73,7 @@
     }
 
     function cleanupListeners() {
+        // Only call this on logout or fatal error
         if (adminUnsubscribe) {
             adminUnsubscribe();
             adminUnsubscribe = null;
@@ -87,11 +87,13 @@
 
     function subscribeToConfig() {
         if (configUnsubscribe) return;
+        console.log("[Admin Keybinds] Subscribing to config...");
         configUnsubscribe = onSnapshot(doc(db, 'config', 'soundboard'), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 if (data.explicitEnabled !== undefined) {
                     explicitEnabled = data.explicitEnabled;
+                    console.log(`[Admin Keybinds] Explicit Enabled: ${explicitEnabled}`);
                 }
             } else {
                 explicitEnabled = true;
@@ -101,8 +103,6 @@
 
     // Keybind Listener
     document.addEventListener('keydown', async (e) => {
-        // Trigger: Ctrl + Alt + E
-        // Using e.code as fallback for better Chrome/Layout support
         if (e.ctrlKey && e.altKey && (e.key.toLowerCase() === 'e' || e.code === 'KeyE')) {
             e.preventDefault();
             
@@ -156,27 +156,43 @@
                 console.log(`[Admin Keybinds] Owner recognized: ${OWNER_EMAIL}`);
                 isAdmin = true;
                 subscribeToConfig();
-                return; 
+                return; // Skip DB check for owner
             }
 
             // 2. DB Admin Check (for others)
+            // Clean up old listener if it exists (e.g. fast user switch)
+            if (adminUnsubscribe) adminUnsubscribe();
+
             adminUnsubscribe = onSnapshot(doc(db, 'admins', user.uid), (docSnap) => {
                 if (docSnap.exists()) {
-                    const role = docSnap.data().role;
+                    const data = docSnap.data();
+                    const role = (data.role || '').toLowerCase();
+                    
+                    console.log(`[Admin Keybinds] Role update for ${user.uid}: ${role}`);
+
                     if (role === 'admin' || role === 'superadmin') {
-                        if (!isAdmin) console.log("[Admin Keybinds] Admin privileges active.");
+                        if (!isAdmin) {
+                            console.log("[Admin Keybinds] Admin privileges active.");
+                            // Optionally show toast here to let them know they are ready
+                        }
                         isAdmin = true;
                         subscribeToConfig();
                     } else {
-                        console.log("[Admin Keybinds] Insufficient role.");
-                        cleanupListeners();
+                        console.log("[Admin Keybinds] Role is not admin/superadmin.");
+                        isAdmin = false;
+                        // We do NOT call cleanupListeners() here because we want to keep listening 
+                        // in case they are promoted to admin later without refreshing.
                     }
                 } else {
-                    cleanupListeners();
+                    console.log("[Admin Keybinds] Admin doc does not exist.");
+                    isAdmin = false;
+                    // Do NOT call cleanupListeners() here.
                 }
             }, (error) => {
                 console.error("[Admin Keybinds] Admin check error:", error);
-                cleanupListeners();
+                // If we can't read the doc (permission denied), they aren't admin (or rules prevent it).
+                isAdmin = false;
+                // Here we might want to cleanup if it's a hard error, but keeping it safe.
             });
         } else {
             cleanupListeners();
