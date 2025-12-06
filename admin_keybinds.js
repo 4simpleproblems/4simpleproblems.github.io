@@ -1,3 +1,4 @@
+
 (async function() {
     console.log("[Admin Keybinds] Script Loaded");
 
@@ -24,8 +25,6 @@
     ]);
 
     // Initialize Firebase
-    // We try to get the existing default app first, which holds the user's session.
-    // If we create a NEW app instance, it won't have the auth state from the main app.
     let app;
     try {
         app = getApp(); // Try to get the default app
@@ -47,31 +46,64 @@
     
     const OWNER_EMAIL = "4simpleproblems@gmail.com";
 
-    // Visual Feedback Helper
-    function showAdminToast(message, color = "blue") {
+    // Visual Feedback Helper (Updated to match site style)
+    function showAdminToast(message, type = "neutral") {
         const existing = document.getElementById("admin-keybind-toast");
         if (existing) existing.remove();
 
         const toast = document.createElement("div");
         toast.id = "admin-keybind-toast";
-        toast.style.position = "fixed";
-        toast.style.bottom = "20px";
-        toast.style.right = "20px";
-        toast.style.backgroundColor = color === "red" ? "rgba(220, 38, 38, 0.9)" : (color === "green" ? "rgba(22, 163, 74, 0.9)" : "rgba(30, 30, 30, 0.9)");
-        toast.style.color = "white";
-        toast.style.padding = "12px 24px";
-        toast.style.borderRadius = "8px";
-        toast.style.zIndex = "999999";
-        toast.style.fontFamily = "sans-serif";
-        toast.style.fontWeight = "bold";
-        toast.style.boxShadow = "0 4px 6px rgba(0,0,0,0.3)";
-        toast.style.transition = "opacity 0.3s ease";
-        toast.innerText = message;
-        
+
+        // Styles resembling notes.html/settings.html elements
+        Object.assign(toast.style, {
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            backgroundColor: "rgba(13, 13, 13, 0.95)", // Dark glass effect
+            backdropFilter: "blur(5px)",
+            color: "#c0c0c0", // Light gray text
+            padding: "14px 20px",
+            borderRadius: "12px", // Rounded corners
+            border: "1px solid #333", // Dark border
+            fontFamily: "'Geist', 'Roboto', sans-serif",
+            fontSize: "14px",
+            fontWeight: "500",
+            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.5)",
+            zIndex: "9999999",
+            opacity: "0",
+            transform: "translateY(20px)",
+            transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+        });
+
+        // Type-specific accents (using FontAwesome icons if available)
+        let iconHtml = '';
+        if (type === "success" || type === "green") {
+            toast.style.borderColor = "rgba(34, 197, 94, 0.5)"; // Green hint
+            iconHtml = '<i class="fa-solid fa-check-circle" style="color: #4ade80;"></i>';
+        } else if (type === "error" || type === "red") {
+            toast.style.borderColor = "rgba(239, 68, 68, 0.5)"; // Red hint
+            iconHtml = '<i class="fa-solid fa-circle-exclamation" style="color: #f87171;"></i>';
+        } else {
+            toast.style.borderColor = "rgba(59, 130, 246, 0.5)"; // Blue hint
+            iconHtml = '<i class="fa-solid fa-info-circle" style="color: #60a5fa;"></i>';
+        }
+
+        toast.innerHTML = `${iconHtml}<span>${message}</span>`;
         document.body.appendChild(toast);
 
+        // Animation In
+        requestAnimationFrame(() => {
+            toast.style.opacity = "1";
+            toast.style.transform = "translateY(0)";
+        });
+
+        // Animation Out
         setTimeout(() => {
             toast.style.opacity = "0";
+            toast.style.transform = "translateY(10px)";
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
