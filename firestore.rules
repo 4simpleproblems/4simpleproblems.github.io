@@ -15,9 +15,11 @@ service cloud.firestore {
     }
 
     function isAdminOrSuperAdmin() {
-      return isAuthenticated() && 
-             exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+      return isAuthenticated() && (
+             request.auth.token.email == '4simpleproblems@gmail.com' ||
+             (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['admin', 'superadmin'])
+      );
     }
     
     // ----------------------------------------------------------------------------------

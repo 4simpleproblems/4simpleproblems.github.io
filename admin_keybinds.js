@@ -1,3 +1,4 @@
+
 (async function() {
     console.log("[Admin Keybinds] Script Loaded");
 
@@ -73,7 +74,6 @@
     }
 
     function cleanupListeners() {
-        // Only call this on logout or fatal error
         if (adminUnsubscribe) {
             adminUnsubscribe();
             adminUnsubscribe = null;
@@ -88,7 +88,10 @@
     function subscribeToConfig() {
         if (configUnsubscribe) return;
         console.log("[Admin Keybinds] Subscribing to config...");
-        configUnsubscribe = onSnapshot(doc(db, 'config', 'soundboard'), (docSnap) => {
+        
+        const configRef = doc(db, 'config', 'soundboard');
+        
+        configUnsubscribe = onSnapshot(configRef, async (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 if (data.explicitEnabled !== undefined) {
@@ -96,7 +99,12 @@
                     console.log(`[Admin Keybinds] Explicit Enabled: ${explicitEnabled}`);
                 }
             } else {
+                // Document doesn't exist. If we are admin, let's try to create it to avoid confusion.
+                console.log("[Admin Keybinds] Config doc missing. Defaulting to TRUE.");
                 explicitEnabled = true;
+                
+                // Optional: Auto-create if missing? 
+                // For now, we won't auto-create to avoid spamming writes, but the keybind WILL create it.
             }
         }, (error) => console.error("Config Listen Error:", error));
     }
@@ -122,7 +130,7 @@
                     lastEnablePressTime = 0;
                 } catch (err) {
                     console.error("[Admin Keybinds] Failed to disable:", err);
-                    showAdminToast("Error: Failed to disable", "red");
+                    showAdminToast("Error: Check Console", "red");
                 }
             } else {
                 // Currently OFF -> Turn ON (Double press logic)
@@ -136,7 +144,7 @@
                         lastEnablePressTime = 0;
                     } catch (err) {
                         console.error("[Admin Keybinds] Failed to enable:", err);
-                        showAdminToast("Error: Failed to enable", "red");
+                        showAdminToast("Error: Check Console", "red");
                     }
                 } else {
                     // First press
@@ -152,7 +160,8 @@
     onAuthStateChanged(auth, (user) => {
         if (user) {
             // 1. Hardcoded Owner Check
-            if (user.email === OWNER_EMAIL) {
+            // Using toLowerCase() to be safe against input variations
+            if (user.email && user.email.toLowerCase() === OWNER_EMAIL) {
                 console.log(`[Admin Keybinds] Owner recognized: ${OWNER_EMAIL}`);
                 isAdmin = true;
                 subscribeToConfig();
@@ -160,7 +169,6 @@
             }
 
             // 2. DB Admin Check (for others)
-            // Clean up old listener if it exists (e.g. fast user switch)
             if (adminUnsubscribe) adminUnsubscribe();
 
             adminUnsubscribe = onSnapshot(doc(db, 'admins', user.uid), (docSnap) => {
@@ -173,26 +181,20 @@
                     if (role === 'admin' || role === 'superadmin') {
                         if (!isAdmin) {
                             console.log("[Admin Keybinds] Admin privileges active.");
-                            // Optionally show toast here to let them know they are ready
                         }
                         isAdmin = true;
                         subscribeToConfig();
                     } else {
                         console.log("[Admin Keybinds] Role is not admin/superadmin.");
                         isAdmin = false;
-                        // We do NOT call cleanupListeners() here because we want to keep listening 
-                        // in case they are promoted to admin later without refreshing.
                     }
                 } else {
                     console.log("[Admin Keybinds] Admin doc does not exist.");
                     isAdmin = false;
-                    // Do NOT call cleanupListeners() here.
                 }
             }, (error) => {
                 console.error("[Admin Keybinds] Admin check error:", error);
-                // If we can't read the doc (permission denied), they aren't admin (or rules prevent it).
                 isAdmin = false;
-                // Here we might want to cleanup if it's a hard error, but keeping it safe.
             });
         } else {
             cleanupListeners();
