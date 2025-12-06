@@ -379,7 +379,11 @@
             const url = `https://weather.googleapis.com/v1/currentConditions:lookup?key=${apiKey}&location.latitude=${lat}&location.longitude=${lon}`;
             
             const res = await fetch(url);
-            if (!res.ok) throw new Error(`Google Weather Error: ${res.status}`);
+            if (!res.ok) {
+                const errText = await res.text();
+                console.error("Google Weather API Failed. Details:", errText);
+                throw new Error(`Google Weather Error: ${res.status} - ${errText}`);
+            }
             
             const data = await res.json();
             if (!data.currentConditions) throw new Error("Invalid Google Weather Data");
