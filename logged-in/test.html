@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4SP - DASHBOARD</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="../navigation.js"></script>
+    <script src="../injector.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* --- FONT & BASE STYLING --- */
+        :root {
+            --bg-page: #040404;
+            --bg-container: #000000;
+            --border-color: #333;
+            --text-primary: #c0c0c0;
+            --text-light-grey: #d1d5db;
+            --accent-color: #6366f1;
+        }
+
+        body { 
+            font-family: 'Geist', sans-serif; 
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            font-weight: 300;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        h1, h2, h3, .font-bold, .font-semibold, strong, .tracking-widest {
+            font-weight: 400 !important;
+        }
+
+        /* --- LAYOUT UTILS --- */
+        #page-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* --- DASHBOARD WIDGET STYLES --- */
+        .dashboard-widget {
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-container);
+            padding: 2rem 3rem; /* Reduced padding slightly to fit content */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 32px; 
+            
+            /* Sizing */
+            width: auto;
+            min-width: 680px; /* Ensure enough width for side-by-side */
+            max-width: 95vw;
+            box-sizing: border-box;
+
+            /* Flex Layout for Clock | Weather */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3rem;
+        }
+
+        .dashboard-widget:hover {
+            border-color: #505050;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- CLOCK STYLES --- */
+        .clock-section {
+            text-align: right;
+            flex: 1;
+        }
+
+        .time-display {
+            font-family: 'Geist', sans-serif;
+            font-weight: 300;
+            line-height: 1;
+            color: var(--text-light-grey);
+            font-variant-numeric: tabular-nums; 
+        }
+        
+        .date-display {
+            font-weight: 300;
+            margin-top: 0.5rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-size: 1rem;
+            color: var(--text-light-grey); 
+            opacity: 0.8;
+        }
+        
+        .seconds-display {
+            font-weight: 300;
+            font-size: 0.5em;
+            margin-left: 0.5rem;
+            color: var(--text-light-grey);
+            opacity: 0.8;
+        }
+
+        /* --- VERTICAL DIVIDER --- */
+        .vertical-divider {
+            width: 1px;
+            height: 120px; /* Fixed height for the line */
+            background-color: #262626;
+        }
+
+        /* --- WEATHER STYLES --- */
+        .weather-section {
+            text-align: left;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+        }
+
+        .weather-main {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .weather-icon {
+            font-size: 2.5rem;
+            color: var(--text-light-grey);
+        }
+
+        .weather-temp {
+            font-size: 3rem;
+            line-height: 1;
+            color: #fff;
+        }
+
+        .weather-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .weather-detail-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .wind-arrow {
+            display: inline-block;
+            transition: transform 0.5s ease;
+            font-size: 0.8rem;
+            color: var(--accent-color);
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+
+<body>
+    <div id="page-content">
+        <div id="dashboard-widget" class="dashboard-widget">
+            
+            <div class="clock-section">
+                <div id="clock-time" class="time-display text-7xl">--:--</div>
+                <div id="clock-date" class="date-display">--------</div>
+            </div>
+
+            <div class="vertical-divider"></div>
+
+            <div class="weather-section">
+                <div class="weather-main">
+                    <div id="w-icon" class="weather-icon"><i class="fa-solid fa-cloud"></i></div>
+                    <div id="w-temp" class="weather-temp">--°</div>
+                </div>
+                
+                <div class="weather-details">
+                    <div class="weather-detail-row">
+                        <span>H: <span id="w-high" class="text-gray-300">--°</span></span>
+                        <span class="mx-1 text-[#333]">|</span>
+                        <span>L: <span id="w-low" class="text-gray-300">--°</span></span>
+                    </div>
+                    <div class="weather-detail-row">
+                        <i id="w-wind-arrow" class="fa-solid fa-arrow-up wind-arrow"></i>
+                        <span id="w-wind-speed">-- mph</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { firebaseConfig } from '../firebase-config.js';
+
+        // --- FIREBASE INIT ---
+        if (typeof firebase !== 'undefined') {
+            const app = firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth(app);
+            window.db = firebase.firestore(app);
+            window.auth = auth;
+        }
+
+        const redirectPath = '../index.html';
+
+        // --- CLOCK LOGIC ---
+        const clockTimeEl = document.getElementById('clock-time');
+        const clockDateEl = document.getElementById('clock-date');
+
+        function updateDateTime() {
+            const now = new Date();
+            
+            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+            const timeString = now.toLocaleTimeString('en-US', timeOptions);
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            
+            const parts = timeString.split(' ');
+            const timeOnly = parts[0];
+            const amPm = parts[1] || '';
+
+            const dateOptions = { weekday: 'long', month: 'long', day: 'numeric' };
+            const dateString = now.toLocaleDateString('en-US', dateOptions);
+
+            if (clockTimeEl) {
+                clockTimeEl.innerHTML = `${timeOnly}<span class="seconds-display">${seconds} ${amPm}</span>`;
+            }
+            if (clockDateEl) {
+                clockDateEl.innerText = dateString;
+            }
+        }
+
+        // --- WEATHER LOGIC (No Loaders) ---
+        const wTemp = document.getElementById('w-temp');
+        const wIcon = document.getElementById('w-icon');
+        const wHigh = document.getElementById('w-high');
+        const wLow = document.getElementById('w-low');
+        const wWindSpeed = document.getElementById('w-wind-speed');
+        const wWindArrow = document.getElementById('w-wind-arrow');
+
+        async function initWeather() {
+            try {
+                // 1. Get Location (Browser or IP)
+                let lat, lon;
+                try {
+                    const pos = await getBrowserLocation();
+                    lat = pos.coords.latitude;
+                    lon = pos.coords.longitude;
+                } catch(e) {
+                    const ipRes = await fetch('https://ipapi.co/json/');
+                    const ipData = await ipRes.json();
+                    lat = ipData.latitude;
+                    lon = ipData.longitude;
+                }
+
+                if(!lat || !lon) return; // Silent fail
+
+                // 2. Try NWS
+                try {
+                    await fetchNWS(lat, lon);
+                } catch(nwsError) {
+                    // 3. Fallback to OpenMeteo
+                    await fetchOpenMeteo(lat, lon);
+                }
+
+            } catch (err) {
+                console.warn("Weather load failed", err);
+            }
+        }
+
+        function getBrowserLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) reject("Not supported");
+                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000 });
+            });
+        }
+
+        // --- NWS FETCH ---
+        async function fetchNWS(lat, lon) {
+            const pointsRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`);
+            if (!pointsRes.ok) throw new Error("NWS Point Fail");
+            const pointsData = await pointsRes.json();
+            
+            const [forecastRes, hourlyRes] = await Promise.all([
+                fetch(pointsData.properties.forecast),
+                fetch(pointsData.properties.forecastHourly)
+            ]);
+
+            const dailyData = await forecastRes.json();
+            const hourlyData = await hourlyRes.json();
+
+            const current = hourlyData.properties.periods[0];
+            const daily = dailyData.properties.periods; 
+            
+            // NWS separates day/night periods. Find the high (isDaytime=true) and low.
+            // Rough logic: Look at first 2 periods to find high/low context.
+            let high = daily[0].temperature;
+            let low = daily[0].temperature;
+            
+            // Simple scan of first 24h to find high/low for display
+            const first24 = hourlyData.properties.periods.slice(0, 24);
+            const temps = first24.map(p => p.temperature);
+            high = Math.max(...temps);
+            low = Math.min(...temps);
+
+            updateWeatherUI({
+                temp: current.temperature,
+                iconCode: current.shortForecast,
+                isDay: current.isDaytime,
+                high: high,
+                low: low,
+                windSpeed: current.windSpeed, // e.g., "5 mph"
+                windDir: current.windDirection, // e.g., "NW"
+                isNWS: true
+            });
+        }
+
+        // --- OPEN METEO FETCH ---
+        async function fetchOpenMeteo(lat, lon) {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            updateWeatherUI({
+                temp: Math.round(data.current.temperature_2m),
+                iconCode: data.current.weather_code,
+                isDay: data.current.is_day,
+                high: Math.round(data.daily.temperature_2m_max[0]),
+                low: Math.round(data.daily.temperature_2m_min[0]),
+                windSpeed: Math.round(data.current.wind_speed_10m) + " mph",
+                windDir: data.current.wind_direction_10m, // Degrees
+                isNWS: false
+            });
+        }
+
+        // --- UI UPDATE ---
+        function updateWeatherUI(data) {
+            // Temp
+            wTemp.innerText = `${data.temp}°`;
+            wHigh.innerText = `${data.high}°`;
+            wLow.innerText = `${data.low}°`;
+            wWindSpeed.innerText = data.windSpeed;
+
+            // Icon
+            let iconClass = 'fa-cloud';
+            if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
+            else iconClass = getIconFromWMO(data.iconCode, data.isDay);
+            wIcon.innerHTML = `<i class="${iconClass}"></i>`;
+
+            // Wind Direction Arrow
+            const rotation = getWindRotation(data.windDir);
+            wWindArrow.style.transform = `rotate(${rotation}deg)`;
+        }
+
+        // --- HELPERS ---
+        function getWindRotation(dir) {
+            if (typeof dir === 'number') return dir; // Open-Meteo gives degrees
+            
+            // NWS gives text (N, NE, etc)
+            const map = {
+                'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
+                'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
+                'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
+                'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
+            };
+            return map[dir] || 0;
+        }
+
+        function getIconFromWMO(code, isDay) {
+            const day = isDay === 1;
+            const map = {
+                0: day ? 'fa-sun' : 'fa-moon', 1: day ? 'fa-cloud-sun' : 'fa-cloud-moon',
+                2: day ? 'fa-cloud-sun' : 'fa-cloud-moon', 3: 'fa-cloud', 45: 'fa-smog',
+                51: 'fa-cloud-rain', 61: 'fa-cloud-rain', 71: 'fa-snowflake', 95: 'fa-cloud-bolt'
+            };
+            return `fa-solid ${map[code] || 'fa-cloud'}`;
+        }
+
+        function getIconFromNWS(shortForecast, isDay) {
+            const lower = shortForecast.toLowerCase();
+            const prefix = 'fa-solid';
+            if (lower.includes('thunder')) return `${prefix} fa-cloud-bolt`;
+            if (lower.includes('snow') || lower.includes('flurries')) return `${prefix} fa-snowflake`;
+            if (lower.includes('rain') || lower.includes('shower')) return `${prefix} fa-cloud-showers-heavy`;
+            if (lower.includes('cloud')) return `${prefix} fa-cloud`;
+            if (lower.includes('sunny') || lower.includes('clear')) return isDay ? `${prefix} fa-sun` : `${prefix} fa-moon`;
+            return `${prefix} fa-cloud`;
+        }
+
+        // --- INIT ---
+        window.addEventListener('load', () => {
+            // Start Clock Immediately
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+
+            // Trigger Weather (Async, no loader)
+            initWeather();
+        });
+
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            firebase.auth().onAuthStateChanged((user) => {
+                if (!user) {
+                    window.location.replace(redirectPath);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
