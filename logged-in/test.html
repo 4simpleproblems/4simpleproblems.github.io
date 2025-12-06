@@ -89,6 +89,9 @@
         .time-display {
             font-family: 'Geist', sans-serif;
             font-weight: 300;
+            /* Changed to flex container */
+            display: flex;
+            align-items: flex-end; /* Align all children (minutes and seconds/AMPM) to the bottom */
             line-height: 0.9;
             color: var(--text-light-grey);
             font-variant-numeric: tabular-nums;
@@ -107,15 +110,13 @@
         }
         
         .seconds-display {
-            /* Updated to match temperature font size (3.5rem) */
+            /* Now vertically aligned by parent (.time-display) */
             font-weight: 300;
             font-size: 3.5rem; 
             margin-left: 0.2rem;
             color: var(--text-light-grey);
             opacity: 0.8;
-            /* Adjust alignment to sit better next to minutes */
-            display: inline-block;
-            vertical-align: top; 
+            /* Removed vertical-align: top */
         }
 
         /* --- VERTICAL DIVIDER --- */
@@ -148,7 +149,7 @@
         }
 
         .weather-temp {
-            font-size: 3.5rem; /* Reference size for clock seconds/AMPM */
+            font-size: 3.5rem; 
             line-height: 1;
             color: #fff;
             min-width: 80px; 
@@ -248,6 +249,7 @@
 
             if (clockTimeEl) {
                 // The colon is included in the seconds display span
+                // HTML structure change: timeOnly is the first text node child, the span is the second element.
                 clockTimeEl.innerHTML = `${timeOnly}<span class="seconds-display">:${seconds} ${amPm}</span>`;
             }
             if (clockDateEl) {
