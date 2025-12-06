@@ -1,4 +1,3 @@
-
 (async function() {
     console.log("[Admin Keybinds] Script Loaded");
 
@@ -15,7 +14,7 @@
 
     // Dynamic Imports
     const [
-        { initializeApp },
+        { initializeApp, getApp },
         { getAuth, onAuthStateChanged },
         { getFirestore, doc, getDoc, setDoc, onSnapshot }
     ] = await Promise.all([
@@ -25,10 +24,14 @@
     ]);
 
     // Initialize Firebase
+    // We try to get the existing default app first, which holds the user's session.
+    // If we create a NEW app instance, it won't have the auth state from the main app.
     let app;
     try {
-        app = initializeApp(firebaseConfig, "adminKeybindsApp");
+        app = getApp(); // Try to get the default app
+        console.log("[Admin Keybinds] Attached to existing default app.");
     } catch (e) {
+        console.log("[Admin Keybinds] Default app not found, initializing new one.");
         app = initializeApp(firebaseConfig); 
     }
 
@@ -99,12 +102,8 @@
                     console.log(`[Admin Keybinds] Explicit Enabled: ${explicitEnabled}`);
                 }
             } else {
-                // Document doesn't exist. If we are admin, let's try to create it to avoid confusion.
                 console.log("[Admin Keybinds] Config doc missing. Defaulting to TRUE.");
                 explicitEnabled = true;
-                
-                // Optional: Auto-create if missing? 
-                // For now, we won't auto-create to avoid spamming writes, but the keybind WILL create it.
             }
         }, (error) => console.error("Config Listen Error:", error));
     }
@@ -122,7 +121,6 @@
             console.log("[Admin Keybinds] Ctrl+Alt+E detected.");
 
             if (explicitEnabled) {
-                // Currently ON -> Turn OFF immediately
                 console.log("[Admin Keybinds] Disabling explicit sounds...");
                 try {
                     await setDoc(doc(db, 'config', 'soundboard'), { explicitEnabled: false }, { merge: true });
@@ -133,10 +131,8 @@
                     showAdminToast("Error: Check Console", "red");
                 }
             } else {
-                // Currently OFF -> Turn ON (Double press logic)
                 const now = Date.now();
                 if (now - lastEnablePressTime < 1500) { 
-                    // Second press
                     console.log("[Admin Keybinds] Enabling explicit sounds...");
                     try {
                         await setDoc(doc(db, 'config', 'soundboard'), { explicitEnabled: true }, { merge: true });
@@ -147,7 +143,6 @@
                         showAdminToast("Error: Check Console", "red");
                     }
                 } else {
-                    // First press
                     console.log("[Admin Keybinds] Waiting for confirm...");
                     showAdminToast("Press Ctrl+Alt+E again to ENABLE", "blue");
                     lastEnablePressTime = now;
@@ -159,16 +154,13 @@
     // Auth & Role Check
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // 1. Hardcoded Owner Check
-            // Using toLowerCase() to be safe against input variations
             if (user.email && user.email.toLowerCase() === OWNER_EMAIL) {
                 console.log(`[Admin Keybinds] Owner recognized: ${OWNER_EMAIL}`);
                 isAdmin = true;
                 subscribeToConfig();
-                return; // Skip DB check for owner
+                return;
             }
 
-            // 2. DB Admin Check (for others)
             if (adminUnsubscribe) adminUnsubscribe();
 
             adminUnsubscribe = onSnapshot(doc(db, 'admins', user.uid), (docSnap) => {
@@ -197,6 +189,7 @@
                 isAdmin = false;
             });
         } else {
+            console.log("[Admin Keybinds] No user logged in.");
             cleanupListeners();
         }
     });
