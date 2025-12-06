@@ -188,10 +188,6 @@
             color: var(--text-light-grey);
         }
     </style>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 
 <body>
@@ -237,16 +233,20 @@
         // --- GLOBAL STATE ---
         let CURRENT_LAT = null;
         let CURRENT_LON = null;
-
-        // --- FIREBASE INIT ---
-        if (typeof firebase !== 'undefined') {
-            const app = firebase.initializeApp(firebaseConfig);
-            const auth = firebase.auth(app);
-            window.db = firebase.firestore(app);
-            window.auth = auth;
-        }
-
         const redirectPath = '../index.html';
+
+        // --- FIREBASE INIT WAITER ---
+        // navigation.js loads firebase asynchronously. We must wait for it.
+        function waitForFirebase(callback) {
+            const check = setInterval(() => {
+                if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+                    clearInterval(check);
+                    window.auth = firebase.auth();
+                    window.db = firebase.firestore();
+                    callback();
+                }
+            }, 100);
+        }
 
         // --- CLOCK LOGIC ---
         const clockTimeEl = document.getElementById('clock-time');
@@ -526,15 +526,27 @@
             updateDateTime();
             setInterval(updateDateTime, 1000);
             initWeather();
+
+            waitForFirebase(() => {
+                 if (firebase.auth) {
+                    firebase.auth().onAuthStateChanged((user) => {
+                        if (!user) {
+                            window.location.replace(redirectPath);
+                        }
+                    });
+                }
+            });
         });
 
+        /* 
         if (typeof firebase !== 'undefined' && firebase.auth) {
             firebase.auth().onAuthStateChanged((user) => {
                 if (!user) {
                     window.location.replace(redirectPath);
                 }
             });
-        }
+        } 
+        */
     </script>
 </body>
 </html>
