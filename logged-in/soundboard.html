@@ -304,7 +304,7 @@
                 <div id="normalSoundsContainer" class="sound-grid"></div>
             </div>
 
-            <div class="mb-10">
+            <div class="mb-10" id="explicitSectionWrapper">
                 <h2 class="section-header text-red-400/80 border-red-900/30">Explicit Sounds</h2>
                 <div id="explicitSoundsContainer" class="sound-grid"></div>
             </div>
@@ -319,6 +319,7 @@
         // Import Modular SDKs directly (This avoids the global scope conflict)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         // --- UI & State References ---
         const loadingScreen = document.getElementById('loading-screen');
@@ -334,6 +335,7 @@
         const statusToaster = document.getElementById('status-toaster');
         const normalSoundsContainer = document.getElementById('normalSoundsContainer');
         const explicitSoundsContainer = document.getElementById('explicitSoundsContainer');
+        const explicitSectionWrapper = document.getElementById('explicitSectionWrapper');
 
         // --- Soundboard Logic State ---
         let playingAudios = [];
@@ -346,6 +348,7 @@
         // This initialization is contained within the module's scope and won't conflict with global 'firebase'
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
         function setupAuthAndLoad() {
             try {
@@ -355,6 +358,7 @@
                         loadingScreen.style.display = 'none';
                         pageContent.classList.remove('hidden');
                         loadSoundsLocal();
+                        monitorExplicitSettings();
                     } else {
                         window.location.href = '../index.html'; 
                     }
@@ -363,6 +367,32 @@
 
             } catch (e) {
                 console.error("Auth Setup Error", e);
+            }
+        }
+
+        function monitorExplicitSettings() {
+            try {
+                onSnapshot(doc(db, 'config', 'soundboard'), (docSnap) => {
+                    // Default to true if document doesn't exist or field is missing
+                    let isEnabled = true;
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        if (data.explicitEnabled !== undefined) {
+                            isEnabled = data.explicitEnabled;
+                        }
+                    }
+
+                    if (explicitSectionWrapper) {
+                        if (isEnabled) {
+                            explicitSectionWrapper.style.display = 'block';
+                        } else {
+                            explicitSectionWrapper.style.display = 'none';
+                            stopAllAudios(); // Stop all sounds to be safe as per requirements
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error("Error monitoring explicit settings:", err);
             }
         }
 
