@@ -25,18 +25,12 @@ service cloud.firestore {
     // ----------------------------------------------------------------------------------
     match /users/{userId} {
       allow read: if isAuthenticated(); 
-      // Allow listing only for admins
       allow list: if isAdminOrSuperAdmin(); 
       
-      // Allow creation if user is setting up their own profile
       allow create: if isOwner(userId)
                       && request.resource.id == request.auth.uid
                       && 'username' in request.resource.data;
       
-      // Allow update if:
-      // 1. User owns the profile (covers Mibi, Custom PFP, generic settings)
-      // 2. OR Authenticated user is updating 'pending_requests' (Friend Requests)
-      // 3. OR Authenticated user is updating 'friends' (Accepting/Removing Friends)
       allow update: if isOwner(userId) || 
                     (isAuthenticated() && 
                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pending_requests', 'friends']));
@@ -65,26 +59,20 @@ service cloud.firestore {
     }
 
     // ----------------------------------------------------------------------------------
-    // V. Daily Photos Collection (`daily_photos`) - Standard Collection
+    // V. Daily Photos Collection (`daily_photos`)
     // ----------------------------------------------------------------------------------
     match /daily_photos/{photoId} {
+      allow read: if isAuthenticated(); 
       allow create: if isAuthenticated() && request.resource.data.creatorUid == request.auth.uid;
-      
-      // Allow update if:
-      // 1. User is the creator (full control)
-      // 2. OR User is authenticated and ONLY updating 'hearts' or 'comments' (Likes/Comments)
       allow update: if isAuthenticated() && (
         resource.data.creatorUid == request.auth.uid ||
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hearts', 'comments'])
       );
-
-      // Allow delete if creator
       allow delete: if isAuthenticated() && resource.data.creatorUid == request.auth.uid;
-      allow read: if isAuthenticated(); 
     }
 
     // ----------------------------------------------------------------------------------
-    // VI. Daily Photos Collection (`dailyPhotos`) - Alternate/Legacy Collection
+    // VI. Legacy / Unused Collections
     // ----------------------------------------------------------------------------------
     match /dailyPhotos/{photoId} {
       allow create: if isAuthenticated() && (
@@ -98,9 +86,6 @@ service cloud.firestore {
       allow read: if isAuthenticated(); 
     }
 
-    // ----------------------------------------------------------------------------------
-    // VII. Friend Requests Collection (`friendRequests`) - Alternate/Legacy Collection
-    // ----------------------------------------------------------------------------------
     match /friendRequests/{requestId} {
       allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
       allow delete: if isAuthenticated() && (
@@ -115,15 +100,27 @@ service cloud.firestore {
     }
     
     // ----------------------------------------------------------------------------------
-    // VIII. Banned Users & Bans
+    // VII. Banned Users & Bans
     // ----------------------------------------------------------------------------------
     match /banned_users/{userId} {
       allow read, create, update, delete: if isAdminOrSuperAdmin();
     }
     
     match /bans/{userId} {
-      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Admins can read all, Users can read their own (to check if they are banned)
+      allow read: if isAdminOrSuperAdmin() || (isAuthenticated() && request.auth.uid == userId);
       allow create, update, delete: if isAdminOrSuperAdmin();
+    }
+
+    // ----------------------------------------------------------------------------------
+    // VIII. Global Configuration (New)
+    // ----------------------------------------------------------------------------------
+    // Used by admin_keybinds.js and soundboard.html
+    match /config/{configId} {
+      // All authenticated users can read the config (e.g. to check explicitEnabled status)
+      allow read: if isAuthenticated();
+      // Only admins can change the config
+      allow write: if isAdminOrSuperAdmin();
     }
   }
 }
