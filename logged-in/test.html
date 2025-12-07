@@ -21,9 +21,9 @@
             --border-color: #333;
             --text-primary: #c0c0c0;
             --text-light-grey: #d1d5db;
-            --accent-color: #6366f1; /* Purple/Indigo color for switch selection */
+            --accent-color: #6366f1;
             --text-link: #888;
-            --spinner-color: #666666; 
+            --spinner-color: #666666; /* UPDATED: Darker grey color for the loader */
         }
 
         body { 
@@ -161,7 +161,7 @@
             flex-direction: column;
             gap: 0.25rem;
             font-size: 1rem;
-            color: var(--text-link); 
+            color: var(--text-link); /* Base grey color */
             padding-left: 0.5rem; 
         }
 
@@ -195,12 +195,12 @@
         /* --- SPINNER STYLES --- */
         #weather-loader {
             position: absolute;
-            bottom: 20px; 
-            right: 20px; 
+            bottom: 20px; /* Position from bottom edge */
+            right: 20px; /* Position from right edge */
             color: var(--spinner-color); 
             opacity: 0;
             transition: opacity 0.5s ease;
-            pointer-events: none; 
+            pointer-events: none; /* Allows clicks to pass through */
         }
         
         #weather-loader.loading {
@@ -208,10 +208,12 @@
         }
         
         .fa-spin-slow {
-            animation: fa-spin 1.5s infinite linear; 
+            /* Customize spin speed */
+            animation: fa-spin 1.5s infinite linear; /* Slower spin */
             font-size: 1.2rem;
         }
         
+        /* Font Awesome's base spin animation (needed for custom speed) */
         @keyframes fa-spin {
             0% {
                 transform: rotate(0deg);
@@ -219,49 +221,6 @@
             100% {
                 transform: rotate(360deg);
             }
-        }
-        
-        /* --- NEW TEMPERATURE SWITCH STYLES --- */
-        #temp-switch-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            transition: opacity 0.5s ease;
-            opacity: 1; 
-            z-index: 100;
-        }
-        
-        #temp-switch-container.hidden {
-            opacity: 0;
-            pointer-events: none; /* Make it unclickable when hidden */
-        }
-
-        .temp-switch {
-            display: flex;
-            background-color: var(--bg-container); 
-            border: 1px solid var(--border-color);
-            border-radius: 10px; 
-            overflow: hidden;
-            user-select: none;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            font-size: 0.9rem;
-        }
-
-        .unit-option {
-            padding: 8px 12px;
-            transition: background-color 0.2s ease, color 0.2s ease;
-            color: var(--text-link); /* Grey for unselected */
-            background-color: transparent;
-        }
-
-        .unit-option:hover:not(.selected) {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        .unit-option.selected {
-            background-color: var(--accent-color); /* Selected purple/indigo color */
-            color: #fff; /* White text for selected */
         }
     </style>
 </head>
@@ -275,9 +234,9 @@
                 <div id="clock-date" class="date-display">--------</div>
             </div>
 
-            <div class="vertical-divider"></div>
+            <div id="weather-divider" class="vertical-divider"></div>
 
-            <div class="weather-section">
+            <div id="weather-widget" class="weather-section">
                 <div class="weather-main">
                     <div id="w-icon" class="weather-icon"><i class="fa-solid fa-cloud"></i></div>
                     <div id="w-temp" class="weather-temp">--°</div>
@@ -306,13 +265,6 @@
             </div>
     </div>
 
-    <div id="temp-switch-container" class="hidden">
-        <div id="temp-switch" class="temp-switch">
-            <div id="unit-c" class="unit-option">°C</div>
-            <div id="unit-f" class="unit-option">°F</div>
-        </div>
-    </div>
-
     <script type="module">
         import { firebaseConfig } from '../firebase-config.js';
 
@@ -321,13 +273,8 @@
         let CURRENT_LON = null;
         const redirectPath = '../index.html';
         const WEATHER_CACHE_KEY = 'weather_data_cache';
-        const TEMP_UNIT_KEY = 'weather_temp_unit'; 
         // 5 minutes in milliseconds
         const REFRESH_INTERVAL_MS = 5 * 60 * 1000; 
-        
-        let isCelsius = localStorage.getItem(TEMP_UNIT_KEY) === 'C';
-        let lastWeatherCache = null; 
-        let hideTimer = null; 
 
         // --- ELEMENTS ---
         const clockTimeEl = document.getElementById('clock-time');
@@ -340,13 +287,12 @@
         const wWindArrow = document.getElementById('w-wind-arrow');
         const wLocLink = document.getElementById('w-location-link');
         const weatherLoader = document.getElementById('weather-loader'); 
-        
-        const tempSwitchContainer = document.getElementById('temp-switch-container');
-        const unitC = document.getElementById('unit-c');
-        const unitF = document.getElementById('unit-f');
+        // NEW ELEMENTS
+        const weatherWidget = document.getElementById('weather-widget');
+        const weatherDivider = document.getElementById('weather-divider');
 
 
-        // --- LOADER FUNCTIONS (Unchanged) ---
+        // --- LOADER FUNCTIONS ---
         function showLoader() {
             weatherLoader.classList.add('loading');
         }
@@ -355,7 +301,18 @@
             weatherLoader.classList.remove('loading');
         }
 
-        // --- FIREBASE INIT WAITER (Unchanged) ---
+        // --- WIDGET VISIBILITY FUNCTION ---
+        function hideWeatherWidget() {
+            if (weatherWidget) {
+                weatherWidget.style.display = 'none';
+            }
+            if (weatherDivider) {
+                weatherDivider.style.display = 'none';
+            }
+            hideLoader(); // Make sure to hide the loader if we hide the widget
+        }
+
+        // --- FIREBASE INIT WAITER ---
         function waitForFirebase(callback) {
             const check = setInterval(() => {
                 if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
@@ -390,7 +347,7 @@
             }
         }
 
-        // Resets display to placeholders (Unchanged)
+        // Resets display to placeholders
         function resetWeatherDisplay() {
             wTemp.innerText = `--°`;
             wHigh.innerText = `--°`;
@@ -413,6 +370,7 @@
 
         function setWeatherCache(data) {
             try {
+                // Store data and a timestamp
                 const cacheData = {
                     timestamp: Date.now(),
                     weatherData: data
@@ -428,19 +386,23 @@
             const now = Date.now();
 
             if (cache && (now - cache.timestamp < REFRESH_INTERVAL_MS)) {
+                // Cache is fresh, use it
                 console.log("Using cached weather data.");
                 updateWeatherUI(cache.weatherData);
+                hideLoader(); // FIX: Added hideLoader for cache hits
             } else {
+                // Cache is stale or non-existent, fetch new data
                 console.log("Weather cache stale or missing. Fetching new data.");
                 resetWeatherDisplay();
                 loadWeatherWithFallback(lat, lon);
             }
         }
 
-        // --- LOCATION FETCH (Unchanged) ---
+        // --- LOCATION FETCH (IP Fallback) ---
         async function initWeather() {
-            showLoader(); 
+            showLoader(); // Show loader at start of location determination
             try {
+                // 1. Get Location using IP (Default)
                 const ipRes = await fetch('https://ipapi.co/json/');
                 const ipData = await ipRes.json();
                 
@@ -448,25 +410,28 @@
                 CURRENT_LON = ipData.longitude;
                 
                 if(!CURRENT_LAT || !CURRENT_LON) {
-                    hideLoader();
+                    hideWeatherWidget(); // HIDE if IP location is unavailable
                     return; 
                 }
 
+                // 2. Load weather using cache-check function
                 loadWeatherIfNeeded(CURRENT_LAT, CURRENT_LON);
 
             } catch (err) {
                 console.warn("Initial weather load (IP location) failed", err);
-                hideLoader(); 
+                hideWeatherWidget(); // HIDE on general IP location failure
             }
         }
 
+        // --- LOCATION FETCH (Browser Geolocation) ---
         window.getUserBrowserLocation = async function() {
             if (!navigator.geolocation) {
                 alert("Geolocation is not supported by this browser.");
+                hideWeatherWidget(); // HIDE if browser doesn't support geolocation
                 return;
             }
             
-            showLoader(); 
+            showLoader(); // Show loader before geolocating
             resetWeatherDisplay();
 
             try {
@@ -480,16 +445,26 @@
                 CURRENT_LAT = pos.coords.latitude;
                 CURRENT_LON = pos.coords.longitude;
                 
+                // When explicitly asked for new location, bypass cache and force a fetch
                 loadWeatherWithFallback(CURRENT_LAT, CURRENT_LON);
 
             } catch(e) {
                 console.error("Geolocation failed:", e);
-                initWeather(); 
+                // Call initWeather which uses IP fallback, but if that fails, 
+                // initWeather will call hideWeatherWidget().
+                // To be explicit, if this is a permission denial, we hide it immediately.
+                if (e.code === e.PERMISSION_DENIED) {
+                    hideWeatherWidget(); 
+                } else {
+                    // Fallback to IP data if browser location fails 
+                    initWeather(); 
+                }
             }
         }
 
-        // --- FALLBACK LOGIC (Unchanged) ---
+        // --- FALLBACK LOGIC ---
         async function loadWeatherWithFallback(lat, lon) {
+            // Loader is already shown by calling functions (initWeather or getUserBrowserLocation)
             try {
                 // 1. Google Weather (using Firebase API Key) - PRIMARY
                 try {
@@ -512,80 +487,53 @@
                     await fetchOpenMeteo(lat, lon);
                 } catch(e) {
                     console.error("All weather sources failed", e);
-                    hideLoader(); 
+                    hideWeatherWidget(); // HIDE on absolute data fetch failure
                 }
             } catch (finalError) {
-                hideLoader();
+                // Catches errors during the fallback chain setup
+                hideWeatherWidget(); // HIDE on final error
             }
         }
 
-        // --- GOOGLE WEATHER FETCH (FIXED ENDPOINT AND METHOD) ---
+        // --- GOOGLE WEATHER FETCH (Unchanged) ---
         async function fetchGoogleWeather(lat, lon) {
             const apiKey = firebaseConfig.apiKey;
-            // CORRECTED: Use the :lookup endpoint as suggested by the user.
-            const url = `https://weather.googleapis.com/v1/currentConditions:lookup?key=${apiKey}`;
+            const url = `https://weather.googleapis.com/v1/currentConditions:lookup?key=${apiKey}&location.latitude=${lat}&location.longitude=${lon}`;
             
-            const res = await fetch(url, {
-                method: 'GET', // The :lookup endpoint requires a POST request
-                // NOTE: The JSON body and headers have been removed as requested.
-                // This request is now expected to be handled by a proxy or a different Google Weather endpoint.
-            });
-            
-            // This check handles the expected CORS/Referer 403 or any other API-level error (e.g., 404).
+            const res = await fetch(url);
             if (!res.ok) {
-                console.error(`Google Weather API returned status: ${res.status}`);
-                // Throw an error to trigger the fallback (NWS/Open-Meteo)
-                throw new Error(`Google Weather Error: ${res.status} - Could not fetch data.`);
+                const errText = await res.text();
+                console.error("Google Weather API Failed. Details:", errText);
+                throw new Error(`Google Weather Error: ${res.status} - ${errText}`);
             }
             
             const data = await res.json();
-            if (!data.temperature) throw new Error("Invalid Google Weather Data format");
+            if (!data.currentConditions) throw new Error("Invalid Google Weather Data");
 
-            // --- DATA EXTRACTION (All converted to F for consistent cache storage) ---
-            let tempC = data.temperature?.degrees;
-            let tempF = 0; 
-            if (tempC !== undefined) {
-                tempF = Math.round((tempC * 9/5) + 32);
+            const curr = data.currentConditions;
+            
+            let tempF = curr.temperature?.value;
+            if (curr.temperature?.unit?.toLowerCase() === 'celsius' || curr.temperature?.unit?.toLowerCase() === 'c') {
+                tempF = (tempF * 9/5) + 32;
             }
             
-            let highF = "--";
-            let lowF = "--";
-            if (data.currentConditionsHistory?.maxTemperature?.degrees !== undefined) {
-                highF = Math.round((data.currentConditionsHistory.maxTemperature.degrees * 9/5) + 32);
-            }
-            if (data.currentConditionsHistory?.minTemperature?.degrees !== undefined) {
-                lowF = Math.round((data.currentConditionsHistory.minTemperature.degrees * 9/5) + 32);
-            }
+            const weatherCode = curr.weatherCondition || "CLOUDY"; 
 
-            const weatherCode = data.weatherCondition?.type || "CLOUDY"; 
-            const isDay = data.isDaytime === true; 
-
-            let windSpeed = "-- mph";
-            let windDir = 0; 
-            
-            if (data.wind?.speed?.value !== undefined && data.wind?.speed?.unit === 'KILOMETERS_PER_HOUR') {
-                const speedMph = data.wind.speed.value * 0.621371;
-                windSpeed = `${Math.round(speedMph)} mph`;
-            }
-            if (data.wind?.direction?.degrees !== undefined) {
-                windDir = data.wind.direction.degrees;
-            }
-
-            // --- CONSTRUCT CACHE OBJECT (Stores all temperatures in Fahrenheit) ---
             const weatherData = {
-                temp: tempF, 
+                temp: Math.round(tempF || 0),
                 iconCode: weatherCode,
-                isDay: isDay, 
-                high: highF, 
-                low: lowF,
-                windSpeed: windSpeed,
-                windDir: windDir,
+                isDay: true, 
+                high: "--", 
+                low: "--",
+                windSpeed: (curr.windSpeed?.value || 0) + " mph",
+                windDir: curr.windDirection || 0,
                 isNWS: false,
                 isGoogle: true
             };
 
             setWeatherCache(weatherData);
             updateWeatherUI(weatherData);
+            hideLoader(); // Hide loader on success
         }
 
         // --- NWS FETCH (Unchanged) ---
@@ -622,6 +570,7 @@
 
             setWeatherCache(weatherData);
             updateWeatherUI(weatherData);
+            hideLoader(); // Hide loader on success
         }
 
         // --- OPEN METEO FETCH (Unchanged) ---
@@ -643,48 +592,18 @@
 
             setWeatherCache(weatherData);
             updateWeatherUI(weatherData);
+            hideLoader(); // Hide loader on success
         }
 
-        // --- TEMPERATURE CONVERSION AND DISPLAY LOGIC (Unchanged) ---
-        function fahrenheitToCelsius(f) {
-            if (typeof f !== 'number' || isNaN(f)) return "--";
-            return Math.round((f - 32) * 5/9);
-        }
-
-        function convertAndDisplayTemperature() {
-            if (!lastWeatherCache) return;
-
-            const data = lastWeatherCache;
-            
-            let displayTemp = data.temp;
-            let displayHigh = data.high;
-            let displayLow = data.low;
-
-            if (isCelsius) {
-                displayTemp = fahrenheitToCelsius(data.temp);
-                displayHigh = fahrenheitToCelsius(data.high);
-                displayLow = fahrenheitToCelsius(data.low);
-            }
-            
-            wTemp.innerText = `${displayTemp}°`;
-            wHigh.innerText = `${displayHigh}°`;
-            wLow.innerText = `${displayLow}°`;
-            
-            if (isCelsius) {
-                unitC.classList.add('selected');
-                unitF.classList.remove('selected');
-            } else {
-                unitC.classList.remove('selected');
-                unitF.classList.add('selected');
-            }
-        }
-        
         // --- UI UPDATE (Unchanged) ---
         function updateWeatherUI(data) {
-            lastWeatherCache = data; 
-            
+            wTemp.innerText = `${data.temp}°`;
+            wHigh.innerText = `${data.high}°`;
+            wLow.innerText = `${data.low}°`;
+            wWindSpeed.innerText = data.windSpeed;
+
             let iconClass = 'fa-cloud';
-            if(data.isGoogle) iconClass = getIconFromGoogle(data.iconCode, data.isDay); 
+            if(data.isGoogle) iconClass = getIconFromGoogle(data.iconCode);
             else if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
             else iconClass = getIconFromWMO(data.iconCode, data.isDay);
             
@@ -692,10 +611,6 @@
 
             const rotation = getWindRotation(data.windDir);
             wWindArrow.style.transform = `rotate(${rotation}deg)`;
-            wWindSpeed.innerText = data.windSpeed; 
-
-            convertAndDisplayTemperature();
-            hideLoader(); 
         }
 
         // --- HELPERS (Wind & Icon - Unchanged) ---
@@ -707,22 +622,19 @@
                 'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
                 'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
             };
-            return map[dir] || dir || 0; 
+            return map[dir] || 0;
         }
 
-        function getIconFromGoogle(condition, isDay) {
-             const prefix = 'fa-solid';
-             if (!condition) return `${prefix} fa-cloud`;
+        function getIconFromGoogle(condition) {
+             if (!condition) return 'fa-solid fa-cloud';
              const c = condition.toLowerCase();
-             
-             if (c.includes('clear')) return isDay ? `${prefix} fa-sun` : `${prefix} fa-moon`;
-             if (c.includes('cloud')) return `${prefix} fa-cloud`;
-             if (c.includes('rain')) return `${prefix} fa-cloud-rain`;
-             if (c.includes('snow') || c.includes('ice')) return `${prefix} fa-snowflake`;
-             if (c.includes('storm') || c.includes('thunder')) return `${prefix} fa-cloud-bolt`;
-             if (c.includes('fog') || c.includes('mist')) return `${prefix} fa-smog`;
-             
-             return `${prefix} fa-cloud`;
+             if (c.includes('clear') || c.includes('sunny')) return 'fa-solid fa-sun';
+             if (c.includes('cloud')) return 'fa-solid fa-cloud';
+             if (c.includes('rain')) return 'fa-solid fa-cloud-rain';
+             if (c.includes('snow')) return 'fa-solid fa-snowflake';
+             if (c.includes('storm') || c.includes('thunder')) return 'fa-solid fa-cloud-bolt';
+             if (c.includes('fog') || c.includes('mist')) return 'fa-solid fa-smog';
+             return 'fa-solid fa-cloud';
         }
 
         function getIconFromWMO(code, isDay) {
@@ -746,51 +658,25 @@
             return `${prefix} fa-cloud`;
         }
         
-        // --- TEMPERATURE SWITCH HANDLERS (Unchanged) ---
-        function handleUnitChange(newUnit) {
-            isCelsius = newUnit === 'C';
-            localStorage.setItem(TEMP_UNIT_KEY, newUnit);
-            convertAndDisplayTemperature();
-        }
-
-        unitC.addEventListener('click', () => handleUnitChange('C'));
-        unitF.addEventListener('click', () => handleUnitChange('F'));
-        
-        // --- AUTO-HIDE LOGIC (Unchanged) ---
-        function resetHideTimer() {
-            if (hideTimer) {
-                clearTimeout(hideTimer);
-            }
-            tempSwitchContainer.classList.remove('hidden');
-
-            // Set new timer to hide after 2.5 seconds
-            hideTimer = setTimeout(() => {
-                tempSwitchContainer.classList.add('hidden');
-            }, 2500);
-        }
-
-        // --- REFRESH LOOP (Unchanged) ---
+        // --- REFRESH LOOP ---
         function setupWeatherRefresh() {
+             // Set up a periodic check after the initial load
              setInterval(() => {
                  if (CURRENT_LAT && CURRENT_LON) {
                      loadWeatherIfNeeded(CURRENT_LAT, CURRENT_LON);
                  } else {
+                     // If location is somehow lost, re-init to get IP location
                      initWeather();
                  }
              }, REFRESH_INTERVAL_MS);
         }
 
-        // --- INIT (Unchanged) ---
+        // --- INIT ---
         window.addEventListener('load', () => {
-            convertAndDisplayTemperature();
-            
-            document.addEventListener('mousemove', resetHideTimer);
-            resetHideTimer(); 
-
             updateDateTime();
             setInterval(updateDateTime, 500);
-            initWeather(); 
-            setupWeatherRefresh(); 
+            initWeather(); // Initial load (which checks cache)
+            setupWeatherRefresh(); // Start the periodic refresh
 
             waitForFirebase(() => {
                  if (firebase.auth) {
