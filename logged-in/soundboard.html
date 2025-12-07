@@ -61,6 +61,7 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            text-decoration: none; /* For anchor tags */
         }
         .btn-toolbar-style:hover {
             background-color: var(--menu-bg);
@@ -299,6 +300,27 @@
         </header>
 
         <main class="flex-grow p-5 md:p-8 max-w-7xl mx-auto w-full">
+            
+            <div class="mb-8 p-5 rounded-2xl border border-cyan-900/30 bg-cyan-900/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex-grow">
+                    <h3 class="text-lg text-cyan-400 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-globe"></i> Unblockable Soundboard Available
+                    </h3>
+                    <p class="text-sm text-cyan-100/80 leading-relaxed max-w-3xl">
+                        A local soundboard file is available that uses <code class="text-cyan-300 bg-cyan-900/30 px-1 rounded">cdn.jsdelivr.net</code> to bypass Game Collection blocks. 
+                        <br>
+                        <span class="text-cyan-300/60 italic text-xs mt-1 block">
+                            <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                            Note: This contains non-4SP approved sounds. Titles in this version may not accurately explain the sounds they play.
+                        </span>
+                    </p>
+                </div>
+                
+                <a href="../logged-in/third-party-soundboard.html" download="third-party-soundboard.html" class="btn-toolbar-style text-sm whitespace-nowrap shrink-0">
+                    <i class="fa-solid fa-file-arrow-down"></i> <span>Download HTML</span>
+                </a>
+            </div>
+
             <div class="mb-10">
                 <h2 class="section-header">Normal Sounds</h2>
                 <div id="normalSoundsContainer" class="sound-grid"></div>
@@ -316,7 +338,7 @@
     <script type="module">
         import { firebaseConfig } from '../firebase-config.js';
         
-        // Import Modular SDKs directly (This avoids the global scope conflict)
+        // Import Modular SDKs directly
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
@@ -345,14 +367,12 @@
         let toasterTimeout = null;
 
         // --- Firebase Initialization (Modular) ---
-        // This initialization is contained within the module's scope and won't conflict with global 'firebase'
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
         function setupAuthAndLoad() {
             try {
-                // Modular: using 'onAuthStateChanged(auth, ...)'
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         loadingScreen.style.display = 'none';
@@ -549,7 +569,6 @@
         });
 
         // --- Init ---
-        // This runs after all imports are loaded and sets up the event listeners
         window.addEventListener('load', () => {
             const savedOverlay = localStorage.getItem('soundOverlay') === 'true';
             const savedAutoClick = localStorage.getItem('autoClicker') === 'true';
