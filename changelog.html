@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog - 4simpleproblems</title>
+    <meta name="description" content="Release history and changelog for 4simpleproblems.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="navigation-mini.js" defer></script>
+
+    <style>
+        html { scroll-behavior: smooth; }
+        :root {
+            --geist-foreground: 255, 255, 255;
+            --geist-background: 0, 0, 0;
+        }
+        .dark { color-scheme: dark; }
+        body { font-family: 'Geist', sans-serif; }
+        
+        .gradient-text {
+            background-image: linear-gradient(90deg, #0070f3, #f81ce5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Custom scrollbar to match dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+
+        .changelog-date-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+
+        .badge-added { background-color: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .badge-fixed { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-removed { background-color: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-changed { background-color: rgba(107, 114, 128, 0.2); color: #d1d5db; border: 1px solid rgba(107, 114, 128, 0.3); }
+    </style>
+</head>
+<body class="bg-black text-white min-h-screen flex flex-col">
+
+    <nav class="w-full border-b border-gray-900 py-4 px-6 flex items-center sticky top-0 bg-black/80 backdrop-blur-md z-50">
+        <a href="index.html" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-normal rounded-xl text-white bg-white/5 ring-1 ring-white/10 hover:bg-white/10 transition text-gray-300 hover:text-white">
+            <i class="fas fa-arrow-left mr-2"></i> Home
+        </a>
+        <div class="ml-auto text-sm text-gray-500 font-light hidden sm:block">Track our progress</div>
+    </nav>
+
+    <main class="flex-grow flex flex-col md:flex-row h-[calc(100vh-73px)] overflow-hidden">
+        
+        <!-- Sidebar Navigation (Dates) -->
+        <aside class="w-full md:w-64 border-b md:border-b-0 md:border-r border-gray-900 bg-black/50 overflow-y-auto changelog-date-nav hidden md:block">
+            <div class="p-4 sticky top-0 bg-black z-10 border-b border-gray-900">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest">Release History</h3>
+            </div>
+            <ul id="date-list" class="p-2 space-y-1">
+                <!-- Dates will be injected here -->
+            </ul>
+        </aside>
+
+        <!-- Content Section -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 relative" id="main-content">
+            <div class="max-w-4xl mx-auto">
+                <section class="text-left border-b border-gray-900 pb-8 mb-8">
+                    <h1 class="text-4xl sm:text-5xl font-light tracking-tighter mb-4 leading-tight">
+                        <span class="gradient-text font-bold">Changelog.</span>
+                    </h1>
+                    <p class="text-lg text-gray-400 font-light leading-relaxed">
+                        A detailed record of everything we've built, fixed, and improved.
+                    </p>
+                </section>
+
+                <div id="changelog-container" class="space-y-12 pb-16">
+                    <!-- Changelog entries will be injected here -->
+                    <div class="flex items-center justify-center py-20">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mobile Date Select -->
+    <div class="md:hidden fixed bottom-6 right-6 z-40">
+        <button id="mobile-date-toggle" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center transition-all">
+            <i class="fas fa-calendar-alt text-xl"></i>
+        </button>
+    </div>
+
+    <div id="mobile-date-menu" class="fixed inset-0 bg-black/90 z-50 hidden flex-col p-6 overflow-hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-light">Select Date</h2>
+            <button id="close-mobile-date-menu" class="text-gray-400 hover:text-white p-2">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+        <div class="overflow-y-auto flex-1" id="mobile-date-list">
+            <!-- Mobile dates -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('changelog.txt')
+                .then(response => {
+                    if (!response.ok) throw new Error("Failed to load changelog.txt");
+                    return response.text();
+                })
+                .then(text => {
+                    const entries = parseChangelog(text);
+                    renderChangelog(entries);
+                    renderDateNav(entries);
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('changelog-container').innerHTML = `
+                        <div class="text-center text-red-400 py-10">
+                            <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                            <p>Failed to load release history.</p>
+                        </div>
+                    `;
+                });
+
+            // Mobile menu logic
+            const mobileToggle = document.getElementById('mobile-date-toggle');
+            const mobileMenu = document.getElementById('mobile-date-menu');
+            const closeMobileMenu = document.getElementById('close-mobile-date-menu');
+
+            mobileToggle.addEventListener('click', () => {
+                mobileMenu.classList.remove('hidden');
+                mobileMenu.classList.add('flex');
+            });
+
+            closeMobileMenu.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                mobileMenu.classList.remove('flex');
+            });
+        });
+
+        function parseChangelog(text) {
+            const lines = text.split('\n');
+            const history = [];
+            let currentDate = null;
+            let currentChanges = [];
+
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('## ')) {
+                    if (currentDate) {
+                        history.push({ date: currentDate, changes: currentChanges });
+                    }
+                    currentDate = trimmed.substring(3).trim();
+                    currentChanges = [];
+                } else if (trimmed.startsWith('- ')) {
+                    currentChanges.push(trimmed.substring(2).trim());
+                }
+            });
+
+            // Push the last entry
+            if (currentDate) {
+                history.push({ date: currentDate, changes: currentChanges });
+            }
+
+            return history;
+        }
+
+        function getCategory(message) {
+            const msg = message.toLowerCase();
+            if (msg.startsWith('create') || msg.startsWith('add') || msg.startsWith('feat') || msg.startsWith('implement')) {
+                return { type: 'Added', class: 'badge-added', icon: 'fa-plus' };
+            } else if (msg.startsWith('fix') || msg.startsWith('resolve') || msg.startsWith('correct')) {
+                return { type: 'Fixed', class: 'badge-fixed', icon: 'fa-bug' };
+            } else if (msg.startsWith('delete') || msg.startsWith('remove') || msg.startsWith('revert')) {
+                return { type: 'Removed', class: 'badge-removed', icon: 'fa-trash' };
+            } else {
+                return { type: 'Changed', class: 'badge-changed', icon: 'fa-pen' };
+            }
+        }
+
+        function formatMessage(message) {
+            // Remove common prefixes if present to avoid redundancy with badge
+            return message
+                .replace(/^(Create|Add|Feat|Implement|Fix|Resolve|Correct|Delete|Remove|Revert|Update|Style|Refactor|Docs):\s*/i, '')
+                .replace(/^files via upload/i, 'Uploaded files')
+                .charAt(0).toUpperCase() + message.slice(1);
+        }
+
+        function renderChangelog(entries) {
+            const container = document.getElementById('changelog-container');
+            container.innerHTML = '';
+
+            entries.forEach((entry, index) => {
+                const dateId = `date-${entry.date}`;
+                const dateObj = new Date(entry.date);
+                const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                
+                // Group changes by type
+                const groups = { Added: [], Fixed: [], Changed: [], Removed: [] };
+                
+                entry.changes.forEach(change => {
+                    const cat = getCategory(change);
+                    // Use original message but cleaned up? Or keep original?
+                    // Let's use the original message but categorized.
+                    groups[cat.type].push({ msg: change, cat });
+                });
+
+                let changesHtml = '';
+                
+                // Render order: Added, Fixed, Changed, Removed
+                ['Added', 'Fixed', 'Changed', 'Removed'].forEach(type => {
+                    if (groups[type].length > 0) {
+                        changesHtml += `<div class="mb-4">`;
+                        groups[type].forEach(item => {
+                            // Clean message slightly for display
+                            let displayMsg = item.msg;
+                            
+                            // Regex to strip the exact prefix if it matches the category to avoid redundancy
+                            // e.g. if category is "Added" and msg is "Create test.html", show "test.html"
+                            // But "Create test.html" reads better as "Create test.html" even with "Added" tag?
+                            // Actually, user requested "Added this", "Removed that".
+                            // So let's try to map the message to that style or just use the badge.
+                            
+                            changesHtml += `
+                                <div class="flex items-start mb-2 group">
+                                    <span class="badge ${item.cat.class} flex-shrink-0 mt-0.5">
+                                        ${item.cat.type}
+                                    </span>
+                                    <span class="text-gray-300 font-light leading-snug group-hover:text-white transition-colors">
+                                        ${displayMsg}
+                                    </span>
+                                </div>
+                            `;
+                        });
+                        changesHtml += `</div>`;
+                    }
+                });
+
+                const section = document.createElement('section');
+                section.id = dateId;
+                section.className = 'relative pl-8 border-l border-gray-800 scroll-mt-24';
+                section.innerHTML = `
+                    <div class="absolute -left-[5px] top-0 h-2.5 w-2.5 rounded-full bg-blue-600 ring-4 ring-black"></div>
+                    <time class="block text-sm text-gray-500 mb-2 font-mono">${formattedDate}</time>
+                    <h2 class="text-2xl font-light text-white mb-6">${entry.date}</h2>
+                    <div class="space-y-4">
+                        ${changesHtml}
+                    </div>
+                `;
+                container.appendChild(section);
+            });
+        }
+
+        function renderDateNav(entries) {
+            const list = document.getElementById('date-list');
+            const mobileList = document.getElementById('mobile-date-list');
+            
+            // Generate list items
+            const createListItem = (entry) => `
+                <li>
+                    <a href="#date-${entry.date}" class="block px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition truncate" onclick="closeMobile()">
+                        ${entry.date}
+                    </a>
+                </li>
+            `;
+
+            const itemsHtml = entries.map(createListItem).join('');
+            list.innerHTML = itemsHtml;
+            mobileList.innerHTML = entries.map(entry => `
+                <a href="#date-${entry.date}" class="block px-4 py-3 border-b border-gray-800 text-lg text-gray-300 hover:text-white" onclick="document.getElementById('mobile-date-menu').classList.add('hidden'); document.getElementById('mobile-date-menu').classList.remove('flex');">
+                    ${entry.date}
+                </a>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
