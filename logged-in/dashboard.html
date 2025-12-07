@@ -234,6 +234,9 @@
         let CURRENT_LAT = null;
         let CURRENT_LON = null;
         const redirectPath = '../index.html';
+        const WEATHER_CACHE_KEY = 'weather_data_cache';
+        // 5 minutes in milliseconds
+        const REFRESH_INTERVAL_MS = 5 * 60 * 1000; 
 
         // --- FIREBASE INIT WAITER ---
         // navigation.js loads firebase asynchronously. We must wait for it.
@@ -293,6 +296,46 @@
             wWindArrow.style.transform = `rotate(0deg)`;
         }
 
+        // --- CACHE LOGIC ---
+        function getWeatherCache() {
+            try {
+                const cached = localStorage.getItem(WEATHER_CACHE_KEY);
+                return cached ? JSON.parse(cached) : null;
+            } catch (e) {
+                console.error("Error reading weather cache:", e);
+                return null;
+            }
+        }
+
+        function setWeatherCache(data) {
+            try {
+                // Store data and a timestamp
+                const cacheData = {
+                    timestamp: Date.now(),
+                    weatherData: data
+                };
+                localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(cacheData));
+            } catch (e) {
+                console.error("Error writing weather cache:", e);
+            }
+        }
+
+        function loadWeatherIfNeeded(lat, lon) {
+            const cache = getWeatherCache();
+            const now = Date.now();
+
+            if (cache && (now - cache.timestamp < REFRESH_INTERVAL_MS)) {
+                // Cache is fresh, use it
+                console.log("Using cached weather data.");
+                updateWeatherUI(cache.weatherData);
+            } else {
+                // Cache is stale or non-existent, fetch new data
+                console.log("Weather cache stale or missing. Fetching new data.");
+                resetWeatherDisplay();
+                loadWeatherWithFallback(lat, lon);
+            }
+        }
+
         // --- LOCATION FETCH (IP Fallback) ---
         async function initWeather() {
             try {
@@ -305,11 +348,11 @@
                 
                 if(!CURRENT_LAT || !CURRENT_LON) return; 
 
-                // 2. Load weather with Fallback Chain
-                loadWeatherWithFallback(CURRENT_LAT, CURRENT_LON);
+                // 2. Load weather using cache-check function
+                loadWeatherIfNeeded(CURRENT_LAT, CURRENT_LON);
 
             } catch (err) {
-                console.warn("Initial weather load failed", err);
+                console.warn("Initial weather load (IP location) failed", err);
             }
         }
 
@@ -320,7 +363,6 @@
                 return;
             }
             
-            // wLocLink.innerText = "Loading..."; // REMOVED
             resetWeatherDisplay();
 
             try {
@@ -334,38 +376,35 @@
                 CURRENT_LAT = pos.coords.latitude;
                 CURRENT_LON = pos.coords.longitude;
                 
-                // wLocLink.innerText = "Location Updated (Click to Re-scan)"; // REMOVED
-                
+                // When explicitly asked for new location, bypass cache and force a fetch
                 loadWeatherWithFallback(CURRENT_LAT, CURRENT_LON);
 
             } catch(e) {
                 console.error("Geolocation failed:", e);
-                // wLocLink.innerText = "Location Access Denied or Timeout (Using IP)"; // REMOVED
-                
-                // Fallback to IP data if browser location fails
+                // Fallback to IP data if browser location fails (which is checked via initWeather)
                 initWeather(); 
             }
         }
 
         // --- FALLBACK LOGIC ---
         async function loadWeatherWithFallback(lat, lon) {
-            // 1. Google Weather (using Firebase API Key)
+            // 1. Google Weather (using Firebase API Key) - PRIMARY
             try {
                 await fetchGoogleWeather(lat, lon);
                 return;
             } catch(e) {
-                console.warn("Google Weather fallback skipped:", e);
+                console.warn("Google Weather failed, attempting NWS:", e);
             }
 
-            // 2. NWS
+            // 2. NWS - SECONDARY
             try {
                 await fetchNWS(lat, lon);
                 return;
             } catch(e) {
-                console.warn("NWS fallback skipped:", e);
+                console.warn("NWS failed, attempting Open-Meteo:", e);
             }
 
-            // 3. Open-Meteo
+            // 3. Open-Meteo - TERTIARY
             try {
                 await fetchOpenMeteo(lat, lon);
             } catch(e) {
@@ -392,23 +431,28 @@
             
             // Conversions and Defaults (Google usually metric C)
             let tempF = curr.temperature?.value;
-            if (curr.temperature?.unit === 'celsius' || curr.temperature?.unit === 'C') {
+            // NOTE: The Google API is known to return Fahrenheit if not explicitly requested otherwise, 
+            // but keeping the conversion check for robustness.
+            if (curr.temperature?.unit?.toLowerCase() === 'celsius' || curr.temperature?.unit?.toLowerCase() === 'c') {
                 tempF = (tempF * 9/5) + 32;
             }
             
             const weatherCode = curr.weatherCondition || "CLOUDY"; 
 
-            updateWeatherUI({
+            const weatherData = {
                 temp: Math.round(tempF || 0),
                 iconCode: weatherCode,
-                isDay: true, // Approximation
+                isDay: true, // Approximation for simplicity
                 high: "--", 
                 low: "--",
                 windSpeed: (curr.windSpeed?.value || 0) + " mph",
                 windDir: curr.windDirection || 0,
                 isNWS: false,
                 isGoogle: true
-            });
+            };
+
+            setWeatherCache(weatherData);
+            updateWeatherUI(weatherData);
         }
 
         // --- NWS FETCH ---
@@ -432,7 +476,7 @@
             const high = Math.max(...temps);
             const low = Math.min(...temps);
 
-            updateWeatherUI({
+            const weatherData = {
                 temp: current.temperature,
                 iconCode: current.shortForecast,
                 isDay: current.isDaytime,
@@ -441,7 +485,10 @@
                 windSpeed: current.windSpeed, 
                 windDir: current.windDirection,
                 isNWS: true
-            });
+            };
+
+            setWeatherCache(weatherData);
+            updateWeatherUI(weatherData);
         }
 
         // --- OPEN METEO FETCH ---
@@ -450,7 +497,7 @@
             const res = await fetch(url);
             const data = await res.json();
             
-            updateWeatherUI({
+            const weatherData = {
                 temp: Math.round(data.current.temperature_2m),
                 iconCode: data.current.weather_code,
                 isDay: data.current.is_day,
@@ -459,7 +506,10 @@
                 windSpeed: Math.round(data.current.wind_speed_10m) + " mph",
                 windDir: data.current.wind_direction_10m,
                 isNWS: false
-            });
+            };
+
+            setWeatherCache(weatherData);
+            updateWeatherUI(weatherData);
         }
 
         // --- UI UPDATE ---
@@ -480,7 +530,7 @@
             wWindArrow.style.transform = `rotate(${rotation}deg)`;
         }
 
-        // --- HELPERS ---
+        // --- HELPERS (Wind & Icon) ---
         function getWindRotation(dir) {
             if (typeof dir === 'number') return dir; 
             const map = {
@@ -524,12 +574,26 @@
             if (lower.includes('sunny') || lower.includes('clear')) return isDay ? `${prefix} fa-sun` : `${prefix} fa-moon`;
             return `${prefix} fa-cloud`;
         }
+        
+        // --- REFRESH LOOP ---
+        function setupWeatherRefresh() {
+             // Set up a periodic check after the initial load
+             setInterval(() => {
+                 if (CURRENT_LAT && CURRENT_LON) {
+                     loadWeatherIfNeeded(CURRENT_LAT, CURRENT_LON);
+                 } else {
+                     // If location is somehow lost, re-init to get IP location
+                     initWeather();
+                 }
+             }, REFRESH_INTERVAL_MS);
+        }
 
         // --- INIT ---
         window.addEventListener('load', () => {
             updateDateTime();
             setInterval(updateDateTime, 1000);
-            initWeather();
+            initWeather(); // Initial load (which checks cache)
+            setupWeatherRefresh(); // Start the periodic refresh
 
             waitForFirebase(() => {
                  if (firebase.auth) {
@@ -541,16 +605,6 @@
                 }
             });
         });
-
-        /* 
-        if (typeof firebase !== 'undefined' && firebase.auth) {
-            firebase.auth().onAuthStateChanged((user) => {
-                if (!user) {
-                    window.location.replace(redirectPath);
-                }
-            });
-        } 
-        */
     </script>
 </body>
 </html>
