@@ -1869,7 +1869,7 @@
                     
                     <h3 class="text-xl font-bold text-white mt-6 mb-2">Version</h3>
                     <p class="text-gray-400">
-                        Current Version: <span class="text-blue-400 text-emphasis">5.0 Beta 9</span>
+                        Current Version: <span class="text-blue-400 text-emphasis">5.0.17</span>
                     </p>
 
                     <h3 class="text-xl font-bold text-white mt-6 mb-3">Connect & Support</h3>
