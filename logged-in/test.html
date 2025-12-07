@@ -527,15 +527,8 @@
             
             const res = await fetch(url, {
                 method: 'GET', // The :lookup endpoint requires a POST request
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    location: {
-                        latitude: lat,
-                        longitude: lon
-                    }
-                })
+                // NOTE: The JSON body and headers have been removed as requested.
+                // This request is now expected to be handled by a proxy or a different Google Weather endpoint.
             });
             
             // This check handles the expected CORS/Referer 403 or any other API-level error (e.g., 404).
