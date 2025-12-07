@@ -3,592 +3,605 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4SP - DASHBOARD</title>
+    <title>4SP - SOUNDBOARD</title>
+    <meta name="description" content="A simple soundboard application for the 4SP website.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <script src="../injector.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="../injector.js"></script>
 
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6659160370587814" crossorigin="anonymous"></script>
+    <script type="module">
+        import { firebaseConfig } from '../firebase-config.js';
+        // Expose config for use by the modular script below
+        window.firebaseConfig = firebaseConfig;
+    </script>
 
     <style>
         /* --- FONT & BASE STYLING --- */
         :root {
-            --bg-page: #040404;
-            --bg-container: #000000;
-            --border-color: #333;
-            --text-primary: #c0c0c0;
-            --text-light-grey: #d1d5db;
-            --accent-color: #6366f1;
-            --text-link: #888;
+            --menu-bg: #000000;
+            --menu-border: #333;
+            --menu-text: #d1d5db;
+            --tab-active-bg: rgba(79, 70, 229, 0.1);
+            --tab-active-border: #4f46e5;
+            --tab-active-text: #4f46e5;
         }
 
         body { 
             font-family: 'Geist', sans-serif; 
-            background-color: var(--bg-page);
-            color: var(--text-primary);
+            background-color: #040404; 
+            color: #c0c0c0; 
+            transition: all 0.3s ease;
+            font-size: 16px;
+            overflow-x: hidden;
             font-weight: 300;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
         }
 
         h1, h2, h3, .font-bold, .font-semibold, strong, .tracking-widest {
             font-weight: 400 !important;
         }
 
-        /* --- LAYOUT UTILS --- */
-        #main-layout {
-            display: flex;
-            width: 100%;
-            flex-grow: 1;
-            overflow: hidden;
-        }
-
-        .ad-sidebar {
-            display: none; /* Hidden on mobile */
-            width: 160px; /* Standard skyscraper width */
-            flex-direction: column;
+        /* --- UI COMPONENTS --- */
+        .btn-toolbar-style {
+            background: var(--menu-bg);
+            border: 1px solid var(--menu-border);
+            border-radius: 0.75rem;
+            color: var(--menu-text);
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            background-color: rgba(0, 0, 0, 0.2);
-            border-color: #222;
-            padding: 1rem;
-            flex-shrink: 0;
-        }
-
-        /* Show on medium screens and up */
-        @media (min-width: 768px) {
-            .ad-sidebar {
-                display: flex;
-            }
-        }
-
-        .ad-placeholder {
-            min-width: 120px;
-            min-height: 600px;
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px dashed #444;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #555;
-            font-size: 0.8rem;
-            text-align: center;
-        }
-
-        #page-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-            position: relative;
-            min-width: 0; /* Flexbox overflow fix */
-        }
-
-        /* --- DASHBOARD WIDGET STYLES --- */
-        .dashboard-widget {
-            border: 1px solid var(--border-color);
-            background-color: var(--bg-container);
-            padding: 2.5rem 4rem; 
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            border-radius: 32px; 
-            
-            /* Sizing & Layout */
-            width: fit-content;
-            max-width: 95vw;
-            box-sizing: border-box;
-
-            /* Flex Layout */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 3.5rem; 
-        }
-
-        .dashboard-widget:hover {
-            border-color: #505050;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
-        }
-
-        /* --- CLOCK STYLES --- */
-        .clock-section {
-            text-align: right;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .time-display {
-            font-family: 'Geist', sans-serif;
-            font-weight: 300;
-            display: flex;
-            align-items: flex-end; 
-            line-height: 0.9;
-            color: var(--text-light-grey);
-            font-variant-numeric: tabular-nums;
-            font-size: 5.5rem; 
-            white-space: nowrap;
-        }
-        
-        .date-display {
-            font-weight: 300;
-            margin-top: 0.5rem;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            font-size: 1.1rem;
-            color: var(--text-light-grey); 
-            opacity: 0.8;
-        }
-        
-        .seconds-display {
-            font-weight: 300;
-            font-size: 3.5rem; 
-            margin-left: 0.2rem;
-            color: var(--text-light-grey);
-            opacity: 0.8;
-        }
-
-        /* --- VERTICAL DIVIDER --- */
-        .vertical-divider {
-            width: 1px;
-            height: 100px; 
-            background-color: #262626;
-        }
-
-        /* --- WEATHER STYLES --- */
-        .weather-section {
-            text-align: left;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
             gap: 0.5rem;
         }
+        .btn-toolbar-style:hover {
+            background-color: var(--menu-bg);
+            border-color: #fff;
+            color: #ffffff;
+        }
+        
+        .btn-toolbar-style.btn-primary-override {
+            background-color: var(--tab-active-bg);
+            border: 1px solid var(--tab-active-border);
+            color: var(--tab-active-text);
+        }
+        .btn-toolbar-style.btn-primary-override:hover {
+            background-color: rgba(79, 70, 229, 0.15);
+            border-color: #6366f1;
+            color: #6366f1;
+        }
 
-        .weather-main {
+        /* Dropdown Styling */
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: var(--menu-bg);
+            border: 1px solid var(--menu-border);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            z-index: 1010;
+            min-width: 280px;
+            padding: 0.75rem;
+        }
+
+        .dropdown-item {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: var(--menu-text);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.15s, color 0.15s;
             display: flex;
             align-items: center;
-            gap: 1.2rem;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .dropdown-item:hover {
+            background-color: #2a2a2a;
+            color: #ffffff;
+        }
+        .dropdown-header {
+            padding: 0.5rem 0.75rem;
+            color: #9ca3af;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid #333;
+            margin-bottom: 0.5rem;
         }
 
-        .weather-icon {
-            font-size: 2.8rem;
-            color: var(--text-light-grey);
-            width: 50px; 
-            text-align: center;
+        /* --- CUSTOM CHECKBOX STYLE --- */
+        .custom-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: var(--menu-bg); /* Use theme variable */
+            border: 1px solid var(--menu-border); /* Use theme variable */
+            border-radius: 0.375rem; /* Consistent with notes.html */
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
         }
 
-        .weather-temp {
-            font-size: 3.5rem; 
-            line-height: 1;
-            color: #fff;
-            min-width: 80px; 
+        .custom-checkbox:checked {
+            background-color: var(--tab-active-border); /* Use theme variable */
+            border-color: var(--tab-active-border); /* Use theme variable */
         }
 
-        .weather-details {
+        .custom-checkbox:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free'; 
+            font-weight: 900;
+            color: #ffffff;
+            font-size: 0.75rem;
+        }
+        /* --- END CUSTOM CHECKBOX STYLE --- */
+
+        .custom-input {
+            background: var(--menu-bg); /* Use theme variable */
+            border: 1px solid var(--menu-border); /* Use theme variable */
+            color: var(--menu-text); /* Use theme variable */
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem; /* Consistent with notes.html */
+            width: 70px;
+            font-size: 0.875rem;
+        }
+
+        /* --- Page Layout --- */
+        #page-content {
+            min-height: calc(100vh - 4rem);
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
-            font-size: 1rem;
-            color: var(--text-link); /* Base grey color */
-            padding-left: 0.5rem; 
         }
 
-        .weather-detail-row {
+        .section-header {
+            font-size: 1.25rem;
+            border-bottom: 1px solid #1a1a1a;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+            color: #ffffff;
+        }
+
+        /* --- Sound Buttons Grid --- */
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+            padding: 0 1rem;
+        }
+
+        /* --- Sound Button Style (Highly Rounded) --- */
+        .sound-btn {
+            background-color: #050505; /* Darker when not active */
+            border: 1px solid #1a1a1a;
+            color: #c0c0c0;
+            border-radius: 1.5rem; /* Highly rounded */
+            padding: 1rem;
+            min-height: 80px;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-        }
-
-        .wind-arrow {
-            display: inline-block;
-            transition: transform 0.5s ease;
-            font-size: 0.9rem;
-            color: var(--accent-color);
-        }
-
-        #w-location-link {
-            font-size: 0.7rem;
-            color: var(--text-link);
+            justify-content: center;
+            text-align: center;
             cursor: pointer;
-            text-align: left;
-            margin-top: 0.5rem;
-            padding-left: 0.5rem;
-            transition: color 0.2s ease;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            word-break: break-word;
+            user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .sound-btn:hover {
+            background-color: #1a1a1a;
+            border-color: #4f46e5;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        
+        .sound-btn:active,
+        .sound-btn.sound-btn-playing { /* New class for active playing state */
+            background-color: rgba(79, 70, 229, 0.2);
+            border-color: #6366f1; /* Lighter blue border */
+            transform: translateY(0);
+            box-shadow: none;
         }
 
-        #w-location-link:hover {
-            color: var(--text-light-grey);
+        /* --- Toaster/Status --- */
+        #status-toaster {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background-color: rgba(13, 13, 13, 0.95);
+            backdrop-filter: blur(5px);
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            border: 1px solid #333;
+            font-size: 0.85rem;
+            color: #fff;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #status-toaster.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
         }
     </style>
+    
 </head>
+<body class="min-h-screen">
 
-<body>
-    <div id="main-layout">
-        <!-- LEFT AD SIDEBAR -->
-        <div class="ad-sidebar border-r border-[#222]">
-            <div class="ad-placeholder">
-                <!-- Vertical Ads -->
-                <ins class="adsbygoogle"
-                     style="display:block;min-width:120px;min-height:200px;"
-                     data-ad-client="ca-pub-6659160370587814"
-                     data-ad-slot="7252834287"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-            </div>
-        </div>
-
-        <!-- MAIN CONTENT -->
-        <div id="page-content">
-            <div id="dashboard-widget" class="dashboard-widget">
-                
-                <div class="clock-section">
-                    <div id="clock-time" class="time-display">--:--<span class="seconds-display">--</span></div>
-                    <div id="clock-date" class="date-display">--------</div>
-                </div>
-
-                <div class="vertical-divider"></div>
-
-                <div class="weather-section">
-                    <div class="weather-main">
-                        <div id="w-icon" class="weather-icon"><i class="fa-solid fa-cloud"></i></div>
-                        <div id="w-temp" class="weather-temp">--°</div>
-                    </div>
-                    
-                    <div class="weather-details">
-                        <div class="weather-detail-row">
-                            <span>H: <span id="w-high" class="text-gray-300">--°</span></span>
-                            <span class="mx-1 text-[#333]">|</span>
-                            <span>L: <span id="w-low" class="text-gray-300">--°</span></span>
-                        </div>
-                        <div class="weather-detail-row">
-                            <i id="w-wind-arrow" class="fa-solid fa-arrow-up wind-arrow"></i>
-                            <span id="w-wind-speed">-- mph</span>
-                        </div>
-                    </div>
-                    
-                    <div id="w-location-link" onclick="getUserBrowserLocation()">
-                        Use Current Location
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- RIGHT AD SIDEBAR -->
-        <div class="ad-sidebar border-l border-[#222]">
-            <div class="ad-placeholder">
-                <!-- Vertical Ads -->
-                <ins class="adsbygoogle"
-                     style="display:block;min-width:120px;min-height:200px;"
-                     data-ad-client="ca-pub-6659160370587814"
-                     data-ad-slot="7252834287"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-            </div>
-        </div>
+    <div id="loading-screen" class="fixed inset-0 bg-[#040404] flex items-center justify-center z-50">
+        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
     </div>
 
-    <script>
-        // Initialize Ads only when visible to prevent "No slot size" errors
-        window.addEventListener('load', () => {
-            const adSidebars = document.querySelectorAll('.ad-sidebar');
-            const ads = document.querySelectorAll('.adsbygoogle');
+    <div id="page-content" class="hidden">
+        
+        <header class="flex justify-between items-center p-4 border-b border-[#1a1a1a] sticky top-0 bg-[#040404] z-40">
+            <h1 class="text-2xl font-bold text-white">4SP Soundboard</h1>
             
-            // Check if sidebars are visible (display != none)
-            if (adSidebars.length > 0 && window.getComputedStyle(adSidebars[0]).display !== 'none') {
-                ads.forEach((ad) => {
-                    try {
-                        // Check if ad is already filled to avoid "All 'ins' elements..." error
-                        if (!ad.innerHTML.trim() || ad.getAttribute('data-ad-status') === 'unfilled') {
-                             (window.adsbygoogle = window.adsbygoogle || []).push({});
-                        }
-                    } catch (e) {
-                        // Suppress errors from ad blockers or double-push
-                        console.debug("AdSense push skipped or failed:", e);
-                    }
-                });
-            }
-        });
-    </script>
+            <div class="flex items-center gap-2">
+                <div id="options-menu-container" class="relative">
+                    <button id="options-menu-btn" class="btn-toolbar-style btn-primary-override">
+                        <i class="fa-solid fa-sliders"></i> <span>Options</span>
+                    </button>
+
+                    <div id="options-dropdown" class="dropdown-menu hidden">
+                        <div class="dropdown-header">Playback Settings</div>
+                        
+                        <label class="dropdown-item">
+                            <span><i class="fa-solid fa-layer-group w-5"></i> Sound Overlay</span>
+                            <input type="checkbox" id="soundOverlayCheckbox" class="custom-checkbox">
+                        </label>
+
+                        <label class="dropdown-item">
+                            <span><i class="fa-solid fa-computer-mouse w-5"></i> Auto Clicker</span>
+                            <input type="checkbox" id="autoClickerCheckbox" class="custom-checkbox">
+                        </label>
+
+                        <div id="delay-settings" class="dropdown-item hidden">
+                            <span class="text-sm">Delay (ms)</span>
+                            <div class="flex gap-2">
+                                <input type="number" id="autoClickDelay" value="1000" min="0" class="custom-input">
+                                <button id="applyDelayBtn" class="btn-toolbar-style" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Set</button>
+                            </div>
+                        </div>
+
+                        <div class="dropdown-divider border-t border-[#333] my-2"></div>
+                        
+
+
+                        <div class="dropdown-divider border-t border-[#333] my-2"></div>
+                        
+                        <div id="clear-sounds-btn" class="dropdown-item text-red-500 hover:bg-red-900/20">
+                            <span><i class="fa-solid fa-volume-xmark w-5"></i> Stop All Sounds</span>
+                            <span class="text-xs text-gray-500 border border-[#333] px-1 rounded">SHIFT+C</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow p-5 md:p-8 max-w-7xl mx-auto w-full">
+            <div class="mb-10">
+                <h2 class="section-header">Normal Sounds</h2>
+                <div id="normalSoundsContainer" class="sound-grid"></div>
+            </div>
+
+            <div class="mb-10" id="explicitSectionWrapper">
+                <h2 class="section-header text-red-400/80 border-red-900/30">Explicit Sounds</h2>
+                <div id="explicitSoundsContainer" class="sound-grid"></div>
+            </div>
+
+            <div class="mb-10">
+                <h2 class="section-header text-blue-400/80 border-blue-900/30">Third Party Sounds</h2>
+                <div id="thirdPartySoundsContainer" class="sound-grid"></div>
+            </div>
+        </main>
+    </div>
+
+    <div id="status-toaster"></div>
 
     <script type="module">
         import { firebaseConfig } from '../firebase-config.js';
+        
+        // Import Modular SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // --- GLOBAL STATE ---
-        let CURRENT_LAT = null;
-        let CURRENT_LON = null;
-        const redirectPath = '../index.html';
+        // Import Third Party Sounds
+        import { sounds as externalSounds } from 'https://cdn.jsdelivr.net/gh/genizy/soundboard@main/sounds.js';
 
-        // --- FIREBASE INIT WAITER ---
-        // navigation.js loads firebase asynchronously. We must wait for it.
-        function waitForFirebase(callback) {
-            const check = setInterval(() => {
-                if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-                    clearInterval(check);
-                    window.auth = firebase.auth();
-                    window.db = firebase.firestore();
-                    callback();
-                }
-            }, 100);
-        }
+        // --- UI & State References ---
+        const loadingScreen = document.getElementById('loading-screen');
+        const pageContent = document.getElementById('page-content');
+        const optionsMenuBtn = document.getElementById('options-menu-btn');
+        const optionsDropdown = document.getElementById('options-dropdown');
+        const soundOverlayCheckbox = document.getElementById('soundOverlayCheckbox');
+        const autoClickerCheckbox = document.getElementById('autoClickerCheckbox');
+        const delaySettings = document.getElementById('delay-settings');
+        const autoClickDelayInput = document.getElementById('autoClickDelay');
+        const applyDelayBtn = document.getElementById('applyDelayBtn');
+        const clearSoundsBtn = document.getElementById('clear-sounds-btn');
+        const statusToaster = document.getElementById('status-toaster');
+        const normalSoundsContainer = document.getElementById('normalSoundsContainer');
+        const explicitSoundsContainer = document.getElementById('explicitSoundsContainer');
+        const explicitSectionWrapper = document.getElementById('explicitSectionWrapper');
+        const thirdPartySoundsContainer = document.getElementById('thirdPartySoundsContainer');
 
-        // --- CLOCK LOGIC ---
-        const clockTimeEl = document.getElementById('clock-time');
-        const clockDateEl = document.getElementById('clock-date');
+        // --- Soundboard Logic State ---
+        let playingAudios = [];
+        let autoClickInterval;
+        let requestAnimationFrameId = null;
+        let currentlyHoveredButton = null;
+        let toasterTimeout = null;
 
-        function updateDateTime() {
-            const now = new Date();
-            
-            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
-            const timeString = now.toLocaleTimeString('en-US', timeOptions);
-            const seconds = now.getSeconds().toString().padStart(2, '0');
-            
-            const parts = timeString.split(' ');
-            const timeOnly = parts[0];
-            const amPm = parts[1] || '';
+        // --- Firebase Initialization (Modular) ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-            const dateOptions = { weekday: 'long', month: 'long', day: 'numeric' };
-            const dateString = now.toLocaleDateString('en-US', dateOptions);
-
-            if (clockTimeEl) {
-                clockTimeEl.innerHTML = `${timeOnly}<span class="seconds-display">:${seconds} ${amPm}</span>`;
-            }
-            if (clockDateEl) {
-                clockDateEl.innerText = dateString;
-            }
-        }
-
-        // --- WEATHER LOGIC (No Loaders) ---
-        const wTemp = document.getElementById('w-temp');
-        const wIcon = document.getElementById('w-icon');
-        const wHigh = document.getElementById('w-high');
-        const wLow = document.getElementById('w-low');
-        const wWindSpeed = document.getElementById('w-wind-speed');
-        const wWindArrow = document.getElementById('w-wind-arrow');
-        const wLocLink = document.getElementById('w-location-link');
-
-        // Resets display to placeholders
-        function resetWeatherDisplay() {
-            wTemp.innerText = `--°`;
-            wHigh.innerText = `--°`;
-            wLow.innerText = `--°`;
-            wWindSpeed.innerText = `-- mph`;
-            wIcon.innerHTML = `<i class="fa-solid fa-cloud"></i>`;
-            wWindArrow.style.transform = `rotate(0deg)`;
-        }
-
-        // --- LOCATION FETCH (IP Fallback) ---
-        async function initWeather() {
+        function setupAuthAndLoad() {
             try {
-                // 1. Get Location using IP (Default) from ipapi.co (Note: May have CORS issues)
-                const ipRes = await fetch('https://ipapi.co/json/');
-                const ipData = await ipRes.json();
-                
-                // ipapi.co uses 'latitude' and 'longitude'
-                CURRENT_LAT = ipData.latitude;
-                CURRENT_LON = ipData.longitude;
-                
-                if(!CURRENT_LAT || !CURRENT_LON) return; 
-
-                // 2. Load weather with Fallback Chain
-                loadWeatherWithFallback(CURRENT_LAT, CURRENT_LON);
-
-            } catch (err) {
-                console.warn("Initial weather load failed", err);
-            }
-        }
-
-        // --- LOCATION FETCH (Browser Geolocation) ---
-        window.getUserBrowserLocation = async function() {
-            if (!navigator.geolocation) {
-                alert("Geolocation is not supported by this browser.");
-                return;
-            }
-            
-            // wLocLink.innerText = "Loading..."; // REMOVED
-            resetWeatherDisplay();
-
-            try {
-                const pos = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { 
-                        timeout: 5000, 
-                        maximumAge: 60000 
-                    });
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        loadingScreen.style.display = 'none';
+                        pageContent.classList.remove('hidden');
+                        loadSoundsLocal();
+                        loadThirdPartySounds(); // Load external sounds
+                        monitorExplicitSettings();
+                    } else {
+                        window.location.href = '../index.html'; 
+                    }
                 });
-                
-                CURRENT_LAT = pos.coords.latitude;
-                CURRENT_LON = pos.coords.longitude;
-                
-                // wLocLink.innerText = "Location Updated (Click to Re-scan)"; // REMOVED
-                
-                loadWeatherWithFallback(CURRENT_LAT, CURRENT_LON);
 
-            } catch(e) {
-                console.error("Geolocation failed:", e);
-                // wLocLink.innerText = "Location Access Denied or Timeout (Using IP)"; // REMOVED
-                
-                // Fallback to IP data if browser location fails
-                initWeather(); 
+
+            } catch (e) {
+                console.error("Auth Setup Error", e);
             }
         }
 
-        // --- FALLBACK LOGIC ---
-        async function loadWeatherWithFallback(lat, lon) {
-            // 1. NWS
+        function monitorExplicitSettings() {
             try {
-                await fetchNWS(lat, lon);
-                return;
-            } catch(e) {
-                console.warn("NWS fallback skipped:", e);
-            }
-
-            // 2. Open-Meteo
-            try {
-                await fetchOpenMeteo(lat, lon);
-            } catch(e) {
-                console.error("All weather sources failed", e);
-            }
-        }
-
-        // --- NWS FETCH ---
-        async function fetchNWS(lat, lon) {
-            const pointsRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`);
-            if (!pointsRes.ok) throw new Error("NWS Point Fail");
-            const pointsData = await pointsRes.json();
-            
-            const [forecastRes, hourlyRes] = await Promise.all([
-                fetch(pointsData.properties.forecast),
-                fetch(pointsData.properties.forecastHourly)
-            ]);
-
-            const dailyData = await forecastRes.json();
-            const hourlyData = await hourlyRes.json();
-
-            const current = hourlyData.properties.periods[0];
-            
-            const first24 = hourlyData.properties.periods.slice(0, 24);
-            const temps = first24.map(p => p.temperature);
-            const high = Math.max(...temps);
-            const low = Math.min(...temps);
-
-            updateWeatherUI({
-                temp: current.temperature,
-                iconCode: current.shortForecast,
-                isDay: current.isDaytime,
-                high: high,
-                low: low,
-                windSpeed: current.windSpeed, 
-                windDir: current.windDirection,
-                isNWS: true
-            });
-        }
-
-        // --- OPEN METEO FETCH ---
-        async function fetchOpenMeteo(lat, lon) {
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
-            const res = await fetch(url);
-            const data = await res.json();
-            
-            updateWeatherUI({
-                temp: Math.round(data.current.temperature_2m),
-                iconCode: data.current.weather_code,
-                isDay: data.current.is_day,
-                high: Math.round(data.daily.temperature_2m_max[0]),
-                low: Math.round(data.daily.temperature_2m_min[0]),
-                windSpeed: Math.round(data.current.wind_speed_10m) + " mph",
-                windDir: data.current.wind_direction_10m,
-                isNWS: false
-            });
-        }
-
-        // --- UI UPDATE ---
-        function updateWeatherUI(data) {
-            wTemp.innerText = `${data.temp}°`;
-            wHigh.innerText = `${data.high}°`;
-            wLow.innerText = `${data.low}°`;
-            wWindSpeed.innerText = data.windSpeed;
-
-            let iconClass = 'fa-cloud';
-            if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
-            else iconClass = getIconFromWMO(data.iconCode, data.isDay);
-            
-            wIcon.innerHTML = `<i class="${iconClass}"></i>`;
-
-            const rotation = getWindRotation(data.windDir);
-            wWindArrow.style.transform = `rotate(${rotation}deg)`;
-        }
-
-        // --- HELPERS ---
-        function getWindRotation(dir) {
-            if (typeof dir === 'number') return dir; 
-            const map = {
-                'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
-                'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
-                'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
-                'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
-            };
-            return map[dir] || 0;
-        }
-
-        function getIconFromWMO(code, isDay) {
-            const day = isDay === 1;
-            const map = {
-                0: day ? 'fa-sun' : 'fa-moon', 1: day ? 'fa-cloud-sun' : 'fa-cloud-moon',
-                2: day ? 'fa-cloud-sun' : 'fa-cloud-moon', 3: 'fa-cloud', 45: 'fa-smog',
-                51: 'fa-cloud-rain', 61: 'fa-cloud-rain', 71: 'fa-snowflake', 95: 'fa-cloud-bolt'
-            };
-            return `fa-solid ${map[code] || 'fa-cloud'}`;
-        }
-
-        function getIconFromNWS(shortForecast, isDay) {
-            const lower = shortForecast.toLowerCase();
-            const prefix = 'fa-solid';
-            if (lower.includes('thunder')) return `${prefix} fa-cloud-bolt`;
-            if (lower.includes('snow') || lower.includes('flurries')) return `${prefix} fa-snowflake`;
-            if (lower.includes('rain') || lower.includes('shower')) return `${prefix} fa-cloud-showers-heavy`;
-            if (lower.includes('cloud')) return `${prefix} fa-cloud`;
-            if (lower.includes('sunny') || lower.includes('clear')) return isDay ? `${prefix} fa-sun` : `${prefix} fa-moon`;
-            return `${prefix} fa-cloud`;
-        }
-
-        // --- INIT ---
-        window.addEventListener('load', () => {
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
-            initWeather();
-
-            waitForFirebase(() => {
-                 if (firebase.auth) {
-                    firebase.auth().onAuthStateChanged((user) => {
-                        if (!user) {
-                            window.location.replace(redirectPath);
+                onSnapshot(doc(db, 'config', 'soundboard'), (docSnap) => {
+                    // Default to true if document doesn't exist or field is missing
+                    let isEnabled = true;
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        if (data.explicitEnabled !== undefined) {
+                            isEnabled = data.explicitEnabled;
                         }
+                    }
+
+                    if (explicitSectionWrapper) {
+                        if (isEnabled) {
+                            explicitSectionWrapper.style.display = 'block';
+                        } else {
+                            explicitSectionWrapper.style.display = 'none';
+                            stopAllAudios(); 
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error("Error monitoring explicit settings:", err);
+            }
+        }
+
+        function showStatus(message, type = 'info') {
+            statusToaster.textContent = message;
+            statusToaster.className = ''; 
+            if (type === 'error') statusToaster.style.borderColor = '#ef4444';
+            else if (type === 'success') statusToaster.style.borderColor = '#22c55e';
+            else statusToaster.style.borderColor = '#333';
+            statusToaster.classList.add('visible');
+            if (toasterTimeout) clearTimeout(toasterTimeout);
+            toasterTimeout = setTimeout(() => statusToaster.classList.remove('visible'), 2000);
+        }
+
+        async function loadSoundsLocal() {
+            try {
+                const response = await fetch('../soundboard_names.json');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+
+                if (data.NormalSounds) data.NormalSounds.forEach(f => createSoundButton(f, normalSoundsContainer));
+                if (data.ExplicitSounds) data.ExplicitSounds.forEach(f => createSoundButton(f, explicitSoundsContainer));
+
+            } catch (error) {
+                console.error("Load Error:", error);
+                showStatus("Unable to load local sounds.", "error");
+            }
+        }
+
+        function loadThirdPartySounds() {
+            try {
+                const baseUrl = "https://cdn.jsdelivr.net/gh/genizy/soundboard@main/";
+                if (externalSounds && Array.isArray(externalSounds)) {
+                    externalSounds.forEach(sound => {
+                        // sound object has { name, mp3, color, etc }
+                        // Construct the full URL for the third party audio
+                        const fullAudioUrl = baseUrl + sound.mp3;
+                        createSoundButton(sound.name, thirdPartySoundsContainer, fullAudioUrl);
                     });
                 }
+            } catch (error) {
+                console.error("Third Party Load Error:", error);
+                showStatus("Unable to load 3rd party sounds.", "error");
+            }
+        }
+
+        /**
+         * Creates a sound button.
+         * @param {string} nameOrFile - Display name or filename (if local).
+         * @param {HTMLElement} container - The DOM element to append to.
+         * @param {string|null} customUrl - Optional. If provided, used as audio source. If null, assumes local file.
+         */
+        function createSoundButton(nameOrFile, container, customUrl = null) {
+            let soundName = nameOrFile;
+            let audioPath;
+
+            if (customUrl) {
+                // If custom URL is provided, use name as is, url as path
+                audioPath = customUrl;
+            } else {
+                // Local file logic
+                soundName = nameOrFile.replace('.mp3', '').replace(/_/g, ' ');
+                audioPath = `../sounds/${nameOrFile}`;
+            }
+
+            const btn = document.createElement('div');
+            btn.className = 'sound-btn';
+            btn.textContent = soundName;
+            
+            btn.addEventListener('click', async () => {
+                if (!soundOverlayCheckbox.checked) stopAllAudios();
+
+                try {
+                    const audio = new Audio(audioPath);
+                    audio.soundButton = btn; // Store reference to the button
+                    playingAudios.push(audio);
+                    
+                    audio.addEventListener('ended', () => {
+                        playingAudios = playingAudios.filter(a => a !== audio);
+                        btn.classList.remove('sound-btn-playing'); 
+                    });
+                    
+                    btn.classList.add('sound-btn-playing'); 
+                    await audio.play();
+                } catch (err) {
+                    console.error("Playback failed:", err);
+                    showStatus('Error playing sound', 'error');
+                    btn.classList.remove('sound-btn-playing');
+                }
             });
+
+            btn.addEventListener('mouseenter', () => {
+                currentlyHoveredButton = btn;
+                if (autoClickerCheckbox.checked) startAutoClicker();
+            });
+            btn.addEventListener('mouseleave', () => {
+                if (currentlyHoveredButton === btn) {
+                    currentlyHoveredButton = null;
+                    stopAutoClicker();
+                }
+            });
+
+            container.appendChild(btn);
+        }
+
+        function stopAllAudios(fade = false) {
+            if (playingAudios.length === 0) return;
+            playingAudios.forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+                // Check if the audio object has a reference to its button
+                if (audio.soundButton) {
+                    audio.soundButton.classList.remove('sound-btn-playing');
+                }
+            });
+            playingAudios = [];
+            if (fade) showStatus('All sounds muted', 'success');
+        }
+
+        function clickLoop() {
+             if (currentlyHoveredButton && autoClickerCheckbox.checked) currentlyHoveredButton.click();
+        }
+
+        function fastClicker() {
+            if (currentlyHoveredButton && autoClickerCheckbox.checked) {
+                currentlyHoveredButton.click();
+                requestAnimationFrameId = requestAnimationFrame(fastClicker);
+            }
+        }
+
+        function startAutoClicker() {
+            stopAutoClicker();
+            const delay = parseInt(autoClickDelayInput.value, 10) || 0;
+            if (!currentlyHoveredButton || !autoClickerCheckbox.checked) return;
+            if (delay === 0) requestAnimationFrameId = requestAnimationFrame(fastClicker);
+            else autoClickInterval = setInterval(clickLoop, delay);
+        }
+
+        function stopAutoClicker() {
+            if (autoClickInterval) { clearInterval(autoClickInterval); autoClickInterval = null; }
+            if (requestAnimationFrameId) { cancelAnimationFrame(requestAnimationFrameId); requestAnimationFrameId = null; }
+        }
+
+        // --- Event Listeners ---
+        optionsMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            optionsDropdown.classList.toggle('hidden');
         });
 
-        /* 
-        if (typeof firebase !== 'undefined' && firebase.auth) {
-            firebase.auth().onAuthStateChanged((user) => {
-                if (!user) {
-                    window.location.replace(redirectPath);
-                }
-            });
-        } 
-        */
+        document.addEventListener('click', (e) => {
+            if (!optionsDropdown.classList.contains('hidden') && !optionsMenuBtn.contains(e.target) && !optionsDropdown.contains(e.target)) {
+                optionsDropdown.classList.add('hidden');
+            }
+        });
+
+        soundOverlayCheckbox.addEventListener('change', (e) => {
+            localStorage.setItem('soundOverlay', e.target.checked);
+            if (!e.target.checked) stopAllAudios();
+        });
+
+        autoClickerCheckbox.addEventListener('change', (e) => {
+            localStorage.setItem('autoClicker', e.target.checked);
+            if (e.target.checked) {
+                delaySettings.classList.remove('hidden');
+                if (currentlyHoveredButton) startAutoClicker();
+            } else {
+                delaySettings.classList.add('hidden');
+                stopAutoClicker();
+            }
+        });
+
+        applyDelayBtn.addEventListener('click', () => {
+            const val = autoClickDelayInput.value;
+            localStorage.setItem('autoClickDelay', val);
+            if (autoClickerCheckbox.checked && currentlyHoveredButton) startAutoClicker();
+            showStatus(`Delay set to ${val}ms`);
+        });
+
+        clearSoundsBtn.addEventListener('click', () => {
+            stopAllAudios(true);
+            optionsDropdown.classList.add('hidden');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.shiftKey && e.key.toLowerCase() === 'c') stopAllAudios(true);
+        });
+
+        // --- Init ---
+        // This runs after all imports are loaded and sets up the event listeners
+        window.addEventListener('load', () => {
+            const savedOverlay = localStorage.getItem('soundOverlay') === 'true';
+            const savedAutoClick = localStorage.getItem('autoClicker') === 'true';
+            const savedDelay = localStorage.getItem('autoClickDelay') || '1000';
+
+            soundOverlayCheckbox.checked = savedOverlay;
+            autoClickerCheckbox.checked = savedAutoClick;
+            autoClickDelayInput.value = savedDelay;
+
+            if (savedAutoClick) delaySettings.classList.remove('hidden');
+            setupAuthAndLoad();
+        });
     </script>
 </body>
 </html>
