@@ -651,7 +651,7 @@
         // --- INIT ---
         window.addEventListener('load', () => {
             updateDateTime();
-            setInterval(updateDateTime, 1000);
+            setInterval(updateDateTime, 500);
             initWeather(); // Initial load (which checks cache)
             setupWeatherRefresh(); // Start the periodic refresh
 
