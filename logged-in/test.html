@@ -321,14 +321,13 @@
         let CURRENT_LON = null;
         const redirectPath = '../index.html';
         const WEATHER_CACHE_KEY = 'weather_data_cache';
-        const TEMP_UNIT_KEY = 'weather_temp_unit'; // New key for unit preference
+        const TEMP_UNIT_KEY = 'weather_temp_unit'; 
         // 5 minutes in milliseconds
         const REFRESH_INTERVAL_MS = 5 * 60 * 1000; 
         
-        // State for unit preference: true for Celsius, false for Fahrenheit (Default to F if not set)
         let isCelsius = localStorage.getItem(TEMP_UNIT_KEY) === 'C';
-        let lastWeatherCache = null; // Stores the last fetched data (always in F)
-        let hideTimer = null; // Timer for switch auto-hide
+        let lastWeatherCache = null; 
+        let hideTimer = null; 
 
         // --- ELEMENTS ---
         const clockTimeEl = document.getElementById('clock-time');
@@ -342,13 +341,12 @@
         const wLocLink = document.getElementById('w-location-link');
         const weatherLoader = document.getElementById('weather-loader'); 
         
-        // New Switch Elements
         const tempSwitchContainer = document.getElementById('temp-switch-container');
         const unitC = document.getElementById('unit-c');
         const unitF = document.getElementById('unit-f');
 
 
-        // --- LOADER FUNCTIONS ---
+        // --- LOADER FUNCTIONS (Unchanged) ---
         function showLoader() {
             weatherLoader.classList.add('loading');
         }
@@ -357,13 +355,11 @@
             weatherLoader.classList.remove('loading');
         }
 
-        // --- FIREBASE INIT WAITER ---
+        // --- FIREBASE INIT WAITER (Unchanged) ---
         function waitForFirebase(callback) {
             const check = setInterval(() => {
-                // Check for global firebase object defined by injector.js
                 if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
                     clearInterval(check);
-                    // Assuming the old SDK is still used for auth/firestore via injector.js
                     window.auth = firebase.auth();
                     window.db = firebase.firestore();
                     callback();
@@ -394,7 +390,7 @@
             }
         }
 
-        // Resets display to placeholders
+        // Resets display to placeholders (Unchanged)
         function resetWeatherDisplay() {
             wTemp.innerText = `--°`;
             wHigh.innerText = `--°`;
@@ -417,7 +413,6 @@
 
         function setWeatherCache(data) {
             try {
-                // Store data and a timestamp
                 const cacheData = {
                     timestamp: Date.now(),
                     weatherData: data
@@ -433,23 +428,19 @@
             const now = Date.now();
 
             if (cache && (now - cache.timestamp < REFRESH_INTERVAL_MS)) {
-                // Cache is fresh, use it
                 console.log("Using cached weather data.");
                 updateWeatherUI(cache.weatherData);
-                // hideLoader() is called inside updateWeatherUI
             } else {
-                // Cache is stale or non-existent, fetch new data
                 console.log("Weather cache stale or missing. Fetching new data.");
                 resetWeatherDisplay();
                 loadWeatherWithFallback(lat, lon);
             }
         }
 
-        // --- LOCATION FETCH (IP Fallback) ---
+        // --- LOCATION FETCH (Unchanged) ---
         async function initWeather() {
-            showLoader(); // Show loader at start of location determination
+            showLoader(); 
             try {
-                // 1. Get Location using IP (Default)
                 const ipRes = await fetch('https://ipapi.co/json/');
                 const ipData = await ipRes.json();
                 
@@ -461,23 +452,21 @@
                     return; 
                 }
 
-                // 2. Load weather using cache-check function
                 loadWeatherIfNeeded(CURRENT_LAT, CURRENT_LON);
 
             } catch (err) {
                 console.warn("Initial weather load (IP location) failed", err);
-                hideLoader(); // Hide on failure
+                hideLoader(); 
             }
         }
 
-        // --- LOCATION FETCH (Browser Geolocation) ---
         window.getUserBrowserLocation = async function() {
             if (!navigator.geolocation) {
                 alert("Geolocation is not supported by this browser.");
                 return;
             }
             
-            showLoader(); // Show loader before geolocating
+            showLoader(); 
             resetWeatherDisplay();
 
             try {
@@ -491,26 +480,22 @@
                 CURRENT_LAT = pos.coords.latitude;
                 CURRENT_LON = pos.coords.longitude;
                 
-                // When explicitly asked for new location, bypass cache and force a fetch
                 loadWeatherWithFallback(CURRENT_LAT, CURRENT_LON);
 
             } catch(e) {
                 console.error("Geolocation failed:", e);
-                // Fallback to IP data if browser location fails (which is checked via initWeather)
                 initWeather(); 
             }
         }
 
-        // --- FALLBACK LOGIC ---
+        // --- FALLBACK LOGIC (Unchanged) ---
         async function loadWeatherWithFallback(lat, lon) {
-            // Loader is already shown by calling functions (initWeather or getUserBrowserLocation)
             try {
                 // 1. Google Weather (using Firebase API Key) - PRIMARY
                 try {
                     await fetchGoogleWeather(lat, lon);
                     return;
                 } catch(e) {
-                    // The CORS error is expected here, we gracefully log and continue to NWS
                     console.warn("Google Weather failed, attempting NWS:", e);
                 }
 
@@ -527,25 +512,37 @@
                     await fetchOpenMeteo(lat, lon);
                 } catch(e) {
                     console.error("All weather sources failed", e);
-                    hideLoader(); // Hide on absolute failure
+                    hideLoader(); 
                 }
             } catch (finalError) {
-                // Catches errors during the fallback chain setup
                 hideLoader();
             }
         }
 
-        // --- GOOGLE WEATHER FETCH ---
+        // --- GOOGLE WEATHER FETCH (FIXED ENDPOINT AND METHOD) ---
         async function fetchGoogleWeather(lat, lon) {
             const apiKey = firebaseConfig.apiKey;
-            const url = `https://weather.googleapis.com/v1/currentConditions?key=${apiKey}&location.latitude=${lat}&location.longitude=${lon}`;
+            // CORRECTED: Use the :lookup endpoint as suggested by the user.
+            const url = `https://weather.googleapis.com/v1/currentConditions:lookup?key=${apiKey}`;
             
-            const res = await fetch(url);
-            // This is where the CORS block happens, causing a TypeError/Failed to fetch
+            const res = await fetch(url, {
+                method: 'POST', // The :lookup endpoint requires a POST request
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    location: {
+                        latitude: lat,
+                        longitude: lon
+                    }
+                })
+            });
+            
+            // This check handles the expected CORS/Referer 403 or any other API-level error (e.g., 404).
             if (!res.ok) {
-                const errText = await res.text();
-                console.error("Google Weather API Failed. Details:", errText);
-                throw new Error(`Google Weather Error: ${res.status} - ${errText}`);
+                console.error(`Google Weather API returned status: ${res.status}`);
+                // Throw an error to trigger the fallback (NWS/Open-Meteo)
+                throw new Error(`Google Weather Error: ${res.status} - Could not fetch data.`);
             }
             
             const data = await res.json();
@@ -555,7 +552,6 @@
             let tempC = data.temperature?.degrees;
             let tempF = 0; 
             if (tempC !== undefined) {
-                // Convert Celsius to Fahrenheit: F = C * 9/5 + 32
                 tempF = Math.round((tempC * 9/5) + 32);
             }
             
@@ -575,7 +571,6 @@
             let windDir = 0; 
             
             if (data.wind?.speed?.value !== undefined && data.wind?.speed?.unit === 'KILOMETERS_PER_HOUR') {
-                // Convert km/h to mph (1 km/h ≈ 0.621371 mph)
                 const speedMph = data.wind.speed.value * 0.621371;
                 windSpeed = `${Math.round(speedMph)} mph`;
             }
@@ -600,7 +595,7 @@
             updateWeatherUI(weatherData);
         }
 
-        // --- NWS FETCH (Unchanged - returns F) ---
+        // --- NWS FETCH (Unchanged) ---
         async function fetchNWS(lat, lon) {
             const pointsRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`);
             if (!pointsRes.ok) throw new Error("NWS Point Fail");
@@ -636,7 +631,7 @@
             updateWeatherUI(weatherData);
         }
 
-        // --- OPEN METEO FETCH (Unchanged - returns F) ---
+        // --- OPEN METEO FETCH (Unchanged) ---
         async function fetchOpenMeteo(lat, lon) {
             const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
             const res = await fetch(url);
@@ -781,17 +776,15 @@
             }, 2500);
         }
 
-        // --- REFRESH LOOP (FIXED TYPO) ---
+        // --- REFRESH LOOP (Unchanged) ---
         function setupWeatherRefresh() {
-             // Set up a periodic check after the initial load
              setInterval(() => {
                  if (CURRENT_LAT && CURRENT_LON) {
                      loadWeatherIfNeeded(CURRENT_LAT, CURRENT_LON);
                  } else {
-                     // If location is somehow lost, re-init to get IP location
                      initWeather();
                  }
-             }, REFRESH_INTERVAL_MS); // *** CORRECTED from REFRESH_INTERVAL_SECOND/S ***
+             }, REFRESH_INTERVAL_MS);
         }
 
         // --- INIT (Unchanged) ---
@@ -803,8 +796,8 @@
 
             updateDateTime();
             setInterval(updateDateTime, 500);
-            initWeather(); // Initial load (which checks cache)
-            setupWeatherRefresh(); // Start the periodic refresh
+            initWeather(); 
+            setupWeatherRefresh(); 
 
             waitForFirebase(() => {
                  if (firebase.auth) {
