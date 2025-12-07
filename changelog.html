@@ -333,6 +333,12 @@
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         const date = entry.target.dataset.date;
+                        const dateId = `date-${date}`;
+
+                        // Update URL without jumping
+                        if (history.replaceState) {
+                            history.replaceState(null, null, '#' + dateId);
+                        }
                         
                         // Remove active class from all links
                         navLinks.forEach(link => {
@@ -356,6 +362,23 @@
             sections.forEach(section => {
                 observer.observe(section);
             });
+
+            // Intercept clicks on sidebar links for smooth scrolling in container
+            const dateList = document.getElementById('date-list');
+            if (dateList) {
+                dateList.addEventListener('click', (e) => {
+                    const link = e.target.closest('a');
+                    if (link && link.getAttribute('href').startsWith('#date-')) {
+                        e.preventDefault();
+                        const targetId = link.getAttribute('href').substring(1);
+                        const targetSection = document.getElementById(targetId);
+                        if (targetSection) {
+                            targetSection.scrollIntoView({ behavior: 'smooth' });
+                            // Hash update will be handled by observer
+                        }
+                    }
+                });
+            }
         }
         
         function closeMobile() {
