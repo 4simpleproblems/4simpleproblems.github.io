@@ -21,9 +21,9 @@
             --border-color: #333;
             --text-primary: #c0c0c0;
             --text-light-grey: #d1d5db;
-            --accent-color: #6366f1;
+            --accent-color: #6366f1; /* Purple/Indigo color for switch selection */
             --text-link: #888;
-            --spinner-color: #666666; /* UPDATED: Darker grey color for the loader */
+            --spinner-color: #666666; 
         }
 
         body { 
@@ -161,7 +161,7 @@
             flex-direction: column;
             gap: 0.25rem;
             font-size: 1rem;
-            color: var(--text-link); /* Base grey color */
+            color: var(--text-link); 
             padding-left: 0.5rem; 
         }
 
@@ -195,12 +195,12 @@
         /* --- SPINNER STYLES --- */
         #weather-loader {
             position: absolute;
-            bottom: 20px; /* Position from bottom edge */
-            right: 20px; /* Position from right edge */
+            bottom: 20px; 
+            right: 20px; 
             color: var(--spinner-color); 
             opacity: 0;
             transition: opacity 0.5s ease;
-            pointer-events: none; /* Allows clicks to pass through */
+            pointer-events: none; 
         }
         
         #weather-loader.loading {
@@ -208,12 +208,10 @@
         }
         
         .fa-spin-slow {
-            /* Customize spin speed */
-            animation: fa-spin 1.5s infinite linear; /* Slower spin */
+            animation: fa-spin 1.5s infinite linear; 
             font-size: 1.2rem;
         }
         
-        /* Font Awesome's base spin animation (needed for custom speed) */
         @keyframes fa-spin {
             0% {
                 transform: rotate(0deg);
@@ -221,6 +219,49 @@
             100% {
                 transform: rotate(360deg);
             }
+        }
+        
+        /* --- NEW TEMPERATURE SWITCH STYLES --- */
+        #temp-switch-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            transition: opacity 0.5s ease;
+            opacity: 1; 
+            z-index: 100;
+        }
+        
+        #temp-switch-container.hidden {
+            opacity: 0;
+            pointer-events: none; /* Make it unclickable when hidden */
+        }
+
+        .temp-switch {
+            display: flex;
+            background-color: var(--bg-container); 
+            border: 1px solid var(--border-color);
+            border-radius: 10px; 
+            overflow: hidden;
+            user-select: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            font-size: 0.9rem;
+        }
+
+        .unit-option {
+            padding: 8px 12px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            color: var(--text-link); /* Grey for unselected */
+            background-color: transparent;
+        }
+
+        .unit-option:hover:not(.selected) {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .unit-option.selected {
+            background-color: var(--accent-color); /* Selected purple/indigo color */
+            color: #fff; /* White text for selected */
         }
     </style>
 </head>
@@ -265,6 +306,13 @@
             </div>
     </div>
 
+    <div id="temp-switch-container" class="hidden">
+        <div id="temp-switch" class="temp-switch">
+            <div id="unit-c" class="unit-option">°C</div>
+            <div id="unit-f" class="unit-option">°F</div>
+        </div>
+    </div>
+
     <script type="module">
         import { firebaseConfig } from '../firebase-config.js';
 
@@ -273,8 +321,14 @@
         let CURRENT_LON = null;
         const redirectPath = '../index.html';
         const WEATHER_CACHE_KEY = 'weather_data_cache';
+        const TEMP_UNIT_KEY = 'weather_temp_unit'; // New key for unit preference
         // 5 minutes in milliseconds
         const REFRESH_INTERVAL_MS = 5 * 60 * 1000; 
+        
+        // State for unit preference: true for Celsius, false for Fahrenheit (Default to F if not set)
+        let isCelsius = localStorage.getItem(TEMP_UNIT_KEY) === 'C';
+        let lastWeatherCache = null; // Stores the last fetched data (always in F)
+        let hideTimer = null; // Timer for switch auto-hide
 
         // --- ELEMENTS ---
         const clockTimeEl = document.getElementById('clock-time');
@@ -287,6 +341,12 @@
         const wWindArrow = document.getElementById('w-wind-arrow');
         const wLocLink = document.getElementById('w-location-link');
         const weatherLoader = document.getElementById('weather-loader'); 
+        
+        // New Switch Elements
+        const tempSwitchContainer = document.getElementById('temp-switch-container');
+        const unitC = document.getElementById('unit-c');
+        const unitF = document.getElementById('unit-f');
+
 
         // --- LOADER FUNCTIONS ---
         function showLoader() {
@@ -376,7 +436,7 @@
                 // Cache is fresh, use it
                 console.log("Using cached weather data.");
                 updateWeatherUI(cache.weatherData);
-                hideLoader();
+                // hideLoader() is called inside updateWeatherUI
             } else {
                 // Cache is stale or non-existent, fetch new data
                 console.log("Weather cache stale or missing. Fetching new data.");
@@ -447,9 +507,6 @@
             try {
                 // 1. Google Weather (using Firebase API Key) - PRIMARY
                 try {
-                    // NOTE: The new API format comes from a different endpoint (not lookup), 
-                    // but we will keep the existing structure and assume the API key is sufficient
-                    // and the server is hitting the correct API that returns the new format.
                     await fetchGoogleWeather(lat, lon);
                     return;
                 } catch(e) {
@@ -479,11 +536,7 @@
 
         // --- GOOGLE WEATHER FETCH (UPDATED FOR NEW JSON STRUCTURE) ---
         async function fetchGoogleWeather(lat, lon) {
-            // Using a placeholder URL structure based on the original code's pattern, 
-            // assuming the server-side handles the new API endpoint/key appropriately.
             const apiKey = firebaseConfig.apiKey;
-            // The endpoint is updated to reflect the standard weather API pattern, 
-            // but the actual path might need server-side adjustment for a real API.
             const url = `https://weather.googleapis.com/v1/currentConditions?key=${apiKey}&location.latitude=${lat}&location.longitude=${lon}`;
             
             const res = await fetch(url);
@@ -495,18 +548,16 @@
             }
             
             const data = await res.json();
-            // Data structure check for the new format
             if (!data.temperature) throw new Error("Invalid Google Weather Data format");
 
-            // --- DATA EXTRACTION ---
+            // --- DATA EXTRACTION (All converted to F for consistent cache storage) ---
             let tempC = data.temperature?.degrees;
-            let tempF = null;
+            let tempF = 0; // Default to 0, which is then handled by the check below
             if (tempC !== undefined) {
                 // Convert Celsius to Fahrenheit: F = C * 9/5 + 32
                 tempF = Math.round((tempC * 9/5) + 32);
             }
             
-            // Extract Max/Min Temps (also in Celsius, need conversion)
             let highF = "--";
             let lowF = "--";
             if (data.currentConditionsHistory?.maxTemperature?.degrees !== undefined) {
@@ -516,13 +567,11 @@
                 lowF = Math.round((data.currentConditionsHistory.minTemperature.degrees * 9/5) + 32);
             }
 
-            // Weather Condition
             const weatherCode = data.weatherCondition?.type || "CLOUDY"; 
-            const isDay = data.isDaytime === true; // API returns boolean 'isDaytime'
+            const isDay = data.isDaytime === true; 
 
-            // Wind Data
             let windSpeed = "-- mph";
-            let windDir = 0; // Default rotation
+            let windDir = 0; 
             
             if (data.wind?.speed?.value !== undefined && data.wind?.speed?.unit === 'KILOMETERS_PER_HOUR') {
                 // Convert km/h to mph (1 km/h ≈ 0.621371 mph)
@@ -533,9 +582,9 @@
                 windDir = data.wind.direction.degrees;
             }
 
-            // --- CONSTRUCT CACHE OBJECT ---
+            // --- CONSTRUCT CACHE OBJECT (Stores all temperatures in Fahrenheit) ---
             const weatherData = {
-                temp: tempF !== null ? tempF : 0,
+                temp: tempF, 
                 iconCode: weatherCode,
                 isDay: isDay, 
                 high: highF, 
@@ -548,10 +597,10 @@
 
             setWeatherCache(weatherData);
             updateWeatherUI(weatherData);
-            hideLoader(); // Hide loader on success
+            // hideLoader() is called inside updateWeatherUI
         }
 
-        // --- NWS FETCH (Unchanged) ---
+        // --- NWS FETCH (Unchanged - returns F) ---
         async function fetchNWS(lat, lon) {
             const pointsRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`);
             if (!pointsRes.ok) throw new Error("NWS Point Fail");
@@ -585,10 +634,10 @@
 
             setWeatherCache(weatherData);
             updateWeatherUI(weatherData);
-            hideLoader(); // Hide loader on success
+            // hideLoader() is called inside updateWeatherUI
         }
 
-        // --- OPEN METEO FETCH (Unchanged) ---
+        // --- OPEN METEO FETCH (Unchanged - returns F) ---
         async function fetchOpenMeteo(lat, lon) {
             const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
             const res = await fetch(url);
@@ -607,18 +656,55 @@
 
             setWeatherCache(weatherData);
             updateWeatherUI(weatherData);
-            hideLoader(); // Hide loader on success
+            // hideLoader() is called inside updateWeatherUI
         }
 
-        // --- UI UPDATE (Unchanged) ---
-        function updateWeatherUI(data) {
-            wTemp.innerText = `${data.temp}°`;
-            wHigh.innerText = `${data.high}°`;
-            wLow.innerText = `${data.low}°`;
-            wWindSpeed.innerText = data.windSpeed;
+        // --- NEW TEMPERATURE CONVERSION AND DISPLAY LOGIC ---
+        function fahrenheitToCelsius(f) {
+            // Check if f is a valid number; return the placeholder if not.
+            if (typeof f !== 'number' || isNaN(f)) return "--";
+            return Math.round((f - 32) * 5/9);
+        }
 
+        function convertAndDisplayTemperature() {
+            if (!lastWeatherCache) return;
+
+            const data = lastWeatherCache;
+            
+            let displayTemp = data.temp;
+            let displayHigh = data.high;
+            let displayLow = data.low;
+
+            // Conversion if Celsius is selected
+            if (isCelsius) {
+                displayTemp = fahrenheitToCelsius(data.temp);
+                displayHigh = fahrenheitToCelsius(data.high);
+                displayLow = fahrenheitToCelsius(data.low);
+            }
+            
+            // Update the UI
+            wTemp.innerText = `${displayTemp}°`;
+            wHigh.innerText = `${displayHigh}°`;
+            wLow.innerText = `${displayLow}°`;
+            
+            // Update the switch appearance
+            if (isCelsius) {
+                unitC.classList.add('selected');
+                unitF.classList.remove('selected');
+            } else {
+                unitC.classList.remove('selected');
+                unitF.classList.add('selected');
+            }
+        }
+        
+        // --- UI UPDATE (Refactored to call conversion function) ---
+        function updateWeatherUI(data) {
+            // Store the Fahrenheit data for later conversion
+            lastWeatherCache = data; 
+            
+            // Icon and wind speed/arrow logic
             let iconClass = 'fa-cloud';
-            if(data.isGoogle) iconClass = getIconFromGoogle(data.iconCode, data.isDay); // Pass isDay for better Google icon
+            if(data.isGoogle) iconClass = getIconFromGoogle(data.iconCode, data.isDay); 
             else if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
             else iconClass = getIconFromWMO(data.iconCode, data.isDay);
             
@@ -626,9 +712,14 @@
 
             const rotation = getWindRotation(data.windDir);
             wWindArrow.style.transform = `rotate(${rotation}deg)`;
+            wWindSpeed.innerText = data.windSpeed; 
+
+            // Call the new function to display temperature based on preference
+            convertAndDisplayTemperature();
+            hideLoader(); 
         }
 
-        // --- HELPERS (Wind & Icon - Slight Update to Google Icon Function) ---
+        // --- HELPERS (Wind & Icon - Unchanged) ---
         function getWindRotation(dir) {
             if (typeof dir === 'number') return dir; 
             const map = {
@@ -637,17 +728,14 @@
                 'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
                 'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
             };
-            // If it's a cardinal direction, use the map, otherwise assume it's degrees already (or 0)
             return map[dir] || dir || 0; 
         }
 
-        // UPDATED: Now accepts isDay for better day/night icon selection
         function getIconFromGoogle(condition, isDay) {
              const prefix = 'fa-solid';
              if (!condition) return `${prefix} fa-cloud`;
              const c = condition.toLowerCase();
              
-             // Mapping based on 'type' from the API (e.g., 'CLEAR', 'RAIN', 'CLOUDY')
              if (c.includes('clear')) return isDay ? `${prefix} fa-sun` : `${prefix} fa-moon`;
              if (c.includes('cloud')) return `${prefix} fa-cloud`;
              if (c.includes('rain')) return `${prefix} fa-cloud-rain`;
@@ -679,6 +767,34 @@
             return `${prefix} fa-cloud`;
         }
         
+        // --- TEMPERATURE SWITCH HANDLERS ---
+        function handleUnitChange(newUnit) {
+            // Toggle the state
+            isCelsius = newUnit === 'C';
+            
+            // Save the new preference
+            localStorage.setItem(TEMP_UNIT_KEY, newUnit);
+            
+            // Update the UI
+            convertAndDisplayTemperature();
+        }
+
+        unitC.addEventListener('click', () => handleUnitChange('C'));
+        unitF.addEventListener('click', () => handleUnitChange('F'));
+        
+        // --- AUTO-HIDE LOGIC ---
+        function resetHideTimer() {
+            if (hideTimer) {
+                clearTimeout(hideTimer);
+            }
+            tempSwitchContainer.classList.remove('hidden');
+
+            // Set new timer to hide after 2.5 seconds
+            hideTimer = setTimeout(() => {
+                tempSwitchContainer.classList.add('hidden');
+            }, 2500);
+        }
+
         // --- REFRESH LOOP ---
         function setupWeatherRefresh() {
              // Set up a periodic check after the initial load
@@ -689,11 +805,18 @@
                      // If location is somehow lost, re-init to get IP location
                      initWeather();
                  }
-             }, REFRESH_INTERVAL_SECOND/S);
+             }, REFRESH_INTERVAL_MS);
         }
 
         // --- INIT ---
         window.addEventListener('load', () => {
+            // Check initial unit setting and apply immediately
+            convertAndDisplayTemperature();
+            
+            // Set up auto-hide listener and initial timeout
+            document.addEventListener('mousemove', resetHideTimer);
+            resetHideTimer(); 
+
             updateDateTime();
             setInterval(updateDateTime, 500);
             initWeather(); // Initial load (which checks cache)
