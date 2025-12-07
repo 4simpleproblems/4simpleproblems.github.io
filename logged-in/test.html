@@ -23,6 +23,7 @@
             --text-light-grey: #d1d5db;
             --accent-color: #6366f1;
             --text-link: #888;
+            --spinner-color: #a0a0a0; /* New: Grey color for the loader */
         }
 
         body { 
@@ -196,7 +197,7 @@
             position: absolute;
             bottom: 20px; /* Position from bottom edge */
             right: 20px; /* Position from right edge */
-            color: var(--accent-color);
+            color: var(--spinner-color); /* Updated to grey */
             opacity: 0;
             transition: opacity 0.5s ease;
             pointer-events: none; /* Allows clicks to pass through */
@@ -206,10 +207,20 @@
             opacity: 1;
         }
         
-        .fa-spin-fast {
-            /* Customize spin speed if needed */
-            animation: fa-spin 0.7s infinite linear;
-            font-size: 1rem;
+        .fa-spin-slow {
+            /* Customize spin speed */
+            animation: fa-spin 1.5s infinite linear; /* Slower spin */
+            font-size: 1.2rem;
+        }
+        
+        /* Font Awesome's base spin animation (needed for custom speed) */
+        @keyframes fa-spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
@@ -249,7 +260,7 @@
             </div>
             
             <div id="weather-loader">
-                <i class="fa-solid fa-spinner fa-spin-fast"></i>
+                <i class="fa-solid fa-circle-notch fa-spin-slow"></i>
             </div>
             </div>
     </div>
@@ -275,7 +286,7 @@
         const wWindSpeed = document.getElementById('w-wind-speed');
         const wWindArrow = document.getElementById('w-wind-arrow');
         const wLocLink = document.getElementById('w-location-link');
-        const weatherLoader = document.getElementById('weather-loader'); // New Element
+        const weatherLoader = document.getElementById('weather-loader'); 
 
         // --- LOADER FUNCTIONS ---
         function showLoader() {
