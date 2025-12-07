@@ -1,0 +1,734 @@
+Changelog
+=========
+
+## 2025-12-07
+- Update test.html
+- Update dashboard.html
+- Update index.html
+- Update settings.js
+- Update soundboard.html
+- Create third-party-soundboard.html
+
+## 2025-12-06
+- Update soundboard_names.json
+- Revert weather API to ipapi.co and remake AdSense with responsive units and min-size
+- Fix AdSense 'No slot size' error with fixed-size ads and resolve ipapi.co CORS with ip-api.com
+- Remove Google Weather API, switch to NWS/Open-Meteo only, and harden AdSense loader
+- Fix AdSense 'No slot size' error by initializing on load only if visible
+- Implement specific AdSense units in test.html sidebars
+- Update dashboard.html with weather/clock widgets, add AdSense sidebar to test.html
+- Log detailed Google Weather API error for debugging
+- Fix Firebase warning by reusing navigation.js instance
+- Fix navigation.js double-loading error
+- Update weather fallback: Google -> NWS -> OpenMeteo, freeze location text
+- Update test.html
+- Create test.html
+
+## 2025-12-05
+- feat: darken clanker theme grey and red colors
+- fix: resolve duplicate content in legal.html and ensure single clean structure
+- style: refine legal.html buttons for smooth scroll, wider sections, and correct name
+- style: refine legal.html buttons to match index.html and inject navigation-mini.js
+- style: completely redesign legal.html to match index.html aesthetics
+- docs: update legal.html with comprehensive terms and privacy policy covering all features
+- style: update admin toast notification to match site design
+- fix: use default firebase app instance to ensure correct auth state
+- fix: add owner overwrite to firestore rules and robustify creation logic
+- fix: allow superadmin access via robust role check and case-insensitivity
+- fix: hardcode owner perms, add chrome compat, add visual toaster
+- fix: enhance admin_keybinds.js robustness with real-time role checks
+- fix(rules): update firestore rules for admin config/soundboard access
+- feat: add admin keybind (Ctrl+Alt+E) to toggle explicit sounds globally
+
+## 2025-12-04
+- Update injex.html
+- Create injex.html
+- Update soundboard_names.json
+- Add files via upload
+- Update Firestore rules to support Dailyphoto interactions, Mibi Avatars, and Friend Requests
+
+## 2025-12-03
+- Create firestore.rules to allow user account deletion including legacy collections
+- Fix authentication race condition and enable explicit redirection for social logins
+- Fix Intermediate Thesaurus endpoint to ithesaurus
+- Update Dictionary API endpoints to Intermediate (sd3/ithes) to match keys
+- Fix dictionary JSON parse error by handling invalid API responses gracefully
+- Add missing soundboard configuration and sound files
+- Fix authentication error, update soundboard to local, and dictionary to direct API
+
+## 2025-12-02
+- Create ph
+- Upgrade functions to Gen 2 syntax and update dependencies
+- Create functions directory with index.js and package.json for getWordData Cloud Function
+- Fix console errors in dictionary.html: navigation script conflict, auth restriction, and CORS
+- Fix auth blocking spinner and add mobile aspect ratio warning
+
+## 2025-12-01
+- Update dashboard.html
+- Update index.html
+- Update navigation-mini.js
+- Fix: Authentication redirection, ban enforcer loading, and navigation-mini theme sync
+- Handle bans collection permission error gracefully in fetchUsersAndAdmins
+- Fix admin role check and remove redundant script tags
+- Fix race condition in admin status check
+- Update settings.html
+- Refactor: Integrate Sound Management into Settings page
+- Delete logged-in/beta-settings.html
+- Delete logged-in/test.html
+- Delete logged-in/test.js
+- Delete logged-in/heartive.html
+- Delete favicons/example
+- Delete images/example
+- Update verify.html
+- Delete trailer.html
+- Update authentication.html
+- Delete storage.rules
+- Delete navigation-test.js
+- Delete firestore.rules
+- Delete color-picker.js
+- Delete auth-handler.html
+- Fix navigation-mini.js styling to use CSS variables for theming support
+- Fix syntax error in navigation-mini.js
+- Add theme applying and logo tinting to navigation-mini.js
+- Update dailyphoto to use root-level friend_codes Firestore collection
+- Lighten grey colors in Clanker theme
+- Replace Teal Dream theme with Clanker and update theme sorting
+- Update theme sorting in settings to use rainbow color order and type
+- Update settings.js
+- Improve Mibi Avatar Creator: Sort colors by rainbow spectrum and enable multi-row layout
+- Update test.html
+
+## 2025-11-30
+- Fix: Account creation 400 error - Minimal client-side validation
+- Fix: Account creation 400 error - Added lowercase requirement
+- Fix: Account creation 400 error in authentication.html
+- Update: Firestore Rules for comprehensive access control
+- Update: Firestore Rules for Account Creation and Username Check
+- Update: Relax password requirements
+- Update index.html
+- Fix: Uncaught SyntaxError in settings.js
+- feat: Implement admin and superadmin management in settings
+- Update dictionary.html
+- Add files via upload
+- feat: Add trailer.html for 4SP
+- feat: Enhance feature sections with image carousels and styled navigation
+- feat: Update QOL & Discreet Features section in index.html
+- feat: Update index.html with QOL & Personalization features and image carousels
+- Update authentication.html
+- Update provider icon sizing on authentication and settings pages for improved aspect ratio handling
+- Remove auth button highlights and unify pin menu style
+- Update account deletion logic to wipe local storage, IndexedDB, and Firestore data
+- Use provider username for new accounts via social auth
+- Fix race condition in ban-enforcer.js where firestore was undefined
+- Sync navbar theme selection to Firestore
+- Switch Admin Settings from Cloud Functions to Client-Side Firestore
+
+## 2025-11-29
+- Update ban UI style and inject injector.js into heartive.html
+- Update ban-enforcer.js: Implement invisible barrier and improve real-time UI updates
+- Update admin UI: Filter admins, square buttons, add Make Admin feature
+- Update ban enforcement UI/logic and add Admin settings tab
+- Update ban-enforcer.js
+- refactor: Rename Firestore and Storage rules files to .rules extension
+- fix: Further refine Firestore rules username regex to prevent syntax errors
+- fix: Correct Firestore rules syntax for username regex and daily_photos update
+- feat: Update Storage rules to allow read access to Soundboard assets
+- feat: Add Firestore and Storage security rules
+- feat: Apply updated footer to all root HTML files (excluding test.html)
+- feat: Add Terms of Service and Privacy Policy links to footer
+- Update navigation.js
+- Implement logo tinting feature and correct Pink theme logo
+- Implement theme sorting and Mibi Avatar initialization in settings page
+- Add 4 new themes to themes.json and sort them
+- Update settings.html
+- Update settings.js
+- Update test.js
+- Update test.html
+- Create test.js
+- feat: Add missing getAboutContent, getDataManagementContent, and loadGeneralTab functions
+- Fix: ReferenceError in settings.js by reordering initialization
+- Fix: ReferenceError in settings.js
+- Fix: Regex syntax in getCurrentSiteKey and normalizeDomainKey
+- Align settings.html with provided settings.js
+- Revert: settings.js to a previous commit
+- Remove: Hash-based navigation and loading animation from settings page
+- Refactor: Enhanced loading and hash navigation in settings
+- Fix: Loading spinner consistency and timing
+- Enhance: Loading animation and consistency
+- Fix: General tab loading with spinner
+- Enhance: Settings page and Navigation bar theming improvements
+- Delete .gitignore
+- Update index.html
+- Fix personalization tab Mibi avatar loading
+- fix: Add null check to switchTab in settings.js
+- feat: Implement hash-based tab navigation in settings.html and update themes.json
+- fix: Navigation-mini.js pin button logic and display enhancements
+- fix: Pin display and login redirection fixes
+- fix: Resolve duplicate setupEventListeners declaration in navigation-mini.js
+- feat: Implement navigation bar enhancements
+- Add files via upload
+- Delete images/discord.png
+- Delete images/logo.png
+- Delete images/logo-dark.png
+- Delete images/logo-christmas.png
+- Force fixed square dimensions for MAC live preview in orientation mode to fix pill bug
+- Enable dynamic MAC slider width and add revert-on-cancel logic for orientation mode
+- Ensure MAC live preview rules are identical in normal and orientation modes
+- Enforce square aspect ratio for MAC live preview in orientation mode
+- Fix MAC preview shape bug and add asset preloading
+- Fix Mibi Avatar Creator UI issues: circular preview, orientation mode layout, hide preview text, and remove black color option
+- Enhance MAC UI: dropdown auto-select, orientation sliders reposition, and cancel button logic
+- Add new hat options to Mibi Avatar Creator
+- Add Reset Button to MAC, adjust orientation preview, and refine color palette layout
+- Fix MAC orientation sizing, drag constraints, Cropper Modal styling, and Pin Button alignment
+- Update Mibi Avatar Creator UI: Collapse menu in orientation mode, light backgrounds for options, rounded styles, and compact color palette
+
+## 2025-11-28
+- Refine Mibi Avatar Creator UI/UX and Navigation buttons: scale preview in orientation mode, improve color picker layout, enhance menu slide animation, and enlarge navigation buttons
+- Update Mibi Avatar Creator UI: custom styled range sliders with snapping ticks and fixed preview dimensions
+- Fix Mibi Avatar Creator alignment and scaling issues by using percentage-based offsets for translation in both the editor and navigation bars
+- Enhance Mibi Avatar Creator: fix circular preview shape, separate background from transform layers, square X button, and consistent dark theme/styling
+- Enhance Mibi Avatar Creator: Orientation mode with drag/scale/rotate, darker theme, new UI animations, and mandatory eyes/mouth selection
+- Revamp Mibi Avatar Creator: simplified UI, fixed duplicate buttons, added Firestore persistence, and implemented avatar rendering in navigation bars
+- Update navigation.js
+- feat: Enhance Mibi Avatar Creation Menu UI
+- feat: Refactor Mibi Avatar UI and fix TypeError
+- fix: Resolve ReferenceError in updatePfpUi
+- feat: Implement Mibi Avatar Creation Menu
+- feat: Allow setting primary provider in account management
+- Create settings.js
+- Delete logged-in/settings.js
+- Update settings.js
+- Create settings.html
+- Delete logged-in/settings.html
+- Update settings.html
+- Delete logged-in/mibi-avatar-creation.js
+- Update test.html
+- Create mibi-avatar-creation.js
+- feat: replace letter avatar with Mibi avatar, add sparkle effect and intro menu
+- Add files via upload
+- Create ph
+
+## 2025-11-27
+- feat: Implement Letter Avatar functionality
+- Update settings.js
+- Update settings.js for X (Twitter) provider and logo size
+- Create settings.js
+- Update settings.html
+- Update authentication.html
+- Add files via upload
+- Create site-mapping.js
+- Update documentation.html
+- Delete doc-images/authentication.png
+- Update index.html
+- Delete site-mapping.js
+- Delete sw.js
+- Delete notifications.js
+- Delete firebase-messaging-sw.js
+- Delete LOGO_THEMING_README.md
+- Delete functions directory
+- feat: Implement comprehensive user banning system
+- Update dashboard.html
+- feat: Improve letter avatar display and consistency in navigation-mini.js
+- Update humanity-agent.js
+- Refactor: Harmonize navigation spacing and dropdown position
+- Refactor: Reduce font weight of username and email displays
+- Refactor: Standardize dropdown menu styling and spacing
+- Enhance panic key logic: Prevent activation in typing containers
+- Refactor: Adjust spacing and widen user info in navigation menus
+- Remove large profile picture from dropdown menus
+- Update navigation.js
+- Update test.html
+- Update navigation-test.js
+- Feat: Finalize letter avatar dynamic styling and globalize color utils
+- Feat: Enhance letter avatar with dynamic text color, font size, and new gradients
+- Feat: Implement correct Google PFP retrieval for linked accounts
+- Refactor: Implement custom dropdowns and conditional Google PFP option
+- Refactor: Improve auth error messages and implement proper Firebase action handler in verify.html
+- Feat: Add auto-scrolling marquee for long usernames/emails in dropdown
+- Refactor: Improve cropping UX (auto-center on zoom, dashed lines) and resize menu avatar
+- Feat: Add larger profile picture to auth dropdown menu header
+- Feat: Enhance PFP customization with constraints, gradients, and instant fade updates
+- Feat: Add profile picture customization (Custom Upload, Letter w/ Color, Google) with cropping tool
+- Refactor: Capitalize HTML titles and update Font Awesome to v6.5.2
+
+## 2025-11-26
+- Update settings.html
+- Update authentication.html
+- Revert: functions/index.js to original state
+- Fix: Pass Discord email and username as URL parameters from Cloud Function
+- Fix: Resolve serverTimestamp ReferenceError and null email for Discord new users
+- Fix: Populate email field for Discord new user creation
+- Fix: Improve Discord account creation in auth-handler.html
+- Update auth-handler.html
+- Update navigation-mini.js
+- Delete logged-in/music.html
+- feat: improve documentation.html layout and content
+- feat: update documentation with new design and images
+- fix: update discord icon path and style
+- feat: add discord provider
+- Create test.html
+- Rename test.html to securly-tester.html
+- Add files via upload
+- Update test.html
+- Create auth-handler.html
+- feat: darken background color
+
+## 2025-11-25
+- Update test.html
+- Update dictionary.html
+- Update dashboard.html
+- Update navigation.js
+- Update navigation-test.js
+- Update beta-settings.html
+- Create beta-settings.html
+- Update settings.html
+- fix: Resolve JavaScript 'already declared' errors
+- fix: Add missing appId definition to settings.html
+- feat: Integrate beta-settings.html into settings.html
+- Update soundboard.html
+- fix: Preserve sound button order after hard clear
+- fix: Soundboard hard clear and button re-render
+- fix: Correctly update sound button active states
+- feat: Improve soundboard UI/UX and remove logout button
+- fix: Force email display to left in navbar dropdown
+- feat: Update donate button and force left-align username in navbar
+- docs: Add DMCA Takedown Notice section to legal.html
+- feat: implement 'Show More' dropdown and update release text
+
+## 2025-11-24
+- Update sound-creation.html
+- Create sound-creation.html
+- Update soundboard.html
+- Create soundboard.html
+
+## 2025-11-20
+- Update heartive.html
+- Update humanity-agent.js
+
+## 2025-11-19
+- Create heartive.html
+- Update music.html
+- Update test.html
+- Create music.html
+- Update messenger-tutorial.html
+
+## 2025-11-18
+- Update test.html
+- Update and rename clock.html to test.html
+- Update navigation.js
+- Rename dailyphoto (1).html to dailyphoto.html
+- Add files via upload
+- Update messenger-v2.html
+- Update countdowns.html
+- Update notes.html
+- Update weather.html
+- Create weather.html
+- Create countdowns.html
+- Update humanity-agent.js
+
+## 2025-11-17
+- Delete logged-in/test.html
+- Delete logged-in/dailyphoto.html
+- Delete logged-in/base-template.html
+- Update index.html
+- feat: Add AdSense code to specified logged-in HTML files
+- fix: handle non-array data in drawCustomGraph
+- feat: update humanity-agent styling and graphing
+- feat: force Christmas logo for Christmas theme
+- Update navigation.js
+- Update navigation-mini.js
+- Update authentication.html
+- Update themes.json
+
+## 2025-11-16
+- Update navigation.js
+- Update navigation-mini.js
+- Update test.html
+- Add files via upload
+- Delete images/christmas-logo.png
+- Update index.html
+- Update Gradient to Christmas themed
+- Update url-changer.js
+- Update settings.html
+
+## 2025-11-15
+- Update test.html
+- Add files via upload
+- Update settings.html
+- Update url-changer.js
+- Update dashboard.html
+- Update themes.json
+- Update injector.js
+- Delete url-tab-title-changer.js
+- Delete panic-key.js
+- Update firebase-messaging-sw.js
+- fix: ensure service worker is active before getting fcm token
+- fix: resolve console errors related to script loading
+- feat: implement browser notifications for social events
+- Update dailyphoto.html
+- Create firebase-messaging-sw.js
+- Update index.js
+- Create package.json
+- Create index.js
+- Create sw.js
+- Update authentication.html
+- Update messenger-tutorial.html
+- Create test.html
+- Update index.html
+
+## 2025-11-14
+- Create clock.html
+- Update test.html
+- Update messenger-v2.html
+- Update page-identification.json
+- Update messenger-tutorial.html
+- Create messenger-tutorial.html
+- Update injector.js
+
+## 2025-11-13
+- Update messenger-v2.html
+- style: Adjust ID font size, button roundness, and input focus style
+- style: Unify button styles and resize chat controls
+- style: Revert message bubble roundness to 2xl
+- refactor: Adjust message bubble roundness
+- refactor: Update message bubble and button styling
+- refactor: Update message bubble styling
+- refactor: Update button styling and remove tooltips
+- feat: Adjust message history limit and input styling
+- feat: Implement image attachments and viewer
+- feat: Implement chat deletion and real-time kick
+- Update test.html
+
+## 2025-11-12
+- Update print statement from 'Hello' to 'Goodbye'
+- Enhance textarea and message sending behavior
+- Update messenger-v2.html
+- Update dailyphoto.html
+- Update dashboard.html
+- Update notes.html
+
+## 2025-11-11
+- Update test.html
+- Update url-tab-title-changer.js
+- Update fmt.Println message from 'Hello' to 'Goodbye'
+- Update navigation.js
+
+## 2025-11-10
+- Update dictionary.html
+- Refactor dictionary page styles and title
+
+## 2025-11-09
+- Update settings.html
+- feat: Implement Tab Disguiser and Panic Key settings
+- Create panic-key.js
+- Update injector.js
+- Update messenger-v2.html
+- Update index.html
+
+## 2025-11-08
+- feat: Add Google Analytics and clean up pages
+- Update notes.html
+- Create notes.html
+- Delete logged-in/notes.html
+- Create color-picker.js
+
+## 2025-11-07
+- Update notes.html
+
+## 2025-11-05
+- Update page-identification.json
+
+## 2025-11-04
+- Update 404.html
+
+## 2025-11-03
+- Create 404.html
+
+## 2025-10-31
+- Remove empty container and improve file card layout
+- Update Gemini response styling and file creation card layout
+- Fix input padding and file type badge positioning
+- Fix UI issues: equal padding, chart rendering, and file type badge positioning
+- Enhance file cards and fix graphing functionality
+- Fix JSON blocks, enhance file creation, and redesign memories modal
+- Revert loading animation and reduce message padding
+- Fix z-index issue for settings and memories modals
+
+## 2025-10-30
+- Fix Humanity Agent API and UI issues, enhance settings with privacy controls and user profiles
+- Fix logo theming system and enhance Humanity Agent UI/UX
+- Merge branch 'main' of https://github.com/v5-4simpleproblems/v5-4simpleproblems.github.io
+- Add logo theme changing functionality
+- Update navigation-test.js
+- Update test.html
+- Create navigation-test.js
+- Update navigation.js
+- Update humanity-agent.js
+
+## 2025-10-29
+- Update navigation.js
+- Create navigation.js
+- Delete navigation.js
+
+## 2025-10-28
+- Update settings.html
+- Update navigation.js
+- Update navigation.js\
+- Create navigation.js
+- Delete navigation.js
+- Update themes.json
+- Update humanity-agent.js
+- Create themes.json
+- Update index.html
+- Update dailyphoto.html
+
+## 2025-10-27
+- Update authentication.html
+- Update index.html
+- Update settings.html
+- Delete test-navigation.js
+- Update navigation.js
+- Update page-identification.json
+- Create navigation.js
+- Delete navigation.js
+- Update beta-settings.html
+
+## 2025-10-26
+- Update settings.html
+- Update navigation.js
+- Update test.html
+- Update test-navigation.js
+- Update documentation.html
+- Update navigation-mini.js
+- Update legal.html
+- Create legal.html
+- Add files via upload
+- Delete doc-images/dailyphoto.png
+- Create ph
+- Delete docs-images directory
+- Update humanity-agent.js
+- Create placeholder
+- Create documentation.html
+- Update page-identification.json
+
+## 2025-10-25
+- Update humanity-agent.js
+- Update dashboard.html
+- Update and rename agent-activation.js to humanity-agent.js
+- Update test.html
+- Update test-navigation.js
+
+## 2025-10-24
+- Update test-navigation.js
+- Rename logged-in/test-navigation.js to test-navigation.js
+- Update test.html
+- Update and rename test-dashboard.html to test.html
+- Create test-navigation.js
+- Update settings.html
+- Delete logged-in/idontknow.html
+- Update agent-activation.js
+- Update navigation.js
+- Update beta-settings.html
+- Update authentication.html
+- Create beta-settings.html
+
+## 2025-10-22
+- Update agent-activation.js
+- Update authentication.html
+- Update navigation.js
+- Update notes.html
+- Update dailyphoto.html
+- Update settings.html\
+- ]
+
+## 2025-10-21
+- Update index.html
+- Create music.html
+- Update messenger-v2.html
+- Update and rename test.html to messenger-v2.html
+- Update test.html
+- Update dictionary.html
+
+## 2025-10-20
+- Update agent-activation.js
+
+## 2025-10-19
+- Update agent-activation.js
+- Update navigation-mini.js
+- Update navigation.js
+
+## 2025-10-18
+- Update page-identification.json
+- Create idontknow.html
+- Update test.html
+
+## 2025-10-17
+- Update test.html
+- Update settings.html
+
+## 2025-10-16
+- Update test.html
+- Update agent-activation.js
+- Update dashboard.html
+- Update index.html
+
+## 2025-10-15
+- Update navigation.js
+- Incorporate 4SP history into AI agent instructions
+- Update agent-activation.js
+- Update fmt.Println message from 'Hello' to 'Goodbye'
+- Update print statement from 'Hello' to 'Goodbye'
+- Update test-dashboard.html
+
+## 2025-10-14
+- Update agent-activation.js
+
+## 2025-10-13
+- Update agent-activation.js
+- Update test-dashboard.html
+- Rename navigation-test.js to agent-activation.js
+- Update navigation-test.js
+- Update smart-scheduler.html
+- Create smart-scheduler.html
+
+## 2025-10-12
+- Update test-dashboard.html
+- Update navigation-test.js
+- Create test-dashboard.html
+- Create navigation-test.js
+- Update navigation.js
+- Update authentication.html
+- Update injector.js
+- Update dictionary.html
+- Update navigation-mini.js
+- Create authentication.html
+- Delete artificial-integration.js
+
+## 2025-10-11
+- Update settings.html
+- Create settings.html
+- Update navigation.js
+- Update dashboard.html
+- Create injector.js
+- Create artificial-integration.js
+- Update test.html
+- Create test.html
+- Update notes.html
+- Update index.html
+- Update dictionary.html
+- Create dictionary.html
+
+## 2025-10-10
+- Update verify.html
+- Update signup.html
+- Update login.html
+- Update index.html
+- Update navigation.js
+- Update page-identification.json
+- Update navigation-mini.js
+- Update dashboard.html
+- Delete logged-in/test.html
+- Update base-template.html
+- Update dailyphoto.html
+- Delete logged-in/music.html
+- Delete logged-in/weather.html
+- Delete logged-in/messenger.html
+- Update notes.html
+- Update messenger.html
+- Create messenger.html
+- Update test.html
+
+## 2025-10-09
+- Update test.html
+- Update navigation.js
+- Update dailyphoto.html
+- Update and rename testshort.html to test.html
+- Update page-identification.json
+- Create dailyphoto.html
+- Delete logged-in/test.html
+
+## 2025-10-08
+- Update test.html
+- Update testshort.html
+- Create weather.html
+- Update notes.html
+- Create notes.html
+- Update base-template.html
+- Create base-template.html
+
+## 2025-10-07
+- Update testshort.html
+- Create testshort.html
+- Update test.html
+- Create test.html
+- Delete logged-in/test.html
+- Update page-identification.json
+
+## 2025-10-06
+- Update music.html
+
+## 2025-10-05
+- Create music.html
+- Update dashboard.html
+
+## 2025-10-04
+- Update navigation.js
+- Update page-identification.json
+- Update login.html
+- Update signup.html
+- Update index.html
+- Update navigation-mini.js
+- Create navigation-mini.js
+- Delete navigation-mini.js
+- Update dashboard.html
+- Update firebase-config.js
+- Delete main.css
+- Delete Pages.json
+- Delete injector.js
+- Delete auth-logic.js
+- Create signup.html
+- Create verify.html
+- Create auth-logic.js
+- Create dashboard.html
+- Create page-identification.json
+- Delete fontface.css
+- Delete dashboard.html
+- Rename favicon.png to favicon.ico
+- Add files via upload
+- Create login.html
+
+## 2025-10-03
+- Create index.html
+- Delete dashboard.js
+- Update navigation.js
+- Delete fonts directory
+- Add files via upload
+- Create example
+- Create url-tab-title-changer.js
+- Update injector.js
+- Update and rename index.html to dashboard.html
+- Update and rename navbar-loading.js to navigation.js
+- Update navbar-loading.js
+
+## 2025-09-30
+- Update navbar-loading.js
+- Update Pages.json
+- Update index.html
+- Create dashboard.js
+- Create Pages.json
+
+## 2025-09-05
+- Update navbar-loading.js
+- Update main.css
+- Update index.html
+- Create example
+- Update injector.js
+- Create firebase-config.js
+- Create injector.js
+- Add files via upload
+- Create navbar-loading.js
+- Create index.html
+- Create main.css
+- Create fontface.css
+
