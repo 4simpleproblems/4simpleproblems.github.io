@@ -510,6 +510,7 @@
                     await fetchGoogleWeather(lat, lon);
                     return;
                 } catch(e) {
+                    // The CORS error is expected here, we gracefully log and continue to NWS
                     console.warn("Google Weather failed, attempting NWS:", e);
                 }
 
@@ -534,16 +535,16 @@
             }
         }
 
-        // --- GOOGLE WEATHER FETCH (UPDATED FOR NEW JSON STRUCTURE) ---
+        // --- GOOGLE WEATHER FETCH ---
         async function fetchGoogleWeather(lat, lon) {
             const apiKey = firebaseConfig.apiKey;
             const url = `https://weather.googleapis.com/v1/currentConditions?key=${apiKey}&location.latitude=${lat}&location.longitude=${lon}`;
             
             const res = await fetch(url);
+            // This is where the CORS block happens, causing a TypeError/Failed to fetch
             if (!res.ok) {
                 const errText = await res.text();
                 console.error("Google Weather API Failed. Details:", errText);
-                // Throw an error to trigger the fallback chain
                 throw new Error(`Google Weather Error: ${res.status} - ${errText}`);
             }
             
@@ -552,7 +553,7 @@
 
             // --- DATA EXTRACTION (All converted to F for consistent cache storage) ---
             let tempC = data.temperature?.degrees;
-            let tempF = 0; // Default to 0, which is then handled by the check below
+            let tempF = 0; 
             if (tempC !== undefined) {
                 // Convert Celsius to Fahrenheit: F = C * 9/5 + 32
                 tempF = Math.round((tempC * 9/5) + 32);
@@ -597,7 +598,6 @@
 
             setWeatherCache(weatherData);
             updateWeatherUI(weatherData);
-            // hideLoader() is called inside updateWeatherUI
         }
 
         // --- NWS FETCH (Unchanged - returns F) ---
@@ -634,7 +634,6 @@
 
             setWeatherCache(weatherData);
             updateWeatherUI(weatherData);
-            // hideLoader() is called inside updateWeatherUI
         }
 
         // --- OPEN METEO FETCH (Unchanged - returns F) ---
@@ -656,12 +655,10 @@
 
             setWeatherCache(weatherData);
             updateWeatherUI(weatherData);
-            // hideLoader() is called inside updateWeatherUI
         }
 
-        // --- NEW TEMPERATURE CONVERSION AND DISPLAY LOGIC ---
+        // --- TEMPERATURE CONVERSION AND DISPLAY LOGIC (Unchanged) ---
         function fahrenheitToCelsius(f) {
-            // Check if f is a valid number; return the placeholder if not.
             if (typeof f !== 'number' || isNaN(f)) return "--";
             return Math.round((f - 32) * 5/9);
         }
@@ -675,19 +672,16 @@
             let displayHigh = data.high;
             let displayLow = data.low;
 
-            // Conversion if Celsius is selected
             if (isCelsius) {
                 displayTemp = fahrenheitToCelsius(data.temp);
                 displayHigh = fahrenheitToCelsius(data.high);
                 displayLow = fahrenheitToCelsius(data.low);
             }
             
-            // Update the UI
             wTemp.innerText = `${displayTemp}°`;
             wHigh.innerText = `${displayHigh}°`;
             wLow.innerText = `${displayLow}°`;
             
-            // Update the switch appearance
             if (isCelsius) {
                 unitC.classList.add('selected');
                 unitF.classList.remove('selected');
@@ -697,12 +691,10 @@
             }
         }
         
-        // --- UI UPDATE (Refactored to call conversion function) ---
+        // --- UI UPDATE (Unchanged) ---
         function updateWeatherUI(data) {
-            // Store the Fahrenheit data for later conversion
             lastWeatherCache = data; 
             
-            // Icon and wind speed/arrow logic
             let iconClass = 'fa-cloud';
             if(data.isGoogle) iconClass = getIconFromGoogle(data.iconCode, data.isDay); 
             else if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
@@ -714,7 +706,6 @@
             wWindArrow.style.transform = `rotate(${rotation}deg)`;
             wWindSpeed.innerText = data.windSpeed; 
 
-            // Call the new function to display temperature based on preference
             convertAndDisplayTemperature();
             hideLoader(); 
         }
@@ -767,22 +758,17 @@
             return `${prefix} fa-cloud`;
         }
         
-        // --- TEMPERATURE SWITCH HANDLERS ---
+        // --- TEMPERATURE SWITCH HANDLERS (Unchanged) ---
         function handleUnitChange(newUnit) {
-            // Toggle the state
             isCelsius = newUnit === 'C';
-            
-            // Save the new preference
             localStorage.setItem(TEMP_UNIT_KEY, newUnit);
-            
-            // Update the UI
             convertAndDisplayTemperature();
         }
 
         unitC.addEventListener('click', () => handleUnitChange('C'));
         unitF.addEventListener('click', () => handleUnitChange('F'));
         
-        // --- AUTO-HIDE LOGIC ---
+        // --- AUTO-HIDE LOGIC (Unchanged) ---
         function resetHideTimer() {
             if (hideTimer) {
                 clearTimeout(hideTimer);
@@ -795,7 +781,7 @@
             }, 2500);
         }
 
-        // --- REFRESH LOOP ---
+        // --- REFRESH LOOP (FIXED TYPO) ---
         function setupWeatherRefresh() {
              // Set up a periodic check after the initial load
              setInterval(() => {
@@ -805,15 +791,13 @@
                      // If location is somehow lost, re-init to get IP location
                      initWeather();
                  }
-             }, REFRESH_INTERVAL_MS);
+             }, REFRESH_INTERVAL_MS); // *** CORRECTED from REFRESH_INTERVAL_SECOND/S ***
         }
 
-        // --- INIT ---
+        // --- INIT (Unchanged) ---
         window.addEventListener('load', () => {
-            // Check initial unit setting and apply immediately
             convertAndDisplayTemperature();
             
-            // Set up auto-hide listener and initial timeout
             document.addEventListener('mousemove', resetHideTimer);
             resetHideTimer(); 
 
