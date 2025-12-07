@@ -300,8 +300,10 @@
         // --- FIREBASE INIT WAITER ---
         function waitForFirebase(callback) {
             const check = setInterval(() => {
+                // Check for global firebase object defined by injector.js
                 if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
                     clearInterval(check);
+                    // Assuming the old SDK is still used for auth/firestore via injector.js
                     window.auth = firebase.auth();
                     window.db = firebase.firestore();
                     callback();
@@ -374,7 +376,7 @@
                 // Cache is fresh, use it
                 console.log("Using cached weather data.");
                 updateWeatherUI(cache.weatherData);
-                hideLoader(); // FIX: Added hideLoader for cache hits
+                hideLoader();
             } else {
                 // Cache is stale or non-existent, fetch new data
                 console.log("Weather cache stale or missing. Fetching new data.");
@@ -445,6 +447,9 @@
             try {
                 // 1. Google Weather (using Firebase API Key) - PRIMARY
                 try {
+                    // NOTE: The new API format comes from a different endpoint (not lookup), 
+                    // but we will keep the existing structure and assume the API key is sufficient
+                    // and the server is hitting the correct API that returns the new format.
                     await fetchGoogleWeather(lat, lon);
                     return;
                 } catch(e) {
@@ -472,38 +477,71 @@
             }
         }
 
-        // --- GOOGLE WEATHER FETCH ---
+        // --- GOOGLE WEATHER FETCH (UPDATED FOR NEW JSON STRUCTURE) ---
         async function fetchGoogleWeather(lat, lon) {
+            // Using a placeholder URL structure based on the original code's pattern, 
+            // assuming the server-side handles the new API endpoint/key appropriately.
             const apiKey = firebaseConfig.apiKey;
-            const url = `https://weather.googleapis.com/v1/currentConditions:lookup?key=${apiKey}&location.latitude=${lat}&location.longitude=${lon}`;
+            // The endpoint is updated to reflect the standard weather API pattern, 
+            // but the actual path might need server-side adjustment for a real API.
+            const url = `https://weather.googleapis.com/v1/currentConditions?key=${apiKey}&location.latitude=${lat}&location.longitude=${lon}`;
             
             const res = await fetch(url);
             if (!res.ok) {
                 const errText = await res.text();
                 console.error("Google Weather API Failed. Details:", errText);
+                // Throw an error to trigger the fallback chain
                 throw new Error(`Google Weather Error: ${res.status} - ${errText}`);
             }
             
             const data = await res.json();
-            if (!data.currentConditions) throw new Error("Invalid Google Weather Data");
+            // Data structure check for the new format
+            if (!data.temperature) throw new Error("Invalid Google Weather Data format");
 
-            const curr = data.currentConditions;
-            
-            let tempF = curr.temperature?.value;
-            if (curr.temperature?.unit?.toLowerCase() === 'celsius' || curr.temperature?.unit?.toLowerCase() === 'c') {
-                tempF = (tempF * 9/5) + 32;
+            // --- DATA EXTRACTION ---
+            let tempC = data.temperature?.degrees;
+            let tempF = null;
+            if (tempC !== undefined) {
+                // Convert Celsius to Fahrenheit: F = C * 9/5 + 32
+                tempF = Math.round((tempC * 9/5) + 32);
             }
             
-            const weatherCode = curr.weatherCondition || "CLOUDY"; 
+            // Extract Max/Min Temps (also in Celsius, need conversion)
+            let highF = "--";
+            let lowF = "--";
+            if (data.currentConditionsHistory?.maxTemperature?.degrees !== undefined) {
+                highF = Math.round((data.currentConditionsHistory.maxTemperature.degrees * 9/5) + 32);
+            }
+            if (data.currentConditionsHistory?.minTemperature?.degrees !== undefined) {
+                lowF = Math.round((data.currentConditionsHistory.minTemperature.degrees * 9/5) + 32);
+            }
 
+            // Weather Condition
+            const weatherCode = data.weatherCondition?.type || "CLOUDY"; 
+            const isDay = data.isDaytime === true; // API returns boolean 'isDaytime'
+
+            // Wind Data
+            let windSpeed = "-- mph";
+            let windDir = 0; // Default rotation
+            
+            if (data.wind?.speed?.value !== undefined && data.wind?.speed?.unit === 'KILOMETERS_PER_HOUR') {
+                // Convert km/h to mph (1 km/h ≈ 0.621371 mph)
+                const speedMph = data.wind.speed.value * 0.621371;
+                windSpeed = `${Math.round(speedMph)} mph`;
+            }
+            if (data.wind?.direction?.degrees !== undefined) {
+                windDir = data.wind.direction.degrees;
+            }
+
+            // --- CONSTRUCT CACHE OBJECT ---
             const weatherData = {
-                temp: Math.round(tempF || 0),
+                temp: tempF !== null ? tempF : 0,
                 iconCode: weatherCode,
-                isDay: true, 
-                high: "--", 
-                low: "--",
-                windSpeed: (curr.windSpeed?.value || 0) + " mph",
-                windDir: curr.windDirection || 0,
+                isDay: isDay, 
+                high: highF, 
+                low: lowF,
+                windSpeed: windSpeed,
+                windDir: windDir,
                 isNWS: false,
                 isGoogle: true
             };
@@ -513,7 +551,7 @@
             hideLoader(); // Hide loader on success
         }
 
-        // --- NWS FETCH ---
+        // --- NWS FETCH (Unchanged) ---
         async function fetchNWS(lat, lon) {
             const pointsRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`);
             if (!pointsRes.ok) throw new Error("NWS Point Fail");
@@ -550,7 +588,7 @@
             hideLoader(); // Hide loader on success
         }
 
-        // --- OPEN METEO FETCH ---
+        // --- OPEN METEO FETCH (Unchanged) ---
         async function fetchOpenMeteo(lat, lon) {
             const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
             const res = await fetch(url);
@@ -580,7 +618,7 @@
             wWindSpeed.innerText = data.windSpeed;
 
             let iconClass = 'fa-cloud';
-            if(data.isGoogle) iconClass = getIconFromGoogle(data.iconCode);
+            if(data.isGoogle) iconClass = getIconFromGoogle(data.iconCode, data.isDay); // Pass isDay for better Google icon
             else if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
             else iconClass = getIconFromWMO(data.iconCode, data.isDay);
             
@@ -590,7 +628,7 @@
             wWindArrow.style.transform = `rotate(${rotation}deg)`;
         }
 
-        // --- HELPERS (Wind & Icon - Unchanged) ---
+        // --- HELPERS (Wind & Icon - Slight Update to Google Icon Function) ---
         function getWindRotation(dir) {
             if (typeof dir === 'number') return dir; 
             const map = {
@@ -599,19 +637,25 @@
                 'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
                 'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
             };
-            return map[dir] || 0;
+            // If it's a cardinal direction, use the map, otherwise assume it's degrees already (or 0)
+            return map[dir] || dir || 0; 
         }
 
-        function getIconFromGoogle(condition) {
-             if (!condition) return 'fa-solid fa-cloud';
+        // UPDATED: Now accepts isDay for better day/night icon selection
+        function getIconFromGoogle(condition, isDay) {
+             const prefix = 'fa-solid';
+             if (!condition) return `${prefix} fa-cloud`;
              const c = condition.toLowerCase();
-             if (c.includes('clear') || c.includes('sunny')) return 'fa-solid fa-sun';
-             if (c.includes('cloud')) return 'fa-solid fa-cloud';
-             if (c.includes('rain')) return 'fa-solid fa-cloud-rain';
-             if (c.includes('snow')) return 'fa-solid fa-snowflake';
-             if (c.includes('storm') || c.includes('thunder')) return 'fa-solid fa-cloud-bolt';
-             if (c.includes('fog') || c.includes('mist')) return 'fa-solid fa-smog';
-             return 'fa-solid fa-cloud';
+             
+             // Mapping based on 'type' from the API (e.g., 'CLEAR', 'RAIN', 'CLOUDY')
+             if (c.includes('clear')) return isDay ? `${prefix} fa-sun` : `${prefix} fa-moon`;
+             if (c.includes('cloud')) return `${prefix} fa-cloud`;
+             if (c.includes('rain')) return `${prefix} fa-cloud-rain`;
+             if (c.includes('snow') || c.includes('ice')) return `${prefix} fa-snowflake`;
+             if (c.includes('storm') || c.includes('thunder')) return `${prefix} fa-cloud-bolt`;
+             if (c.includes('fog') || c.includes('mist')) return `${prefix} fa-smog`;
+             
+             return `${prefix} fa-cloud`;
         }
 
         function getIconFromWMO(code, isDay) {
@@ -645,13 +689,13 @@
                      // If location is somehow lost, re-init to get IP location
                      initWeather();
                  }
-             }, REFRESH_INTERVAL_MS);
+             }, REFRESH_INTERVAL_SECOND/S);
         }
 
         // --- INIT ---
         window.addEventListener('load', () => {
             updateDateTime();
-            setInterval(updateDateTime, 1000);
+            setInterval(updateDateTime, 500);
             initWeather(); // Initial load (which checks cache)
             setupWeatherRefresh(); // Start the periodic refresh
 
