@@ -526,7 +526,7 @@
             const url = `https://weather.googleapis.com/v1/currentConditions:lookup?key=${apiKey}`;
             
             const res = await fetch(url, {
-                method: 'POST', // The :lookup endpoint requires a POST request
+                method: 'GET', // The :lookup endpoint requires a POST request
                 headers: {
                     'Content-Type': 'application/json'
                 },
