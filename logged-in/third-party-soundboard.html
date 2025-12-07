@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Third Party Soundboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* --- FONT & BASE STYLING --- */
+        :root {
+            --menu-bg: #000000;
+            --menu-border: #333;
+            --menu-text: #d1d5db;
+            --tab-active-bg: rgba(79, 70, 229, 0.1);
+            --tab-active-border: #4f46e5;
+            --tab-active-text: #4f46e5;
+        }
+
+        body { 
+            font-family: 'Geist', sans-serif; 
+            background-color: #040404; 
+            color: #c0c0c0; 
+            font-size: 16px;
+            font-weight: 300;
+        }
+
+        h1, h2 { font-weight: 400 !important; }
+
+        /* --- UI COMPONENTS --- */
+        .btn-toolbar-style {
+            background: var(--menu-bg);
+            border: 1px solid var(--menu-border);
+            border-radius: 0.75rem;
+            color: var(--menu-text);
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-toolbar-style:hover {
+            border-color: #fff;
+            color: #ffffff;
+        }
+        
+        /* Dropdown Styling */
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: var(--menu-bg);
+            border: 1px solid var(--menu-border);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            z-index: 1010;
+            min-width: 280px;
+            padding: 0.75rem;
+        }
+
+        .dropdown-item {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: var(--menu-text);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .dropdown-item:hover {
+            background-color: #2a2a2a;
+            color: #ffffff;
+        }
+        .dropdown-header {
+            padding: 0.5rem 0.75rem;
+            color: #9ca3af;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid #333;
+            margin-bottom: 0.5rem;
+        }
+
+        /* --- CUSTOM CHECKBOX --- */
+        .custom-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: var(--menu-bg); 
+            border: 1px solid var(--menu-border); 
+            border-radius: 0.375rem;
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .custom-checkbox:checked {
+            background-color: var(--tab-active-border);
+            border-color: var(--tab-active-border);
+        }
+        .custom-checkbox:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free'; 
+            font-weight: 900;
+            color: #ffffff;
+            font-size: 0.75rem;
+        }
+
+        .custom-input {
+            background: var(--menu-bg);
+            border: 1px solid var(--menu-border);
+            color: var(--menu-text);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            width: 70px;
+            font-size: 0.875rem;
+        }
+
+        /* --- GRID & BUTTONS --- */
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+            padding: 0 1rem;
+        }
+
+        .sound-btn {
+            background-color: #050505;
+            border: 1px solid #1a1a1a;
+            color: #c0c0c0;
+            border-radius: 1.5rem;
+            padding: 1rem;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            word-break: break-word;
+            user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .sound-btn:hover {
+            background-color: #1a1a1a;
+            border-color: #4f46e5;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        
+        .sound-btn:active, .sound-btn.sound-btn-playing {
+            background-color: rgba(79, 70, 229, 0.2);
+            border-color: #6366f1;
+            transform: translateY(0);
+        }
+
+        /* --- TOASTER --- */
+        #status-toaster {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background-color: rgba(13, 13, 13, 0.95);
+            backdrop-filter: blur(5px);
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            border: 1px solid #333;
+            font-size: 0.85rem;
+            color: #fff;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #status-toaster.visible { opacity: 1; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="flex justify-between items-center p-4 border-b border-[#1a1a1a] sticky top-0 bg-[#040404] z-40">
+        <h1 class="text-2xl font-bold text-white">Third Party Soundboard</h1>
+        
+        <div class="relative">
+            <button id="options-menu-btn" class="btn-toolbar-style">
+                <i class="fa-solid fa-sliders"></i> <span>Options</span>
+            </button>
+
+            <div id="options-dropdown" class="dropdown-menu hidden">
+                <div class="dropdown-header">Playback Settings</div>
+                
+                <label class="dropdown-item">
+                    <span><i class="fa-solid fa-layer-group w-5"></i> Sound Overlay</span>
+                    <input type="checkbox" id="soundOverlayCheckbox" class="custom-checkbox">
+                </label>
+
+                <label class="dropdown-item">
+                    <span><i class="fa-solid fa-computer-mouse w-5"></i> Auto Clicker</span>
+                    <input type="checkbox" id="autoClickerCheckbox" class="custom-checkbox">
+                </label>
+
+                <div id="delay-settings" class="dropdown-item hidden">
+                    <span class="text-sm">Delay (ms)</span>
+                    <div class="flex gap-2">
+                        <input type="number" id="autoClickDelay" value="1000" min="0" class="custom-input">
+                        <button id="applyDelayBtn" class="btn-toolbar-style" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Set</button>
+                    </div>
+                </div>
+
+                <div class="border-t border-[#333] my-2"></div>
+                
+                <div id="clear-sounds-btn" class="dropdown-item text-red-500 hover:bg-red-900/20">
+                    <span><i class="fa-solid fa-volume-xmark w-5"></i> Stop All Sounds</span>
+                    <span class="text-xs text-gray-500 border border-[#333] px-1 rounded">SHIFT+C</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow p-5 md:p-8 max-w-7xl mx-auto w-full">
+        <div class="mb-10">
+            <h2 class="section-header text-blue-400/80 border-blue-900/30 text-xl border-b pb-2 mb-4">Third Party Sounds</h2>
+            <div id="thirdPartySoundsContainer" class="sound-grid">
+                <div class="text-gray-500 italic col-span-full text-center p-10">Loading sounds from CDN...</div>
+            </div>
+        </div>
+    </main>
+
+    <div id="status-toaster"></div>
+
+    <script type="module">
+        // Import only the sounds array from the external source
+        import { sounds } from 'https://cdn.jsdelivr.net/gh/genizy/soundboard@main/sounds.js';
+
+        // Elements
+        const thirdPartySoundsContainer = document.getElementById('thirdPartySoundsContainer');
+        const optionsMenuBtn = document.getElementById('options-menu-btn');
+        const optionsDropdown = document.getElementById('options-dropdown');
+        const soundOverlayCheckbox = document.getElementById('soundOverlayCheckbox');
+        const autoClickerCheckbox = document.getElementById('autoClickerCheckbox');
+        const delaySettings = document.getElementById('delay-settings');
+        const autoClickDelayInput = document.getElementById('autoClickDelay');
+        const applyDelayBtn = document.getElementById('applyDelayBtn');
+        const clearSoundsBtn = document.getElementById('clear-sounds-btn');
+        const statusToaster = document.getElementById('status-toaster');
+
+        // State
+        let playingAudios = [];
+        let autoClickInterval;
+        let requestAnimationFrameId = null;
+        let currentlyHoveredButton = null;
+        let toasterTimeout = null;
+
+        // --- Core Logic ---
+
+        function init() {
+            loadSettings();
+            renderThirdPartySounds();
+        }
+
+        function renderThirdPartySounds() {
+            thirdPartySoundsContainer.innerHTML = '';
+            const baseUrl = "https://cdn.jsdelivr.net/gh/genizy/soundboard@main/";
+            
+            if (sounds && Array.isArray(sounds)) {
+                sounds.forEach(sound => {
+                    const fullAudioUrl = baseUrl + sound.mp3;
+                    createSoundButton(sound.name, thirdPartySoundsContainer, fullAudioUrl);
+                });
+            } else {
+                thirdPartySoundsContainer.innerHTML = '<div class="text-red-500">Failed to load sounds list.</div>';
+            }
+        }
+
+        function createSoundButton(name, container, url) {
+            const btn = document.createElement('div');
+            btn.className = 'sound-btn';
+            btn.textContent = name;
+            
+            btn.addEventListener('click', async () => {
+                if (!soundOverlayCheckbox.checked) stopAllAudios();
+
+                try {
+                    const audio = new Audio(url);
+                    audio.soundButton = btn; 
+                    playingAudios.push(audio);
+                    
+                    audio.addEventListener('ended', () => {
+                        playingAudios = playingAudios.filter(a => a !== audio);
+                        btn.classList.remove('sound-btn-playing'); 
+                    });
+                    
+                    btn.classList.add('sound-btn-playing'); 
+                    await audio.play();
+                } catch (err) {
+                    console.error("Playback failed:", err);
+                    showStatus('Error playing sound', 'error');
+                    btn.classList.remove('sound-btn-playing');
+                }
+            });
+
+            // Auto Clicker Events
+            btn.addEventListener('mouseenter', () => {
+                currentlyHoveredButton = btn;
+                if (autoClickerCheckbox.checked) startAutoClicker();
+            });
+            btn.addEventListener('mouseleave', () => {
+                if (currentlyHoveredButton === btn) {
+                    currentlyHoveredButton = null;
+                    stopAutoClicker();
+                }
+            });
+
+            container.appendChild(btn);
+        }
+
+        function stopAllAudios(fade = false) {
+            playingAudios.forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+                if (audio.soundButton) audio.soundButton.classList.remove('sound-btn-playing');
+            });
+            playingAudios = [];
+            if (fade) showStatus('All sounds muted');
+        }
+
+        // --- Auto Clicker Logic ---
+        function clickLoop() {
+             if (currentlyHoveredButton && autoClickerCheckbox.checked) currentlyHoveredButton.click();
+        }
+
+        function fastClicker() {
+            if (currentlyHoveredButton && autoClickerCheckbox.checked) {
+                currentlyHoveredButton.click();
+                requestAnimationFrameId = requestAnimationFrame(fastClicker);
+            }
+        }
+
+        function startAutoClicker() {
+            stopAutoClicker();
+            const delay = parseInt(autoClickDelayInput.value, 10) || 0;
+            if (!currentlyHoveredButton || !autoClickerCheckbox.checked) return;
+            
+            if (delay === 0) requestAnimationFrameId = requestAnimationFrame(fastClicker);
+            else autoClickInterval = setInterval(clickLoop, delay);
+        }
+
+        function stopAutoClicker() {
+            if (autoClickInterval) { clearInterval(autoClickInterval); autoClickInterval = null; }
+            if (requestAnimationFrameId) { cancelAnimationFrame(requestAnimationFrameId); requestAnimationFrameId = null; }
+        }
+
+        // --- UI Utilities ---
+        function showStatus(message, type = 'info') {
+            statusToaster.textContent = message;
+            statusToaster.style.borderColor = type === 'error' ? '#ef4444' : '#333';
+            statusToaster.classList.add('visible');
+            if (toasterTimeout) clearTimeout(toasterTimeout);
+            toasterTimeout = setTimeout(() => statusToaster.classList.remove('visible'), 2000);
+        }
+
+        function loadSettings() {
+            const savedOverlay = localStorage.getItem('soundOverlay') === 'true';
+            const savedAutoClick = localStorage.getItem('autoClicker') === 'true';
+            const savedDelay = localStorage.getItem('autoClickDelay') || '1000';
+
+            soundOverlayCheckbox.checked = savedOverlay;
+            autoClickerCheckbox.checked = savedAutoClick;
+            autoClickDelayInput.value = savedDelay;
+
+            if (savedAutoClick) delaySettings.classList.remove('hidden');
+        }
+
+        // --- Event Listeners ---
+        optionsMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            optionsDropdown.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!optionsDropdown.classList.contains('hidden') && !optionsMenuBtn.contains(e.target) && !optionsDropdown.contains(e.target)) {
+                optionsDropdown.classList.add('hidden');
+            }
+        });
+
+        soundOverlayCheckbox.addEventListener('change', (e) => {
+            localStorage.setItem('soundOverlay', e.target.checked);
+            if (!e.target.checked) stopAllAudios();
+        });
+
+        autoClickerCheckbox.addEventListener('change', (e) => {
+            localStorage.setItem('autoClicker', e.target.checked);
+            if (e.target.checked) {
+                delaySettings.classList.remove('hidden');
+                if (currentlyHoveredButton) startAutoClicker();
+            } else {
+                delaySettings.classList.add('hidden');
+                stopAutoClicker();
+            }
+        });
+
+        applyDelayBtn.addEventListener('click', () => {
+            localStorage.setItem('autoClickDelay', autoClickDelayInput.value);
+            showStatus(`Delay set to ${autoClickDelayInput.value}ms`);
+            if (autoClickerCheckbox.checked && currentlyHoveredButton) startAutoClicker();
+        });
+
+        clearSoundsBtn.addEventListener('click', () => {
+            stopAllAudios(true);
+            optionsDropdown.classList.add('hidden');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.shiftKey && e.key.toLowerCase() === 'c') stopAllAudios(true);
+        });
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
