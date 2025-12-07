@@ -23,7 +23,7 @@
             --text-light-grey: #d1d5db;
             --accent-color: #6366f1;
             --text-link: #888;
-            --spinner-color: #a0a0a0; /* New: Grey color for the loader */
+            --spinner-color: #666666; /* UPDATED: Darker grey color for the loader */
         }
 
         body { 
@@ -197,7 +197,7 @@
             position: absolute;
             bottom: 20px; /* Position from bottom edge */
             right: 20px; /* Position from right edge */
-            color: var(--spinner-color); /* Updated to grey */
+            color: var(--spinner-color); 
             opacity: 0;
             transition: opacity 0.5s ease;
             pointer-events: none; /* Allows clicks to pass through */
@@ -374,6 +374,7 @@
                 // Cache is fresh, use it
                 console.log("Using cached weather data.");
                 updateWeatherUI(cache.weatherData);
+                hideLoader(); // FIX: Added hideLoader for cache hits
             } else {
                 // Cache is stale or non-existent, fetch new data
                 console.log("Weather cache stale or missing. Fetching new data.");
