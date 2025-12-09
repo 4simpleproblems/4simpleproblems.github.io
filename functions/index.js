@@ -48,3 +48,40 @@ exports.getWordData = onRequest({ cors: true }, async (req, res) => {
         });
     }
 });
+
+exports.leviumProxy = onRequest({ cors: true }, async (req, res) => {
+    const TARGET_ORIGIN = "https://levium-student-management.global.ssl.fastly.net";
+    
+    // Default to levium.html if root is requested
+    let path = req.path;
+    if (!path || path === "/") {
+        path = "/levium.html";
+    }
+
+    const url = TARGET_ORIGIN + path;
+
+    try {
+        const response = await axios({
+            method: req.method,
+            url: url,
+            params: req.query,
+            responseType: 'stream',
+            decompress: false, // Forward raw compressed data if applicable
+            validateStatus: () => true,
+        });
+
+        // Forward headers
+        for (const [key, value] of Object.entries(response.headers)) {
+            // Avoid setting headers that might confuse the server/client loop
+            if (key.toLowerCase() !== 'host') {
+                res.setHeader(key, value);
+            }
+        }
+
+        res.status(response.status);
+        response.data.pipe(res);
+    } catch (error) {
+        logger.error("Proxy Error", error);
+        res.status(500).send("Proxy Error");
+    }
+});
