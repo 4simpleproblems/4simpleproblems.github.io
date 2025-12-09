@@ -65,11 +65,9 @@ exports.leviumProxy = onRequest({ cors: true }, async (req, res) => {
             method: req.method,
             url: url,
             params: req.query,
-            responseType: 'stream',
-            decompress: false, // Forward raw compressed data if applicable
+            responseType: 'arraybuffer', // Use arraybuffer to allow body modification
             validateStatus: () => true,
             headers: {
-                // Forward client headers but override Host, Origin, and Referer to match target
                 ...req.headers,
                 host: new URL(TARGET_ORIGIN).host,
                 origin: TARGET_ORIGIN,
@@ -79,14 +77,36 @@ exports.leviumProxy = onRequest({ cors: true }, async (req, res) => {
 
         // Forward headers
         for (const [key, value] of Object.entries(response.headers)) {
-            // Avoid setting headers that might confuse the server/client loop
-            if (key.toLowerCase() !== 'host' && key.toLowerCase() !== 'content-length') {
+            const lowerKey = key.toLowerCase();
+            // Filter out content-encoding (we let axios decode) and content-length (we might change body size)
+            if (lowerKey !== 'host' && lowerKey !== 'content-length' && lowerKey !== 'content-encoding') {
                 res.setHeader(key, value);
             }
         }
 
-        res.status(response.status);
-        response.data.pipe(res);
+        const contentType = response.headers['content-type'] || '';
+
+        if (contentType.includes('text/html')) {
+            let html = response.data.toString('utf8');
+
+            // Inject base tag or rewrite paths to ensure they go through the proxy
+            // Rewrite absolute paths starting with / to /leviumProxy/
+            const proxyBase = "/leviumProxy/";
+            
+            // Rewrite src="/..." href="/..." action="/..."
+            html = html.replace(/(src|href|action)=["']\/(?!\/)(.*?)["']/g, (match, attr, path) => {
+                const quote = match.includes("'") ? "'" : '"';
+                return `${attr}=${quote}${proxyBase}${path}${quote}`;
+            });
+            
+            // Also rewrite specific JS strings often used in UV/proxies if they appear as "/uv/..."
+            html = html.replace(/"\/uv\//g, `"${proxyBase}uv/`);
+            html = html.replace(/'\/uv\//g, `'${proxyBase}uv/`);
+
+            res.send(html);
+        } else {
+            res.status(response.status).send(response.data);
+        }
     } catch (error) {
         logger.error("Proxy Error", error);
         res.status(500).send("Proxy Error");
