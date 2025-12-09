@@ -51,7 +51,6 @@ exports.getWordData = onRequest({ cors: true }, async (req, res) => {
 
 exports.leviumProxy = onRequest({ cors: true }, async (req, res) => {
     const TARGET_ORIGIN = "https://levium-student-management.global.ssl.fastly.net";
-    const PROXY_BASE_PATH = "/leviumProxy/";
     
     // Default to levium.html if root is requested
     let path = req.path;
@@ -66,57 +65,30 @@ exports.leviumProxy = onRequest({ cors: true }, async (req, res) => {
             method: req.method,
             url: url,
             params: req.query,
-            responseType: 'arraybuffer', // vital for binary files and manual string decoding
-            validateStatus: () => true, // capture all statuses
+            responseType: 'stream', // Reverted to stream for transparency
+            decompress: false, // Forward raw compressed data if applicable
+            validateStatus: () => true,
             headers: {
+                // Forward client headers but override Host, Origin, and Referer to match target
                 ...req.headers,
-                // Spoof headers to make the target think it's a direct request
                 host: new URL(TARGET_ORIGIN).host,
                 origin: TARGET_ORIGIN,
                 referer: TARGET_ORIGIN + '/'
             }
         });
 
-        // Forward headers from the target response to the client
+        // Forward headers
         for (const [key, value] of Object.entries(response.headers)) {
-            const lowerKey = key.toLowerCase();
-            // content-length: we might modify the body, so let the framework set it
-            // content-encoding: axios decodes it, so we don't want to say it's gzip if we send plain text
-            // host: never forward host
-            if (!['host', 'content-length', 'content-encoding'].includes(lowerKey)) {
+            // Avoid setting headers that might confuse the server/client loop
+            if (key.toLowerCase() !== 'host' && key.toLowerCase() !== 'content-length') {
                 res.setHeader(key, value);
             }
         }
 
-        const contentType = response.headers['content-type'] || '';
-
-        // If it's HTML, we need to rewrite paths so the browser keeps using the proxy
-        if (contentType.includes('text/html')) {
-            let html = response.data.toString('utf8');
-
-            // 1. Rewrite HTML attributes that start with '/' (absolute paths)
-            // src="/foo.js" -> src="/leviumProxy/foo.js"
-            html = html.replace(/(src|href|action|data-url)=["']\/(?!\/)(.*?)["']/g, (match, attr, path) => {
-                const quote = match.includes("'") ? "'" : '"';
-                return `${attr}=${quote}${PROXY_BASE_PATH}${path}${quote}`;
-            });
-            
-            // 2. Rewrite specific UV/Bare patterns often found in JS strings
-            // Catch "/uv/" literal strings in JS
-            html = html.replace(/"\/uv\//g, `"${PROXY_BASE_PATH}uv/`);
-            html = html.replace(/'\/uv\//g, `'${PROXY_BASE_PATH}uv/`);
-            
-            // 3. Rewrite usage of /bare/ if it exists
-            html = html.replace(/"\/bare\//g, `"${PROXY_BASE_PATH}bare/`);
-            html = html.replace(/'\/bare\//g, `'${PROXY_BASE_PATH}bare/`);
-
-            res.send(html);
-        } else {
-            // For non-HTML (JS, CSS, Images, etc.), just send the buffer
-            res.status(response.status).send(response.data);
-        }
+        res.status(response.status);
+        response.data.pipe(res);
     } catch (error) {
         logger.error("Proxy Error", error);
-        res.status(500).send("Proxy Error: " + error.message);
+        res.status(500).send("Proxy Error");
     }
 });
