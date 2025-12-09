@@ -68,12 +68,19 @@ exports.leviumProxy = onRequest({ cors: true }, async (req, res) => {
             responseType: 'stream',
             decompress: false, // Forward raw compressed data if applicable
             validateStatus: () => true,
+            headers: {
+                // Forward client headers but override Host, Origin, and Referer to match target
+                ...req.headers,
+                host: new URL(TARGET_ORIGIN).host,
+                origin: TARGET_ORIGIN,
+                referer: TARGET_ORIGIN + '/'
+            }
         });
 
         // Forward headers
         for (const [key, value] of Object.entries(response.headers)) {
             // Avoid setting headers that might confuse the server/client loop
-            if (key.toLowerCase() !== 'host') {
+            if (key.toLowerCase() !== 'host' && key.toLowerCase() !== 'content-length') {
                 res.setHeader(key, value);
             }
         }
