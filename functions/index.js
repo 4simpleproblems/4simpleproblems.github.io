@@ -51,6 +51,7 @@ exports.getWordData = onRequest({ cors: true }, async (req, res) => {
 
 exports.leviumProxy = onRequest({ cors: true }, async (req, res) => {
     const TARGET_ORIGIN = "https://levium-student-management.global.ssl.fastly.net";
+    const PROXY_BASE_PATH = "/leviumProxy/"; // Define proxy base path here
     
     // Default to levium.html if root is requested
     let path = req.path;
@@ -65,30 +66,63 @@ exports.leviumProxy = onRequest({ cors: true }, async (req, res) => {
             method: req.method,
             url: url,
             params: req.query,
-            responseType: 'stream', // Reverted to stream for transparency
-            decompress: false, // Forward raw compressed data if applicable
-            validateStatus: () => true,
+            responseType: 'arraybuffer', // vital for binary files and manual string decoding
+            validateStatus: () => true, // capture all statuses
             headers: {
-                // Forward client headers but override Host, Origin, and Referer to match target
                 ...req.headers,
+                // Spoof headers to make the target think it's a direct request
                 host: new URL(TARGET_ORIGIN).host,
                 origin: TARGET_ORIGIN,
                 referer: TARGET_ORIGIN + '/'
             }
         });
 
-        // Forward headers
+        // Forward headers from the target response to the client
         for (const [key, value] of Object.entries(response.headers)) {
-            // Avoid setting headers that might confuse the server/client loop
-            if (key.toLowerCase() !== 'host' && key.toLowerCase() !== 'content-length') {
+            const lowerKey = key.toLowerCase();
+            // content-length: we might modify the body, so let the framework set it
+            // content-encoding: axios decodes it, so we don't want to say it's gzip if we send plain text
+            // host: never forward host
+            if (!['host', 'content-length', 'content-encoding'].includes(lowerKey)) {
                 res.setHeader(key, value);
             }
         }
 
-        res.status(response.status);
-        response.data.pipe(res);
+        const contentType = response.headers['content-type'] || '';
+
+        // If it's HTML, we need to rewrite paths so the browser keeps using the proxy
+        if (contentType.includes('text/html')) {
+            let html = response.data.toString('utf8');
+
+            // 1. Rewrite HTML attributes that start with '/' (absolute paths)
+            // src="/foo.js" -> src="/leviumProxy/foo.js"
+            // Negative lookahead (?!\/) ensures we don't match protocol relative URLs (//example.com)
+            html = html.replace(/(src|href|action|data-url)=["']\/(?!\/)(.*?)["']/g, (match, attr, path) => {
+                const quote = match.includes("'") ? "'" : '"';
+                return `${attr}=${quote}${PROXY_BASE_PATH}${path}${quote}`;
+            });
+            
+            // 2. Rewrite specific UV/Bare patterns often found in JS strings
+            // Catch "/uv/" literal strings in JS
+            html = html.replace(/"\/uv\//g, `"${PROXY_BASE_PATH}uv/`);
+            html = html.replace(/'\/uv\//g, `'${PROXY_BASE_PATH}uv/`);
+            
+            // 3. Rewrite usage of /bare/ if it exists
+            html = html.replace(/"\/bare\//g, `"${PROXY_BASE_PATH}bare/`);
+            html = html.replace(/'\/bare\//g, `'${PROXY_BASE_PATH}bare/`);
+
+            // 4. Rewrite <base href="/..."> tags to point to the proxy base path
+            // This is crucial if the original page sets a different base for relative URLs
+            html = html.replace(/<base\s+href=["']\/(?!\/)(.*?)["']\s*\/?>/i, `<base href="${PROXY_BASE_PATH}$1">`);
+
+
+            res.status(response.status).send(html); // Ensure status is forwarded
+        } else {
+            // For non-HTML (JS, CSS, Images, etc.), just send the buffer
+            res.status(response.status).send(response.data);
+        }
     } catch (error) {
         logger.error("Proxy Error", error);
-        res.status(500).send("Proxy Error");
+        res.status(500).send("Proxy Error: " + error.message); // More descriptive error
     }
 });
