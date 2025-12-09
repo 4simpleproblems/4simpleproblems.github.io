@@ -1212,37 +1212,11 @@
 
                 <h2 class="text-3xl font-bold text-white mb-6">Management</h2>
                 
-                <!-- Playground Section -->
+                <!-- Placeholder for removed Playground Section -->
                 <div class="w-full mb-8">
                     <h3 class="text-xl font-bold text-white mb-2"><i class="fa-solid fa-rocket mr-2"></i>Playground</h3>
-                    <div class="settings-box p-4">
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Securly URL Tester Card -->
-                            <a href="../logged-in/securly-tester.html" class="block group rounded-xl border border-[#333] hover:border-[#505050] bg-[#0a0a0a] transition-all duration-300 overflow-hidden">
-                                <div class="w-full aspect-video bg-[#111] relative overflow-hidden">
-                                    <img src="../images/securly-tester.png" alt="Securly URL Tester" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300">
-                                </div>
-                                <div class="p-4 flex items-center gap-3">
-                                    <i class="fa-solid fa-flask text-2xl text-gray-400"></i>
-                                    <div>
-                                        <h4 class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">Securly URL Tester</h4>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <!-- Proxy Card -->
-                            <a href="../logged-in/vern.html" class="block group rounded-xl border border-[#333] hover:border-[#505050] bg-[#0a0a0a] transition-all duration-300 overflow-hidden">
-                                <div class="w-full aspect-video bg-[#111] relative overflow-hidden">
-                                    <img src="../images/vern.png" alt="Proxy" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300">
-                                </div>
-                                <div class="p-4 flex items-center gap-3">
-                                    <i class="fa-solid fa-globe text-2xl text-gray-400"></i>
-                                    <div>
-                                        <h4 class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">Proxy</h4>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
+                    <div class="settings-box p-4 text-gray-400 text-sm italic">
+                        The playground links have moved to the "Others" tab in the main navigation.
                     </div>
                 </div>
                 
