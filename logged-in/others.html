@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Others - 4SP</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../injector-test.js"></script>
+
+    <style>
+        :root {
+            --bg-page: #040404;
+            --text-primary: #c0c0c0;
+            --card-bg: #0d0d0d;
+            --card-border: #1a1a1a;
+            --card-hover-border: #333;
+        }
+
+        body { 
+            font-family: 'Geist', sans-serif; 
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            font-weight: 300;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-top: 64px;
+        }
+
+        .menu-container {
+            max-width: 800px;
+            margin: 4rem auto;
+            width: 90%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .menu-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .menu-card:hover {
+            border-color: var(--card-hover-border);
+            transform: translateY(-4px);
+            background-color: #121212;
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #d1d5db;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .card-desc {
+            font-size: 0.875rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="menu-container">
+        <!-- Games -->
+        <a href="../GAMES/index.html" class="menu-card">
+            <i class="fa-solid fa-gamepad card-icon"></i>
+            <h3 class="card-title">Games</h3>
+            <p class="card-desc">Play a collection of games.</p>
+        </a>
+
+        <!-- Vern -->
+        <a href="vern.html" class="menu-card">
+            <i class="fa-solid fa-robot card-icon"></i>
+            <h3 class="card-title">Vern</h3>
+            <p class="card-desc">Chat with the AI assistant.</p>
+        </a>
+
+        <!-- Securly Tester -->
+        <a href="securly-tester.html" class="menu-card">
+            <i class="fa-solid fa-shield-halved card-icon"></i>
+            <h3 class="card-title">Securly Tester</h3>
+            <p class="card-desc">Check if a URL is blocked.</p>
+        </a>
+    </div>
+
+</body>
+</html>

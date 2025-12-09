@@ -1,0 +1,53 @@
+{
+    "dashboard": {
+        "name": "Dashboard",
+        "icon": "fa-solid fa-house-user", 
+        "url": "../logged-in/test.html"
+    },
+    "soundboard": {
+        "name": "Soundboard",
+        "icon": "fa-solid fa-volume-up", 
+        "url": "../logged-in/soundboard.html"
+    },
+    "notes": {
+        "name": "Notes",
+        "icon": "fa-solid fa-sticky-note", 
+        "url": "../logged-in/notes.html"
+    },
+     "notes-again": {
+        "name": "Dailyphoto",
+        "icon": "fa-solid fa-image",
+        "url": "../logged-in/dailyphoto.html"
+    },
+    "countdowns": {
+        "name": "Countdowns",
+        "icon": "fa-solid fa-clock", 
+        "url": "../logged-in/countdowns.html"
+    },
+    "weather": {
+        "name": "Weather",
+        "icon": "fa-solid fa-cloud-sun", 
+        "url": "../logged-in/weather.html"
+    },
+    "dictionary": {
+        "name": "Dictionary",
+        "icon": "fa-solid fa-book", 
+        "url": "../logged-in/dictionary.html"
+    },
+    "messenger-v2": {
+        "name": "Messenger",
+        "icon": "fa-solid fa-comments", 
+        "url": "../logged-in/messenger-tutorial.html"
+    },
+    "others": {
+        "name": "Others",
+        "icon": "fa-solid fa-layer-group", 
+        "url": "../logged-in/others.html",
+        "aliases": [
+            "../logged-in/vern.html",
+            "../logged-in/securly-tester.html",
+            "../GAMES/index.html",
+            "../logged-in/injex.html"
+        ]
+    }
+}
