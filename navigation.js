@@ -1,5 +1,5 @@
 /**
- * navigation.js
+ * navigation-test.js
  * * This is a fully self-contained script to create a dynamic, authentication-aware
  * navigation bar for your website. It handles everything from Firebase initialization
  * to rendering user-specific information. It now includes a horizontally scrollable
@@ -27,7 +27,7 @@ const FIREBASE_CONFIG = {
 // =========================================================================
 
 // --- Configuration ---
-const PAGE_CONFIG_URL = '../page-identification.json';
+const PAGE_CONFIG_URL = '../page-identification-test.json';
 const PRIVILEGED_EMAIL = '4simpleproblems@gmail.com'; 
 const THEME_STORAGE_KEY = 'user-navbar-theme';
 const lightThemeNames = ['Light', 'Lavender', 'Rose Gold', 'Mint', 'Pink']; // Define light theme names
