@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="../injector-test.js"></script>
+    <script src="../injector.js"></script>
 
     <style>
         :root {
@@ -31,49 +31,77 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-top: 64px;
+            overflow-x: hidden;
+            font-size: 16px;
+        }
+
+        /* Matches styling from Dictionary/Notes */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #1a1a1a;
+            background-color: var(--bg-page);
+        }
+
+        #main-wrapper {
+            flex-grow: 1;
+            padding: 20px;
+            margin: 1.25rem 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 1200px;
+            width: calc(100% - 40px);
+            align-self: center;
         }
 
         .menu-container {
-            max-width: 800px;
-            margin: 4rem auto;
-            width: 90%;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
         }
 
         .menu-card {
             background-color: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 16px;
-            padding: 2rem;
+            padding: 1.5rem;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            text-align: center;
             text-decoration: none;
             color: var(--text-primary);
             transition: all 0.2s ease;
+            width: 100%;
         }
 
         .menu-card:hover {
             border-color: var(--card-hover-border);
-            transform: translateY(-4px);
+            transform: translateY(-2px);
             background-color: #121212;
         }
 
-        .card-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: #d1d5db;
+        .card-image {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
         }
 
         .card-title {
             font-size: 1.25rem;
             font-weight: 500;
-            margin-bottom: 0.5rem;
             color: #fff;
+            margin-bottom: 0.25rem;
         }
 
         .card-desc {
@@ -82,29 +110,45 @@
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen">
+    
+    <div id="page-content">
+        <header>
+            <h1 class="text-2xl font-bold text-white">4SP OTHERS</h1>
+        </header>
 
-    <div class="menu-container">
-        <!-- Games -->
-        <a href="../GAMES/index.html" class="menu-card">
-            <i class="fa-solid fa-gamepad card-icon"></i>
-            <h3 class="card-title">Games</h3>
-            <p class="card-desc">Play a collection of games.</p>
-        </a>
+        <div id="main-wrapper">
+            <div class="menu-container">
+                <!-- Games -->
+                <a href="../GAMES/index.html" class="menu-card">
+                    <!-- Placeholder image since games.png was not confirmed, checking if vern.png exists in list -->
+                    <!-- I will try to use the requested paths, if they fail to load, alt text shows -->
+                    <img src="../images/games.png" alt="Games" class="card-image" onerror="this.src='https://placehold.co/60x60/black/white?text=Games'">
+                    <div class="card-content">
+                        <h3 class="card-title">Games</h3>
+                        <p class="card-desc">Play a collection of games.</p>
+                    </div>
+                </a>
 
-        <!-- Vern -->
-        <a href="vern.html" class="menu-card">
-            <i class="fa-solid fa-robot card-icon"></i>
-            <h3 class="card-title">Vern</h3>
-            <p class="card-desc">Chat with the AI assistant.</p>
-        </a>
+                <!-- Vern -->
+                <a href="vern.html" class="menu-card">
+                    <img src="../images/vern.png" alt="Vern" class="card-image">
+                    <div class="card-content">
+                        <h3 class="card-title">Vern</h3>
+                        <p class="card-desc">Chat with the AI assistant.</p>
+                    </div>
+                </a>
 
-        <!-- Securly Tester -->
-        <a href="securly-tester.html" class="menu-card">
-            <i class="fa-solid fa-shield-halved card-icon"></i>
-            <h3 class="card-title">Securly Tester</h3>
-            <p class="card-desc">Check if a URL is blocked.</p>
-        </a>
+                <!-- Securly Tester -->
+                <a href="securly-tester.html" class="menu-card">
+                    <img src="../images/securly-tester.png" alt="Securly Tester" class="card-image">
+                    <div class="card-content">
+                        <h3 class="card-title">Securly Tester</h3>
+                        <p class="card-desc">Check if a URL is blocked.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
     </div>
 
 </body>

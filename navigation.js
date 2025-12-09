@@ -183,19 +183,47 @@ let db;
         return '';
     };
 
-    const isTabActive = (tabUrl) => {
-        const tabPathname = new URL(tabUrl, window.location.origin).pathname.toLowerCase();
+    const isTabActive = (tabUrl, aliases) => {
         const currentPathname = window.location.pathname.toLowerCase();
+        
         const cleanPath = (path) => {
-            if (path.endsWith('/index.html')) path = path.substring(0, path.lastIndexOf('/')) + '/';
-            if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
-            return path;
+            try {
+                // If it's a relative path, resolve it against origin
+                const resolved = new URL(path, window.location.origin).pathname.toLowerCase();
+                // Normalize index.html
+                if (resolved.endsWith('/index.html')) return resolved.substring(0, resolved.lastIndexOf('/')) + '/';
+                if (resolved.length > 1 && resolved.endsWith('/')) return resolved.slice(0, -1);
+                return resolved;
+            } catch (e) {
+                return path; // Fallback for invalid URLs
+            }
         };
+
         const currentCanonical = cleanPath(currentPathname);
-        const tabCanonical = cleanPath(tabPathname);
+        
+        // 1. Check primary URL
+        const tabCanonical = cleanPath(tabUrl);
         if (currentCanonical === tabCanonical) return true;
-        const tabPathSuffix = tabPathname.startsWith('/') ? tabPathname.substring(1) : tabPathname;
-        if (currentPathname.endsWith(tabPathSuffix)) return true;
+
+        // 2. Check suffix matching (existing logic)
+        const tabPathSuffix = new URL(tabUrl, window.location.origin).pathname.toLowerCase();
+        const tabSuffixClean = tabPathSuffix.startsWith('/') ? tabPathSuffix.substring(1) : tabPathSuffix;
+        // Avoid aggressive suffix matching for root/short paths
+        if (tabSuffixClean.length > 3 && currentPathname.endsWith(tabSuffixClean)) return true;
+
+        // 3. Check Aliases (NEW)
+        if (aliases && Array.isArray(aliases)) {
+            for (const alias of aliases) {
+                const aliasCanonical = cleanPath(alias);
+                if (currentCanonical === aliasCanonical) return true;
+                
+                // Also check alias suffixes if needed, though exact path matching is safer
+                const aliasPathSuffix = new URL(alias, window.location.origin).pathname.toLowerCase();
+                 const aliasSuffixClean = aliasPathSuffix.startsWith('/') ? aliasPathSuffix.substring(1) : aliasPathSuffix;
+                if (aliasSuffixClean.length > 3 && currentPathname.endsWith(aliasSuffixClean)) return true;
+            }
+        }
+
         return false;
     };
 
@@ -446,7 +474,7 @@ let db;
 
         const getCurrentPageKey = () => {
             for (const [key, page] of Object.entries(allPages)) {
-                if (isTabActive(page.url)) return key;
+                if (isTabActive(page.url, page.aliases)) return key;
             }
             return null;
         };
@@ -797,7 +825,7 @@ let db;
             const tabsHtml = Object.values(pages || {})
                 .filter(page => !(page.adminOnly && !isPrivilegedUser)) 
                 .map(page => {
-                    const isActive = isTabActive(page.url);
+                    const isActive = isTabActive(page.url, page.aliases); // Pass aliases
                     const activeClass = isActive ? 'active' : '';
                     const iconClasses = getIconClass(page.icon);
                     return `<a href="${page.url}" class="nav-tab ${activeClass}"><i class="${iconClasses} mr-2"></i>${page.name}</a>`;
