@@ -889,10 +889,13 @@ let db;
             const logoPath = DEFAULT_THEME['logo-src']; 
             if (navbarLogo) navbarLogo.src = logoPath;
             
-            const tabsHtml = Object.values(pages || {})
-                .filter(page => !(page.adminOnly && !isPrivilegedUser)) 
-                .map(page => {
-                    const isActive = isTabActive(page.url, page.aliases); // Pass aliases
+            // Determine the single active page key first
+            const activePageKey = getCurrentPageKey();
+
+            const tabsHtml = Object.entries(pages || {})
+                .filter(([, page]) => !(page.adminOnly && !isPrivilegedUser)) 
+                .map(([key, page]) => { // Get key and page from entry
+                    const isActive = (key === activePageKey); // Compare with the single activePageKey
                     const activeClass = isActive ? 'active' : '';
                     const iconClasses = getIconClass(page.icon);
                     return `<a href="${page.url}" class="nav-tab ${activeClass}"><i class="${iconClasses} mr-2"></i>${page.name}</a>`;
