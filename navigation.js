@@ -1225,12 +1225,25 @@ let db;
             let isPrivilegedUser = false;
             let userData = null;
             if (user) {
+                // Check if hardcoded privileged email
                 isPrivilegedUser = user.email === PRIVILEGED_EMAIL;
+
                 try {
-                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    // Fetch user data and check admin status in parallel
+                    const userDocPromise = db.collection('users').doc(user.uid).get();
+                    const adminDocPromise = db.collection('admins').doc(user.uid).get();
+
+                    const [userDoc, adminDoc] = await Promise.all([userDocPromise, adminDocPromise]);
+                    
                     userData = userDoc.exists ? userDoc.data() : null;
+
+                    // If not already privileged via email, check if they are in the admins collection
+                    if (!isPrivilegedUser && adminDoc.exists) {
+                        isPrivilegedUser = true;
+                    }
+
                 } catch (error) {
-                    console.error("Error fetching user data:", error);
+                    console.error("Error fetching user or admin data:", error);
                 }
             }
             currentUser = user;
