@@ -911,76 +911,18 @@ let db;
                     </div>
                     <button id="glide-right" class="scroll-glide-button"><i class="fa-solid fa-chevron-right"></i></button>
                 `;
+                const tabContainer = tabWrapper.querySelector('.tab-scroll-container');
+                setupEventListeners(user, tabContainer); // Pass tabContainer to setupEventListeners
+            } else {
+                setupEventListeners(user, null); // Call with null if tabWrapper is not found
             }
 
             if (authControlsWrapper) {
                 authControlsWrapper.innerHTML = authControlsHtml;
             }
             
-            const tabContainer = tabWrapper.querySelector('.tab-scroll-container'); 
-            const tabCount = tabContainer ? tabContainer.querySelectorAll('.nav-tab').length : 0;
-
-            if (tabCount <= 9) {
-                if(tabContainer) {
-                    tabContainer.style.justifyContent = 'center';
-                    tabContainer.style.overflowX = 'hidden';
-                    tabContainer.style.flexGrow = '0';
-                }
-            } else {
-                if(tabContainer) {
-                    tabContainer.style.justifyContent = 'flex-start';
-                    tabContainer.style.overflowX = 'auto';
-                    tabContainer.style.flexGrow = '1';
-                }
-            }
-
-            setupEventListeners(user);
-
-            let savedTheme;
-            try {
-                savedTheme = JSON.parse(localStorage.getItem(THEME_STORAGE_KEY));
-            } catch (e) { savedTheme = null; }
-            window.applyTheme(savedTheme || DEFAULT_THEME); 
-
-            if (currentScrollLeft > 0) {
-                const savedScroll = currentScrollLeft;
-                requestAnimationFrame(() => {
-                    if (tabContainer) tabContainer.scrollLeft = savedScroll;
-                    currentScrollLeft = 0; 
-                    requestAnimationFrame(() => {
-                        updateScrollGilders();
-                    });
-                });
-            } else if (!hasScrolledToActiveTab) { 
-                const activeTab = document.querySelector('.nav-tab.active');
-                if (activeTab && tabContainer) {
-                    const centerOffset = (tabContainer.offsetWidth - activeTab.offsetWidth) / 2;
-                    const idealCenterScroll = activeTab.offsetLeft - centerOffset;
-                    const maxScroll = tabContainer.scrollWidth - tabContainer.offsetWidth;
-                    const extraRoomOnRight = maxScroll - idealCenterScroll;
-                    let scrollTarget;
-
-                    if (idealCenterScroll > 0 && extraRoomOnRight < centerOffset) {
-                        scrollTarget = maxScroll + 50;
-                    } else {
-                        scrollTarget = Math.max(0, idealCenterScroll);
-                    }
-                    requestAnimationFrame(() => {
-                        tabContainer.scrollLeft = scrollTarget;
-                        requestAnimationFrame(() => {
-                            updateScrollGilders();
-                        });
-                    });
-                    hasScrolledToActiveTab = true; 
-                } else if (tabContainer) {
-                    requestAnimationFrame(() => {
-                        updateScrollGilders();
-                    });
-                }
-            }
-            
-            checkMarquees();
-        };
+            const tabContainerForWidth = tabWrapper ? tabWrapper.querySelector('.tab-scroll-container') : null; 
+            const tabCount = tabContainerForWidth ? tabContainerForWidth.querySelectorAll('.nav-tab').length : 0;
 
         const updateScrollGilders = () => {
             const container = document.querySelector('.tab-scroll-container');
@@ -1098,16 +1040,16 @@ let db;
             }
         }
 
-        const setupEventListeners = (user) => {
-            const tabContainer = document.querySelector('.tab-scroll-container');
+        const setupEventListeners = (user, tabContainer) => {
+            if (!tabContainer) return; // Handle cases where tabContainer might not be passed/found
+
             const leftButton = document.getElementById('glide-left');
             const rightButton = document.getElementById('glide-right');
             const debouncedUpdateGilders = debounce(updateScrollGilders, 50);
 
             if (tabContainer) {
-                const scrollAmount = tabContainer.offsetWidth * 0.8; 
                 tabContainer.addEventListener('scroll', updateScrollGilders);
-                
+                                
                 // --- MODIFIED: RESIZE EVENT ---
                 // We now trigger both glider updates AND the counter-zoom logic
                 window.addEventListener('resize', () => {
