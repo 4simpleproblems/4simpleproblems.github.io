@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4SP - DAILYPHOTO</title>
-    <meta name="description" content="Share your day with friends through three daily photos.">
+    <meta name="description" content="Share your day with friends through five daily photos.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -575,7 +575,7 @@
     <script type="module">
         // --- Firebase Core Imports ---
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { 
             getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs, serverTimestamp, orderBy, deleteDoc, onSnapshot, writeBatch, limit
         } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -584,32 +584,47 @@
         // --- CONFIGURATION IMPORT ---
         import { firebaseConfig } from "../firebase-config.js";
         
+        // --- SELF-CHECK: VALIDATE CONFIGURATION ---
+        // This ensures the config file is actually being read correctly
+        if (!firebaseConfig || typeof firebaseConfig !== 'object') {
+            console.error("CRITICAL: firebase-config.js did not export a valid config object.", firebaseConfig);
+            document.getElementById('loading-screen').innerHTML = '<p class="text-red-400">Error: Invalid Config.</p>';
+            throw new Error("Invalid Configuration");
+        }
+        if (!firebaseConfig.apiKey || !firebaseConfig.storageBucket) {
+             console.error("CRITICAL: firebaseConfig is missing crucial fields (apiKey or storageBucket).", firebaseConfig);
+        } else {
+             console.log("Config Check: Loaded successfully.", { 
+                 bucket: firebaseConfig.storageBucket, 
+                 projectId: firebaseConfig.projectId 
+             });
+        }
+
         const appId = '4sp-default-app'; 
         const initialAuthToken = null; 
 
         // --- Initialize Firebase ---
-        if (!firebaseConfig || !firebaseConfig.apiKey) {
-            document.getElementById('loading-screen').innerHTML = '<p class="text-red-400">ERROR: Missing or incomplete Firebase configuration in firebase-config.js. Check the console for details.</p>';
-            console.error("Firebase Configuration Error: The 'firebase-config.js' file is likely missing or does not contain a valid configuration object. The Friend Code feature relies on Firestore and Auth, which will fail without a correct configuration.");
-            throw new Error("Missing Firebase Config.");
-        }
-        
-        // FIXED: REUSE EXISTING APP IF INJECTOR STARTED ONE
+        // We attempt to reuse the existing app to share auth state with ban-enforcer.js
         let app;
         if (getApps().length > 0) {
-            app = getApp(); // Use the existing default app (likely started by injector/ban-enforcer)
-            console.log("Attached to existing Firebase App instance.");
+            app = getApp(); 
+            console.log("Attached to existing Firebase App instance (Shared Scope).");
         } else {
             app = initializeApp(firebaseConfig);
-            console.log("Initialized new Firebase App instance.");
+            console.log("Initialized new Firebase App instance (Isolated Scope).");
         }
 
         const auth = getAuth(app);
+        
+        // --- PERSISTENCE FIX ---
+        // Explicitly force browserLocalPersistence to ensure we pick up the session
+        // from ban-enforcer.js even if we are in a new app instance.
+        setPersistence(auth, browserLocalPersistence).catch(err => console.error("Persistence Error:", err));
+
         const db = getFirestore(app);
         
-        // Initialize Storage with explicit app and bucket to prevent 401 configuration errors
-        // Falls back to config default if explicit string is empty
-        const storage = getStorage(app, firebaseConfig.storageBucket ? `gs://${firebaseConfig.storageBucket}` : undefined);
+        // Explicitly pass the bucket from the verified config to avoid any default bucket mismatches
+        const storage = getStorage(app, `gs://${firebaseConfig.storageBucket}`);
         
         // --- Global State & Constants ---
         let CURRENT_FRIENDS = [];
@@ -1134,14 +1149,24 @@
         }
 
         async function handlePostCreationLogic(file, slotIndex) {
-            const currentUser = auth.currentUser;
             
-            // SECURITY CHECK: Ensure user is authenticated before upload
+            // SECURITY CHECK: Wait for auth to be fully ready before upload
+            // This prevents race conditions where storage SDK doesn't have the token yet
+            let currentUser = auth.currentUser;
+            
             if (!currentUser) {
-                showMessage(uploadMessage, 'Error: You appear to be logged out. Please refresh the page.', 'error');
-                console.error("Upload Aborted: No valid auth.currentUser");
-                return;
+                // Wait 1 second to see if persistence restores it
+                await new Promise(r => setTimeout(r, 1000));
+                currentUser = auth.currentUser;
+                
+                if (!currentUser) {
+                    showMessage(uploadMessage, 'Error: You appear to be logged out. Please refresh the page.', 'error');
+                    console.error("Upload Aborted: No valid auth.currentUser");
+                    return;
+                }
             }
+            
+            console.log("Starting Upload for UID:", currentUser.uid);
 
             const userProfileRef = getUserProfileDocRef(currentUser.uid);
             
@@ -1169,12 +1194,10 @@
 
             try {
                 // FORCE TOKEN REFRESH: This bridges the gap between Auth and Storage
-                // The main issue is Storage SDK sometimes doesn't see the Auth token right away
                 try {
                     await currentUser.getIdToken(true);
                 } catch (e) {
                     console.warn("Token refresh warning:", e);
-                    // Proceed anyway, usually the token is still valid enough
                 }
 
                 const userProfileSnap = await getDoc(userProfileRef);
@@ -1214,7 +1237,7 @@
             } catch (error) {
                 console.error("Post creation error:", error);
                 if (error.code === 'storage/unauthenticated' || error.message.includes('unauthenticated')) {
-                     showMessage(uploadMessage, `Error: Permission Denied (401). Please try refreshing the page to fix your login session.`);
+                     showMessage(uploadMessage, `Error: Permission Denied (401). Your session may be stale. Refresh and try again.`);
                 } else {
                      showMessage(uploadMessage, `Post creation failed: ${error.message || error}`);
                 }
