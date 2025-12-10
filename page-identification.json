@@ -14,7 +14,7 @@
         "icon": "fa-solid fa-sticky-note", 
         "url": "../logged-in/notes.html"
     },
-     "notes-again": {
+     "dailyphoto": {
         "name": "Dailyphoto",
         "icon": "fa-solid fa-image",
         "url": "../logged-in/dailyphoto.html"
@@ -39,16 +39,24 @@
         "icon": "fa-solid fa-comments", 
         "url": "../logged-in/messenger-tutorial.html"
     },
+    "games-4sp": {
+        "name": "4SP Games",
+        "icon": "fa-solid fa-gamepad",
+        "url": "../GAMES/index.html"
+    },
+    "levium": {
+        "name": "Levium",
+        "icon": "fa-solid fa-globe",
+        "url": "../logged-in/levium.html"
+    },
+    "securly-tester": {
+        "name": "Securly Tester",
+        "icon": "fa-solid fa-shield-alt",
+        "url": "../logged-in/securly-tester.html"
+    },
     "others": {
         "name": "Others",
         "icon": "fa-solid fa-layer-group", 
-        "url": "../logged-in/others.html",
-                "aliases": [
-                    "../logged-in/vern.html",
-                    "../logged-in/securly-tester.html",
-                    "../GAMES/index.html",
-                    "../logged-in/injex.html"
-                ],
-            }
-        }
-        
+        "url": "../logged-in/others.html"
+    }
+}
