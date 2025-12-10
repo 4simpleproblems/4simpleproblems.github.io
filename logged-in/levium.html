@@ -45,8 +45,37 @@
     </style>
 </head>
 <body>
-    <div id="page-content">
+    <div id="page-content" style="display: none;">
         <iframe src="https://leviumproxy-6v3fpfm2zq-uc.a.run.app/" allowfullscreen></iframe>
     </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { firebaseConfig } from "../firebase-config.js";
+        import { checkAdminStatus } from "../utils.js";
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const pageContent = document.getElementById('page-content');
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // User is signed in, check admin status
+                const isAdmin = await checkAdminStatus(user.uid);
+                if (isAdmin) {
+                    pageContent.style.display = 'flex'; // Show content for admins
+                } else {
+                    // Not an admin, redirect to dashboard
+                    window.location.href = '../logged-in/dashboard.html';
+                }
+            } else {
+                // User is signed out, redirect to authentication page
+                window.location.href = '../authentication.html';
+            }
+        });
+    </script>
 </body>
 </html>
