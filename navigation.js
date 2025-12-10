@@ -1118,12 +1118,13 @@ let db;
                 
                 if (leftButton) {
                     leftButton.addEventListener('click', () => {
-                        tabContainer.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                        tabContainer.scrollLeft = 0; // Scroll to the beginning
                     });
                 }
                 if (rightButton) {
                     rightButton.addEventListener('click', () => {
-                        tabContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                        const maxScroll = tabContainer.scrollWidth - tabContainer.offsetWidth;
+                        tabContainer.scrollLeft = maxScroll; // Scroll to the end
                     });
                 }
             }
