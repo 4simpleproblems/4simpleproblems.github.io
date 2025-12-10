@@ -2,7 +2,7 @@
     "dashboard": {
         "name": "Dashboard",
         "icon": "fa-solid fa-house-user", 
-        "url": "../logged-in/test.html"
+        "url": "../logged-in/dashboard.html"
     },
     "soundboard": {
         "name": "Soundboard",
@@ -44,10 +44,9 @@
         "icon": "fa-solid fa-layer-group", 
         "url": "../logged-in/others.html",
         "aliases": [
-            "../logged-in/vern.html",
+            "../logged-in/levium.html",
             "../logged-in/securly-tester.html",
-            "../GAMES/index.html",
-            "../logged-in/injex.html"
+            "../GAMES/index.html"
         ]
     }
 }
