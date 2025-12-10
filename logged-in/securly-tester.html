@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔒 SECURLY BLOCK TESTER</title>
+    <title>4SP - SECURLY URL TESTER</title>
     <meta name="description" content="A tool to test Securly block status on the useast server.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -75,18 +75,16 @@
         }
         /* Primary Button Style (The check button) */
         .btn-toolbar-style.btn-primary-override {
-            /* REQUIRED CHANGE: Black background, lighter outline */
-            background-color: #000000;
-            border: 1px solid #707070; /* Light border color */
-            color: #d1d5db; /* Light text color */
+            background-color: var(--tab-active-bg, rgba(79, 70, 229, 0.1));
+            border: 1px solid var(--tab-active-border, #4f46e5);
+            color: var(--tab-active-text, #4f46e5);
             width: 100%;
             justify-content: center;
         }
         .btn-toolbar-style.btn-primary-override:hover {
-            /* REQUIRED CHANGE: Hover keeps black background, lightens border/text */
-            background-color: #1a1a1a;
-            border-color: #ffffff;
-            color: #ffffff;
+            background-color: var(--tab-active-hover-bg, rgba(79, 70, 229, 0.15));
+            border-color: var(--tab-active-hover-border, #6366f1);
+            color: var(--tab-active-hover-text, #6366f1);
         }
         
         /* --- MAIN TESTER UI STYLES --- */
