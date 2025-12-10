@@ -1188,7 +1188,7 @@
                 showMessage(uploadMessage, `Post creation failed: ${error.message || error}`);
             } finally {
                 createBtn.disabled = false;
-                createPostBtn.innerHTML = `<i class="fas fa-check mr-2"></i> Create Daily Post`;
+                createBtn.innerHTML = `<i class="fas fa-check mr-2"></i> Create Daily Post`;
             }
         }
         
@@ -1514,7 +1514,7 @@
             if (user) {
                 try {
                     await handleFriendCodeLogic(user); 
-                    await cleanupOldPosts(user); 
+                    // cleanupOldPosts removed - moved to server-side logic
                     setupFriendListListener(user); 
                     setupDailyPostsListener(user); 
                     setupFriendsFeedListener(user); // Will use default 'friends'
