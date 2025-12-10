@@ -126,3 +126,42 @@ exports.leviumProxy = onRequest({ cors: true }, async (req, res) => {
         res.status(500).send("Proxy Error: " + error.message); // More descriptive error
     }
 });
+
+exports.reportContent = onRequest({ cors: true }, async (req, res) => {
+    try {
+        if (req.method !== 'POST') {
+            res.status(405).send('Method Not Allowed');
+            return;
+        }
+
+        const { collectionName, docId, reason, reportedBy } = req.body;
+
+        if (!collectionName || !docId) {
+            res.status(400).json({ error: "Missing required parameters: collectionName, docId" });
+            return;
+        }
+
+        // 1. Log the report in a separate collection for admin review
+        await admin.firestore().collection('reports').add({
+            targetCollection: collectionName,
+            targetDocId: docId,
+            reason: reason || 'User Report',
+            reportedBy: reportedBy || 'Anonymous',
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 2. Mark the content as reported in its original document
+        //    This allows for client-side filtering (e.g., hiding it from the reporter)
+        //    and potential global hiding if a threshold is reached.
+        await admin.firestore().collection(collectionName).doc(docId).update({
+             reported: true, // Simple flag
+             reportedBy: admin.firestore.FieldValue.arrayUnion(reportedBy) // Track who reported it
+        });
+
+        res.status(200).json({ success: true, message: "Report submitted successfully." });
+
+    } catch (error) {
+        logger.error("Report Function Error", error);
+        res.status(500).json({ error: "Internal Server Error", details: error.message });
+    }
+});
