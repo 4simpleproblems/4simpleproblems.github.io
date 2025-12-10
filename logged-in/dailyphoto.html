@@ -606,7 +606,10 @@
 
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app);
+        
+        // Initialize Storage with explicit app and bucket to prevent 401 configuration errors
+        // Falls back to config default if explicit string is empty
+        const storage = getStorage(app, firebaseConfig.storageBucket ? `gs://${firebaseConfig.storageBucket}` : undefined);
         
         // --- Global State & Constants ---
         let CURRENT_FRIENDS = [];
@@ -1153,9 +1156,6 @@
                 // Pre-fill state
                 document.getElementById('post-title-input').value = title;
                 document.getElementById('post-public-checkbox').checked = true;
-                // Need to re-trigger file view... simpler to just ask user to do it again or
-                // ideally we pause here. But for simplicity, we just returned after disclaimer.
-                // Re-selecting logic is complex, so for now, forcing re-open.
                 return; 
             }
 
@@ -1168,6 +1168,15 @@
             createBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Creating...`;
 
             try {
+                // FORCE TOKEN REFRESH: This bridges the gap between Auth and Storage
+                // The main issue is Storage SDK sometimes doesn't see the Auth token right away
+                try {
+                    await currentUser.getIdToken(true);
+                } catch (e) {
+                    console.warn("Token refresh warning:", e);
+                    // Proceed anyway, usually the token is still valid enough
+                }
+
                 const userProfileSnap = await getDoc(userProfileRef);
                 if ((userProfileSnap.data().dailySlotsUsed || []).length !== slotIndex) throw new Error("Slot index mismatch. Please refresh.");
                 
@@ -1204,7 +1213,11 @@
                 showMessage(uploadMessage, 'Post created successfully!', 'success');
             } catch (error) {
                 console.error("Post creation error:", error);
-                showMessage(uploadMessage, `Post creation failed: ${error.message || error}`);
+                if (error.code === 'storage/unauthenticated' || error.message.includes('unauthenticated')) {
+                     showMessage(uploadMessage, `Error: Permission Denied (401). Please try refreshing the page to fix your login session.`);
+                } else {
+                     showMessage(uploadMessage, `Post creation failed: ${error.message || error}`);
+                }
             } finally {
                 createBtn.disabled = false;
                 createBtn.innerHTML = `<i class="fas fa-check mr-2"></i> Create Daily Post`;
