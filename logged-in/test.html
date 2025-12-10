@@ -10,6 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script> 
+
     <script src="../injector.js"></script>
     <style>
         /* BUBBLY ANIMATIONS: Keyframes for cute/bubbly effects */
@@ -603,7 +606,7 @@
         const apps = getApps();
 
         if (apps.length > 0) {
-            // Use the existing default app instance
+            // Use the existing default app instance, which resolves the 'Isolated Scope' warning
             app = getApp(); 
             console.log("Attached to existing Firebase App instance.");
         } else {
@@ -915,10 +918,11 @@
                 if (auth.currentUser) return; 
 
                 // **FIX for auth/admin-restricted-operation**: 
-                // If a shared app exists (meaning other scripts have run), we rely 
-                // on onAuthStateChanged to pick up the existing user (which may be admin).
+                // If a shared app is detected (meaning other scripts have initialized it), 
+                // we MUST defer and rely on onAuthStateChanged to pick up the existing user session.
                 if (getApps().length > 0) {
                      console.warn("Shared app detected. Deferring authentication to onAuthStateChanged.");
+                     // Do NOT call signInAnonymously if a shared app exists to avoid the admin-restricted-operation error.
                      return; 
                 }
                 
