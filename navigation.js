@@ -473,11 +473,78 @@ let db;
         const PIN_HINT_SHOWN_KEY = 'navbar_pinHintShown';
 
         const getCurrentPageKey = () => {
+            const currentPathname = window.location.pathname.toLowerCase();
+            let bestMatchKey = null;
+            let longestMatchLength = 0; // Track the length of the matched canonical URL
+
+            const cleanPath = (path) => {
+                try {
+                    // If it's a relative path, resolve it against origin
+                    const resolved = new URL(path, window.location.origin).pathname.toLowerCase();
+                    // Normalize index.html
+                    if (resolved.endsWith('/index.html')) return resolved.substring(0, resolved.lastIndexOf('/')) + '/';
+                    if (resolved.length > 1 && resolved.endsWith('/')) return resolved.slice(0, -1);
+                    return resolved;
+                } catch (e) {
+                    return path; // Fallback for invalid URLs
+                }
+            };
+
+            const currentCanonical = cleanPath(currentPathname);
+            
+            // Collect all matching keys along with their canonical URLs
+            const potentialMatches = [];
+
             for (const [key, page] of Object.entries(allPages)) {
-                if (isTabActive(page.url, page.aliases)) return key;
+                const tabCanonical = cleanPath(page.url);
+                let isMatch = false;
+
+                // 1. Check primary URL
+                if (currentCanonical === tabCanonical) {
+                    isMatch = true;
+                }
+
+                // 2. Check suffix matching (existing logic)
+                // This is less reliable for full path differentiation, but kept for compatibility
+                const tabPathSuffix = new URL(page.url, window.location.origin).pathname.toLowerCase();
+                const tabSuffixClean = tabPathSuffix.startsWith('/') ? tabPathSuffix.substring(1) : tabPathSuffix;
+                // Avoid aggressive suffix matching for root/short paths
+                if (!isMatch && tabSuffixClean.length > 3 && currentPathname.endsWith(tabSuffixClean)) {
+                    isMatch = true;
+                }
+
+                // 3. Check Aliases (NEW)
+                if (!isMatch && page.aliases && Array.isArray(page.aliases)) {
+                    for (const alias of page.aliases) {
+                        const aliasCanonical = cleanPath(alias);
+                        if (currentCanonical === aliasCanonical) {
+                            isMatch = true;
+                            break;
+                        }
+                        // Also check alias suffixes if needed, though exact path matching is safer
+                        const aliasPathSuffix = new URL(alias, window.location.origin).pathname.toLowerCase();
+                         const aliasSuffixClean = aliasPathSuffix.startsWith('/') ? aliasPathSuffix.substring(1) : aliasPathSuffix;
+                        if (aliasSuffixClean.length > 3 && currentPathname.endsWith(aliasSuffixClean)) {
+                            isMatch = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isMatch) {
+                    potentialMatches.push({ key, canonicalUrl: tabCanonical });
+                }
             }
-            return null;
+
+            // From potential matches, find the one with the longest canonical URL (most specific)
+            if (potentialMatches.length > 0) {
+                potentialMatches.sort((a, b) => b.canonicalUrl.length - a.canonicalUrl.length);
+                return potentialMatches[0].key;
+            }
+
+            return null; // No match found
         };
+
         
         const getPinButtonHtml = () => {
             const pinnedPageKey = localStorage.getItem(PINNED_PAGE_KEY);

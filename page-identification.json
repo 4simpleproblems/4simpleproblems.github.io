@@ -58,5 +58,11 @@
         "name": "Others",
         "icon": "fa-solid fa-layer-group", 
         "url": "../logged-in/others.html"
+    },
+    "settings": {
+        "name": "Settings",
+        "icon": "fa-solid fa-gear",
+        "url": "../logged-in/settings.html"
     }
 }
+

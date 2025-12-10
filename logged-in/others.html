@@ -57,14 +57,12 @@
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            max-width: 1200px;
-            width: calc(100% - 40px);
             align-self: center;
         }
 
         .menu-container {
             display: grid; /* Use grid for layout */
-            grid-template-columns: 1fr; /* Single column */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive columns */
             gap: 1.5rem; 
             width: 100%;
         }
@@ -75,13 +73,13 @@
             border: 1px solid var(--menu-border, #333); /* Use menu border */
             border-radius: 0.75rem; /* Match toolbar buttons */
             color: var(--menu-text, #d1d5db);
-            padding: 1rem 1.5rem; /* Adjusted padding */
+            padding: 1.5rem; /* Adjusted padding for larger cards */
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 1rem; /* Space between image and text */
+            gap: 1.5rem; /* Increased space between image and text */
             width: 100%; /* Ensure full width */
             text-decoration: none; /* Remove underline for links */
         }
@@ -103,12 +101,12 @@
         }
 
         .card-image {
-            width: 64px; /* Smaller image to fit button style */
-            height: 64px;
+            width: 96px; /* Larger image size */
+            height: 96px;
             object-fit: contain;
             flex-shrink: 0;
             border-radius: 0.5rem; /* Slightly rounded image */
-            padding: 8px; /* Padding inside the image area */
+            padding: 12px; /* Padding inside the image area */
             background-color: #1a1a1a; /* Background for the image */
             border: 1px solid #333; /* Border for the image */
         }
@@ -173,5 +171,32 @@
         </div>
     </div>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { firebaseConfig } from "../firebase-config.js";
+        import { checkAdminStatus } from "../utils.js";
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const leviumCard = document.querySelector('a[href="../logged-in/levium.html"]');
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // User is signed in, check admin status
+                const isAdmin = await checkAdminStatus(user.uid);
+                if (isAdmin) {
+                    leviumCard.style.display = 'flex'; // Show Levium card for admins
+                } else {
+                    leviumCard.style.display = 'none'; // Hide for non-admins
+                }
+            } else {
+                // User is signed out, hide Levium card
+                leviumCard.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>

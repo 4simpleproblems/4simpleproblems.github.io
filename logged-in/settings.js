@@ -141,7 +141,10 @@
 
         
         // --- Shared Helper Functions ---
+        // --- Shared Helper Functions ---
         const getUserDocRef = (userId) => doc(db, 'users', userId);
+        
+        import { checkAdminStatus } from '../utils.js';
         
         const showMessage = (element, text, type = 'error') => {
             // Prevent clearing a success message if a warning is generated elsewhere
