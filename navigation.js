@@ -984,4 +984,5 @@ let db;
             }
             
             checkMarquees();
+        }; // Close renderNavbar function
         };
