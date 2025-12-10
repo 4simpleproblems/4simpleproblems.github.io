@@ -4481,25 +4481,7 @@ const performAccountDeletion = async (credential) => {
 
         // --- AUTHENTICATION/REDIRECT LOGIC (Retained and Modified) ---
 
-        /**
-         * Checks if the current user is an admin by fetching their admin document.
-         * This is crucial to prevent race conditions where admin-only queries run before permissions are confirmed.
-         */
-        async function checkAdminStatus(uid) {
-            try {
-                const adminDocRef = doc(db, 'admins', uid);
-                const adminSnap = await getDoc(adminDocRef);
-                
-                if (adminSnap.exists()) {
-                    const data = adminSnap.data();
-                    return data.role === 'admin' || data.role === 'superadmin';
-                }
-                return false;
-            } catch (e) {
-                console.error("Error checking admin status:", e);
-                return false;
-            }
-        }
+
 
         function initializeAuth() {
             onAuthStateChanged(auth, async (user) => {
