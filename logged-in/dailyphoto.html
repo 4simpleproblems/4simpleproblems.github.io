@@ -11,7 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="../navigation.js"></script>
 
     <script src="../injector.js"></script>
     <style>
@@ -575,7 +574,7 @@
 
     <script type="module">
         // --- Firebase Core Imports ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { 
             getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs, serverTimestamp, orderBy, deleteDoc, onSnapshot, writeBatch, limit
@@ -595,7 +594,16 @@
             throw new Error("Missing Firebase Config.");
         }
         
-        const app = initializeApp(firebaseConfig);
+        // FIXED: REUSE EXISTING APP IF INJECTOR STARTED ONE
+        let app;
+        if (getApps().length > 0) {
+            app = getApp(); // Use the existing default app (likely started by injector/ban-enforcer)
+            console.log("Attached to existing Firebase App instance.");
+        } else {
+            app = initializeApp(firebaseConfig);
+            console.log("Initialized new Firebase App instance.");
+        }
+
         const auth = getAuth(app);
         const db = getFirestore(app);
         const storage = getStorage(app);
@@ -889,6 +897,9 @@
 
         async function initializeAuth() {
             try {
+                // If we are reusing an app (from injector), we might already be signed in.
+                if (auth.currentUser) return; 
+
                 await (initialAuthToken ? signInWithCustomToken(auth, initialAuthToken) : signInAnonymously(auth));
             } catch (error) {
                 console.error("Firebase authentication failed:", error);
@@ -1121,6 +1132,14 @@
 
         async function handlePostCreationLogic(file, slotIndex) {
             const currentUser = auth.currentUser;
+            
+            // SECURITY CHECK: Ensure user is authenticated before upload
+            if (!currentUser) {
+                showMessage(uploadMessage, 'Error: You appear to be logged out. Please refresh the page.', 'error');
+                console.error("Upload Aborted: No valid auth.currentUser");
+                return;
+            }
+
             const userProfileRef = getUserProfileDocRef(currentUser.uid);
             
             let title = document.getElementById('post-title-input').value.trim();
