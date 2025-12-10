@@ -1577,26 +1577,48 @@
         });
 
         onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                try {
-                    await handleFriendCodeLogic(user); 
-                    // cleanupOldPosts removed - moved to server-side logic
-                    setupFriendListListener(user); 
-                    setupDailyPostsListener(user); 
-                    setupFriendsFeedListener(user); // Will use default 'friends'
-                    loadingScreen.style.display = 'none';
-                    messengerUi.style.display = 'grid';
-                } catch (e) {
-                    console.error("Application Initialization Failed:", e);
-                    loadingScreen.style.display = 'none';
-                    showCustomModal("Startup Error", `The messenger failed to initialize. Error: ${e.message}.`);
-                }
-            } else {
-                // This will now only attempt to sign in anonymously if this is the only running script.
-                // Otherwise, it simply waits for an existing session to be picked up.
-                await initializeAuth(); 
+    // 1. If the user is authenticated
+    if (user) {
+        try {
+            // All necessary initialization logic:
+            await handleFriendCodeLogic(user); 
+            await setupUserProfile(user); 
+            await cleanupOldPosts(user); 
+            setupFriendsListListener(user);
+            setupDailyPostsListener(user);
+            setupFriendsFeedListener(user);
+            
+            // HIDE the loading screen and SHOW the main UI only AFTER successful initialization
+            loadingScreen.classList.add('hidden');
+            messengerUi.style.display = 'grid'; 
+
+            // Initialize feed type
+            CURRENT_FEED_TYPE = localStorage.getItem('dailyphoto_feed_type') || 'friends';
+            updateToggleUI(); 
+
+            // (Optional: Re-check public disclaimer if the user's preferred feed is public)
+            if (CURRENT_FEED_TYPE === 'public' && !localStorage.getItem('public_warning_seen')) {
+                await showPublicDisclaimer();
             }
-        });
+
+        } catch (e) {
+            console.error("Initialization error:", e);
+            
+            // CRITICAL CHANGE: Do NOT redirect here. Just show an error message.
+            // A profile-specific error (like the "Missing permissions" from your logs) 
+            // should not log out the user, but instead show a broken state on the page.
+            showCustomModal("Initialization Error", "Failed to load page data. Check console for details.");
+            
+            // Ensure the loading screen is gone and the error message is visible
+            loadingScreen.classList.add('hidden'); 
+        }
+    } 
+    // 2. If the user is NOT authenticated
+    else {
+        // Only redirect if the user object is null (unauthenticated)
+        location.href = '../index.html'; 
+    }
+});
 
         const friendRequestLogic = async (friendUid, actionType, user) => {
             const batch = writeBatch(db);
