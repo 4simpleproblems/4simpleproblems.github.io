@@ -903,8 +903,6 @@ let db;
 
             const authControlsHtml = getAuthControlsHtml();
 
-            let tabContainerElement = null; // Declare here to make it accessible
-
             if (tabWrapper) {
                 tabWrapper.innerHTML = `
                     <button id="glide-left" class="scroll-glide-button"><i class="fa-solid fa-chevron-left"></i></button>
@@ -913,32 +911,30 @@ let db;
                     </div>
                     <button id="glide-right" class="scroll-glide-button"><i class="fa-solid fa-chevron-right"></i></button>
                 `;
-                tabContainerElement = tabWrapper.querySelector('.tab-scroll-container'); // Assign to the declared variable
             }
 
             if (authControlsWrapper) {
                 authControlsWrapper.innerHTML = authControlsHtml;
             }
             
-            // Use tabContainerElement for logic and styling
-            const tabCount = tabContainerElement ? tabContainerElement.querySelectorAll('.nav-tab').length : 0;
+            const tabContainer = tabWrapper.querySelector('.tab-scroll-container'); 
+            const tabCount = tabContainer ? tabContainer.querySelectorAll('.nav-tab').length : 0;
 
             if (tabCount <= 9) {
-                if(tabContainerElement) {
-                    tabContainerElement.style.justifyContent = 'center';
-                    tabContainerElement.style.overflowX = 'hidden';
-                    tabContainerElement.style.flexGrow = '0';
+                if(tabContainer) {
+                    tabContainer.style.justifyContent = 'center';
+                    tabContainer.style.overflowX = 'hidden';
+                    tabContainer.style.flexGrow = '0';
                 }
             } else {
-                if(tabContainerElement) {
-                    tabContainerElement.style.justifyContent = 'flex-start';
-                    tabContainerElement.style.overflowX = 'auto';
-                    tabContainerElement.style.flexGrow = '1';
+                if(tabContainer) {
+                    tabContainer.style.justifyContent = 'flex-start';
+                    tabContainer.style.overflowX = 'auto';
+                    tabContainer.style.flexGrow = '1';
                 }
             }
 
-            // Call setupEventListeners with the correct tabContainerElement
-            setupEventListeners(user, tabContainerElement); 
+            setupEventListeners(user);
 
             let savedTheme;
             try {
@@ -949,18 +945,18 @@ let db;
             if (currentScrollLeft > 0) {
                 const savedScroll = currentScrollLeft;
                 requestAnimationFrame(() => {
-                    if (tabContainerElement) tabContainerElement.scrollLeft = savedScroll; // Use tabContainerElement
+                    if (tabContainer) tabContainer.scrollLeft = savedScroll;
                     currentScrollLeft = 0; 
                     requestAnimationFrame(() => {
                         updateScrollGilders();
                     });
                 });
             } else if (!hasScrolledToActiveTab) { 
-                const activeTab = document.querySelector('.nav-tab.active'); // This query might need to be relative to tabContainerElement
-                if (activeTab && tabContainerElement) { // Use tabContainerElement
-                    const centerOffset = (tabContainerElement.offsetWidth - activeTab.offsetWidth) / 2; // Use tabContainerElement
+                const activeTab = document.querySelector('.nav-tab.active');
+                if (activeTab && tabContainer) {
+                    const centerOffset = (tabContainer.offsetWidth - activeTab.offsetWidth) / 2;
                     const idealCenterScroll = activeTab.offsetLeft - centerOffset;
-                    const maxScroll = tabContainerElement.scrollWidth - tabContainerElement.offsetWidth; // Use tabContainerElement
+                    const maxScroll = tabContainer.scrollWidth - tabContainer.offsetWidth;
                     const extraRoomOnRight = maxScroll - idealCenterScroll;
                     let scrollTarget;
 
@@ -970,13 +966,13 @@ let db;
                         scrollTarget = Math.max(0, idealCenterScroll);
                     }
                     requestAnimationFrame(() => {
-                        tabContainerElement.scrollLeft = scrollTarget; // Use tabContainerElement
+                        tabContainer.scrollLeft = scrollTarget;
                         requestAnimationFrame(() => {
                             updateScrollGilders();
                         });
                     });
                     hasScrolledToActiveTab = true; 
-                } else if (tabContainerElement) { // Use tabContainerElement
+                } else if (tabContainer) {
                     requestAnimationFrame(() => {
                         updateScrollGilders();
                     });
@@ -984,5 +980,292 @@ let db;
             }
             
             checkMarquees();
-        }; // Close renderNavbar function
         };
+
+        const updateScrollGilders = () => {
+            const container = document.querySelector('.tab-scroll-container');
+            const leftButton = document.getElementById('glide-left');
+            const rightButton = document.getElementById('glide-right');
+            const tabCount = document.querySelectorAll('.nav-tab').length;
+            const isNotScrolling = container && container.style.flexGrow === '0';
+            
+            if (tabCount <= 9 || isNotScrolling) {
+                if (leftButton) leftButton.classList.add('hidden');
+                if (rightButton) rightButton.classList.add('hidden');
+                return; 
+            }
+
+            if (!container || !leftButton || !rightButton) return;
+            const hasHorizontalOverflow = container.scrollWidth > container.offsetWidth + 2; 
+
+            if (hasHorizontalOverflow) {
+                const isScrolledToLeft = container.scrollLeft <= 5;
+                const maxScrollLeft = container.scrollWidth - container.offsetWidth;
+                const isScrolledToRight = (container.scrollLeft + 5) >= maxScrollLeft;
+
+                if (isScrolledToLeft) {
+                    leftButton.classList.add('hidden');
+                } else {
+                    leftButton.classList.remove('hidden');
+                }
+
+                if (isScrolledToRight) {
+                    rightButton.classList.add('hidden');
+                } else {
+                    rightButton.classList.remove('hidden');
+                }
+            } else {
+                leftButton.classList.add('hidden');
+                rightButton.classList.add('hidden');
+            }
+        };
+
+        const forceScrollToRight = () => {
+            const tabContainer = document.querySelector('.tab-scroll-container');
+            if (!tabContainer) return;
+            const maxScroll = tabContainer.scrollWidth - tabContainer.offsetWidth;
+            requestAnimationFrame(() => {
+                tabContainer.scrollLeft = maxScroll + 50;
+                requestAnimationFrame(() => {
+                    updateScrollGilders();
+                });
+            });
+        };
+        
+        const setupPinEventListeners = () => {
+            const pinButton = document.getElementById('pin-button');
+            const pinContextMenu = document.getElementById('pin-context-menu');
+            const repinButton = document.getElementById('repin-button');
+            const removePinButton = document.getElementById('remove-pin-button');
+            const hidePinButton = document.getElementById('hide-pin-button');
+
+            if (pinButton && pinContextMenu) {
+                pinButton.addEventListener('click', (e) => {
+                    if (pinButton.getAttribute('href') === '#') {
+                        e.preventDefault(); 
+                        const hintShown = localStorage.getItem(PIN_HINT_SHOWN_KEY) === 'true';
+                        if (!hintShown) {
+                            const hintEl = document.getElementById('pin-hint');
+                            if (hintEl) {
+                                hintEl.classList.add('show');
+                                localStorage.setItem(PIN_HINT_SHOWN_KEY, 'true');
+                                setTimeout(() => {
+                                    hintEl.classList.remove('show');
+                                }, 6000); 
+                            }
+                        }
+                        const currentPageKey = getCurrentPageKey();
+                        if (currentPageKey) {
+                            localStorage.setItem(PINNED_PAGE_KEY, currentPageKey);
+                            updatePinButtonArea(); 
+                        } else {
+                            console.warn("This page cannot be pinned as it's not in page-identification.json");
+                        }
+                    }
+                });
+
+                pinButton.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    pinContextMenu.classList.toggle('closed');
+                    pinContextMenu.classList.toggle('open');
+                    document.getElementById('auth-menu-container')?.classList.add('closed');
+                    document.getElementById('auth-menu-container')?.classList.remove('open');
+                });
+            }
+
+            if (repinButton) {
+                repinButton.addEventListener('click', () => {
+                    const currentPageKey = getCurrentPageKey();
+                    if (currentPageKey) {
+                        localStorage.setItem(PINNED_PAGE_KEY, currentPageKey);
+                        updatePinButtonArea(); 
+                    }
+                    pinContextMenu.classList.add('closed');
+                    pinContextMenu.classList.remove('open');
+                });
+            }
+            if (removePinButton) {
+                removePinButton.addEventListener('click', () => {
+                    localStorage.removeItem(PINNED_PAGE_KEY);
+                    updatePinButtonArea(); 
+                });
+            }
+            if (hidePinButton) {
+                hidePinButton.addEventListener('click', () => {
+                    localStorage.setItem(PIN_BUTTON_HIDDEN_KEY, 'true');
+                    updateAuthControlsArea();
+                });
+            }
+        }
+
+        const setupEventListeners = (user) => {
+            const tabContainer = document.querySelector('.tab-scroll-container');
+            const leftButton = document.getElementById('glide-left');
+            const rightButton = document.getElementById('glide-right');
+            const debouncedUpdateGilders = debounce(updateScrollGilders, 50);
+
+            if (tabContainer) {
+                const scrollAmount = tabContainer.offsetWidth * 0.8; 
+                tabContainer.addEventListener('scroll', updateScrollGilders);
+                
+                // --- MODIFIED: RESIZE EVENT ---
+                // We now trigger both glider updates AND the counter-zoom logic
+                window.addEventListener('resize', () => {
+                    debouncedUpdateGilders();
+                    applyCounterZoom(); // Re-calculate zoom scale on resize
+                });
+                // --- END MODIFICATION ---
+                
+                if (leftButton) {
+                    leftButton.addEventListener('click', () => {
+                        tabContainer.scrollLeft = 0; // Scroll to the beginning
+                    });
+                }
+                if (rightButton) {
+                    rightButton.addEventListener('click', () => {
+                        const maxScroll = tabContainer.scrollWidth - tabContainer.offsetWidth;
+                        tabContainer.scrollLeft = maxScroll; // Scroll to the end
+                    });
+                }
+            }
+
+            setupAuthToggleListeners(user);
+            setupPinEventListeners();
+
+            if (!globalClickListenerAdded) {
+                document.addEventListener('click', (e) => {
+                    const menu = document.getElementById('auth-menu-container');
+                    const toggleButton = document.getElementById('auth-toggle');
+                    
+                    if (menu && menu.classList.contains('open')) {
+                        if (!menu.contains(e.target) && (toggleButton && !toggleButton.contains(e.target))) {
+                            menu.classList.add('closed');
+                            menu.classList.remove('open');
+                        }
+                    }
+                    
+                    const pinButton = document.getElementById('pin-button');
+                    const pinContextMenu = document.getElementById('pin-context-menu');
+
+                    if (pinContextMenu && pinContextMenu.classList.contains('open')) {
+                        if (!pinContextMenu.contains(e.target) && (pinButton && !pinButton.contains(e.target))) {
+                            pinContextMenu.classList.add('closed');
+                            pinContextMenu.classList.remove('open');
+                        }
+                    }
+                });
+                
+                window.addEventListener('pfp-updated', (e) => {
+                    if (!currentUserData) currentUserData = {};
+                    Object.assign(currentUserData, e.detail);
+                    
+                    const username = currentUserData.username || currentUser?.displayName || 'User';
+                    const initial = (currentUserData.letterAvatarText) ? currentUserData.letterAvatarText : username.charAt(0).toUpperCase();
+                    let newContent = '';
+                    
+                    if (currentUserData.pfpType === 'custom' && currentUserData.customPfp) {
+                        newContent = `<img src="${currentUserData.customPfp}" class="w-full h-full object-cover rounded-full" alt="Profile">`;
+                    } else if (currentUserData.pfpType === 'mibi' && currentUserData.mibiConfig) {
+                        const { eyes, mouths, hats, bgColor, rotation, size, offsetX, offsetY } = currentUserData.mibiConfig;
+                        const scale = (size || 100) / 100;
+                        const rot = rotation || 0;
+                        const x = offsetX || 0;
+                        const y = offsetY || 0;
+
+                        newContent = `
+                            <div class="w-full h-full relative overflow-hidden rounded-full" style="background-color: ${bgColor || '#3B82F6'}">
+                                 <div class="absolute inset-0 w-full h-full" style="transform: translate(${x}%, ${y}%) rotate(${rot}deg) scale(${scale}); transform-origin: center;">
+                                     <img src="/mibi-avatars/head.png" class="absolute inset-0 w-full h-full object-contain">
+                                     ${eyes ? `<img src="/mibi-avatars/eyes/${eyes}" class="absolute inset-0 w-full h-full object-contain">` : ''}
+                                     ${mouths ? `<img src="/mibi-avatars/mouths/${mouths}" class="absolute inset-0 w-full h-full object-contain">` : ''}
+                                     ${hats ? `<img src="/mibi-avatars/hats/${hats}" class="absolute inset-0 w-full h-full object-contain">` : ''}
+                                 </div>
+                            </div>
+                        `;
+                    } else if (currentUserData.pfpType === 'letter') {
+                        const bg = currentUserData.letterAvatarColor || DEFAULT_THEME['avatar-gradient'];
+                        const textColor = getLetterAvatarTextColor(bg);
+                        const fontSizeClass = initial.length >= 3 ? 'text-xs' : (initial.length === 2 ? 'text-sm' : 'text-base');
+                        newContent = `<div class="initial-avatar w-full h-full rounded-full font-semibold ${fontSizeClass}" style="background: ${bg}; color: ${textColor}">${initial}</div>`;
+                    } else {
+                        const googleProvider = currentUser?.providerData.find(p => p.providerId === 'google.com');
+                        const googlePhoto = googleProvider ? googleProvider.photoURL : null;
+                        const displayPhoto = googlePhoto || currentUser?.photoURL;
+
+                        if (displayPhoto) {
+                            newContent = `<img src="${displayPhoto}" class="w-full h-full object-cover rounded-full" alt="Profile">`;
+                        } else {
+                            const bg = DEFAULT_THEME['avatar-gradient'];
+                            const textColor = getLetterAvatarTextColor(bg);
+                            const fontSizeClass = initial.length >= 3 ? 'text-xs' : (initial.length === 2 ? 'text-sm' : 'text-base');
+                            newContent = `<div class="initial-avatar w-full h-full rounded-full font-semibold ${fontSizeClass}" style="background: ${bg}; color: ${textColor}">${initial}</div>`;
+                        }
+                    }
+
+                    const authToggle = document.getElementById('auth-toggle');
+                    if (authToggle) {
+                        authToggle.style.transition = 'opacity 0.2s ease';
+                        authToggle.style.opacity = '0';
+                        setTimeout(() => {
+                            authToggle.innerHTML = newContent;
+                            authToggle.style.opacity = '1';
+                        }, 200);
+                    }
+                    const menuAvatar = document.getElementById('auth-menu-avatar-container');
+                    if (menuAvatar) {
+                        menuAvatar.innerHTML = newContent; 
+                    }
+                });
+
+                globalClickListenerAdded = true;
+            }
+        };
+
+        auth.onAuthStateChanged(async (user) => {
+            let isPrivilegedUser = false;
+            let userData = null;
+            if (user) {
+                isPrivilegedUser = user.email === PRIVILEGED_EMAIL;
+                try {
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    userData = userDoc.exists ? userDoc.data() : null;
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                }
+            }
+            currentUser = user;
+            currentUserData = userData;
+
+            // --- NEW: Apply Theme from Firestore ---
+            if (userData && userData.navbarTheme) {
+                window.applyTheme(userData.navbarTheme);
+                // Sync to local storage for future page loads
+                localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(userData.navbarTheme));
+            }
+            // ---------------------------------------
+
+            currentIsPrivileged = isPrivilegedUser;
+            renderNavbar(currentUser, currentUserData, allPages, currentIsPrivileged);
+
+            // Set flag after the first check
+            if (!authCheckCompleted) {
+                authCheckCompleted = true;
+            }
+
+            // Only redirect if auth check is completed, user is logged out, and we are not already redirecting
+            if (authCheckCompleted && !user && !isRedirecting) {
+                const targetUrl = '../index.html'; 
+                
+                console.log(`User logged out. Restricting access and redirecting to ${targetUrl}`);
+                isRedirecting = true; // Set flag to prevent multiple redirects
+                window.location.href = targetUrl;
+            }
+        });
+    };
+
+    if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+} else {
+    run();
+}
+})();
