@@ -431,16 +431,30 @@
         </div>
     </div>
     
-    <div id="public-disclaimer-modal" class="modal-backdrop hidden opacity-0">
-        <div class="modal-content w-full max-w-md p-6 text-center border border-red-900 bg-[#0d0d0d] shadow-2xl shadow-red-900/20 aspect-auto">
-             <i class="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-4"></i>
-             <h3 class="text-xl font-bold mb-4 text-white">Public Feed Warning</h3>
-             <p class="mb-4 text-gray-300">Public posts are visible to <strong>everyone</strong>. They may contain content that is explicit or violates school rules.</p>
-             <p class="mb-6 text-gray-400 text-sm">Please be aware of your own safety online. Treat this space with respect.</p>
-             <div class="flex gap-4 justify-center">
-                 <button id="public-disclaimer-accept-btn" class="btn-toolbar-style btn-primary-override">I Understand</button>
-                 <a href="https://www.justice.gov/criminal/criminal-ceos/keeping-children-safe-online" target="_blank" class="btn-toolbar-style text-red-400 border-red-900 hover:bg-red-900/20">Safety Info</a>
-             </div>
+    <div id="public-disclaimer-modal" class="fixed inset-0 bg-black/70 z-[9999] transition-opacity duration-300 opacity-0" style="display: none;">
+        <div id="public-disclaimer-banner" class="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-7xl px-4">
+            <div class="bg-black/95 text-white p-4 sm:p-6 rounded-3xl border border-red-900 shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 md:space-x-6">
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-xl font-normal mb-1">Public Feed Warning</h3>
+                    <p class="text-sm text-gray-300 mb-2 font-light">
+                        Public posts are visible to <strong>everyone</strong>. They may contain content that is explicit or violates school rules.
+                    </p>
+                    <div class="space-x-3 text-xs">
+                         <a href="https://www.justice.gov/criminal/criminal-ceos/keeping-children-safe-online" target="_blank" class="text-red-400 hover:text-red-300 underline transition">
+                            Safety Info
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex-shrink-0 flex items-center space-x-4">
+                    <button id="public-disclaimer-accept-btn" class="w-full md:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-normal rounded-xl text-white bg-red-500/10 ring-1 ring-red-500/50 hover:bg-red-500/20 transition duration-150 transform hover:scale-[1.02]">
+                        I Understand
+                    </button>
+                    <button id="public-disclaimer-close-btn" class="text-gray-400 hover:text-white transition focus:outline-none">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -630,147 +644,173 @@
         const feedToggleFriends = document.getElementById('feed-toggle-friends');
         const feedTogglePublic = document.getElementById('feed-toggle-public');
         const publicDisclaimerModal = document.getElementById('public-disclaimer-modal');
-        const publicDisclaimerAcceptBtn = document.getElementById('public-disclaimer-accept-btn');
-
-
-        // --- Firestore Document References & Collections ---
-        const getUserProfileDocRef = (userId) => doc(db, 'users', userId);
-        const getFriendCodeDocRef = (code) => doc(db, 'friend_codes', code);
-        const DAILY_PHOTO_COLLECTION = collection(db, 'daily_photos');
-
-        // =========================================================================
-        // Helper Functions 
-        // =========================================================================
+                const publicDisclaimerAcceptBtn = document.getElementById('public-disclaimer-accept-btn');
+                const publicDisclaimerCloseBtn = document.getElementById('public-disclaimer-close-btn');
         
-        async function cleanText(text, type = 'text') {
-            if (!text || !text.trim()) return text;
-            
-            // Profanity.dev API
-            try {
-                const response = await fetch('https://vector.profanity.dev', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
-                });
+                const TRANSITION_DURATION_MS = 300; // Matches Tailwind's duration-300
                 
-                if (!response.ok) throw new Error("Profanity Check Failed");
+                // --- Firestore Document References & Collections ---
+                const getUserProfileDocRef = (userId) => doc(db, 'users', userId);
+                const getFriendCodeDocRef = (code) => doc(db, 'friend_codes', code);
+                const DAILY_PHOTO_COLLECTION = collection(db, 'daily_photos');
+        
+                // =========================================================================
+                // Helper Functions 
+                // =========================================================================
                 
-                const data = await response.json();
-                
-                if (data.isProfanity) {
-                    return "*** (Profanity Detected) ***";
+                async function cleanText(text, type = 'text') {
+                    if (!text || !text.trim()) return text;
+                    
+                    // Profanity.dev API
+                    try {
+                        const response = await fetch('https://vector.profanity.dev', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ message: text })
+                        });
+                        
+                        if (!response.ok) throw new Error("Profanity Check Failed");
+                        
+                        const data = await response.json();
+                        
+                        if (data.isProfanity) {
+                            return "*** (Profanity Detected) ***";
+                        }
+                        
+                        return text;
+        
+                    } catch (error) {
+                        console.error(`Profanity check failed. Using fallback.`, error);
+                        // Fallback to Purgomalum if Profanity.dev fails
+                        const purgomalumUrl = `https://www.purgomalum.com/service/json?text=${encodeURIComponent(text)}`;
+                        try {
+                            const response = await fetch(purgomalumUrl);
+                            if (!response.ok) throw new Error(`Purgomalum API HTTP error!`);
+                            const data = await response.json();
+                            return data.result || text;
+                        } catch (e) {
+                            return text; // Ultimate fallback
+                        }
+                    }
                 }
                 
-                return text;
-
-            } catch (error) {
-                console.error(`Profanity check failed. Using fallback.`, error);
-                // Fallback to Purgomalum if Profanity.dev fails
-                const purgomalumUrl = `https://www.purgomalum.com/service/json?text=${encodeURIComponent(text)}`;
-                try {
-                    const response = await fetch(purgomalumUrl);
-                    if (!response.ok) throw new Error(`Purgomalum API HTTP error!`);
-                    const data = await response.json();
-                    return data.result || text;
-                } catch (e) {
-                    return text; // Ultimate fallback
+                function formatCount(num) {
+                    if (typeof num !== 'number' || isNaN(num)) return '0';
+                    if (num < 1000) return String(num); 
+                    const suffixes = ["", "K", "M", "B"];
+                    let tier = 0;
+                    let currentNum = num;
+                    while (currentNum >= 1000 && tier < suffixes.length - 1) {
+                        currentNum /= 1000;
+                        tier++;
+                    }
+                    if (tier === 3) {
+                        if (currentNum >= 999.5) return '999B';
+                    }
+                    const formatted = currentNum.toFixed(1).replace(/\.0$/, '');
+                    return formatted + suffixes[tier];
                 }
-            }
-        }
         
-        function formatCount(num) {
-            if (typeof num !== 'number' || isNaN(num)) return '0';
-            if (num < 1000) return String(num); 
-            const suffixes = ["", "K", "M", "B"];
-            let tier = 0;
-            let currentNum = num;
-            while (currentNum >= 1000 && tier < suffixes.length - 1) {
-                currentNum /= 1000;
-                tier++;
-            }
-            if (tier === 3) {
-                if (currentNum >= 999.5) return '999B';
-            }
-            const formatted = currentNum.toFixed(1).replace(/\.0$/, '');
-            return formatted + suffixes[tier];
-        }
-
-        function closePhotoModal() {
-            photoModal.classList.add('hidden');
-            MODAL_UNSUBSCRIBE_LISTENER();
-            MODAL_UNSUBSCRIBE_LISTENER = () => {};
-            document.getElementById('modal-content-container').innerHTML = '';
-            document.getElementById('modal-content-container').classList.remove('fullscreen-image-mode'); 
-        }
-        
-        function openUploadMenu(slotIndex) {
-            document.getElementById('upload-menu-title').textContent = `Post to Slot #${slotIndex + 1}`;
-            uploadFileInput.dataset.slotIndex = slotIndex;
-            uploadFileInput.value = '';
-            uploadSelectOptions.classList.remove('hidden');
-            uploadPostCreator.classList.add('hidden');
-            document.getElementById('post-title-input').value = '';
-            document.getElementById('post-public-checkbox').checked = false; // Default false
-            uploadMenuModal.classList.remove('hidden');
-            setTimeout(() => uploadMenuModal.classList.add('opacity-100'), 10);
-        }
-        
-        function closeUploadMenu() {
-            uploadMenuModal.classList.remove('opacity-100');
-            uploadMenuModal.classList.add('opacity-0');
-            setTimeout(() => uploadMenuModal.classList.add('hidden'), 300);
-            PENDING_UPLOAD_FILE = null;
-        }
-
-        function showMessage(element, text, type = 'error') {
-            element.textContent = text;
-            element.className = `text-sm mt-2 min-h-[20px] ${type === 'success' ? 'text-green-400' : 'text-red-400'}`;
-            setTimeout(() => element.textContent = '', 4000);
-        }
-
-        function showCustomModal(title, body) {
-            return new Promise(resolve => {
-                messageModalTitle.textContent = title;
-                messageModalBody.textContent = body;
-                messageModal.classList.remove('hidden', 'opacity-0');
-                messageModal.classList.add('opacity-100');
+                function closePhotoModal() {
+                    photoModal.classList.add('hidden');
+                    MODAL_UNSUBSCRIBE_LISTENER();
+                    MODAL_UNSUBSCRIBE_LISTENER = () => {};
+                    document.getElementById('modal-content-container').innerHTML = '';
+                    document.getElementById('modal-content-container').classList.remove('fullscreen-image-mode'); 
+                }
                 
-                const handler = () => {
-                    messageModal.classList.remove('opacity-100');
-                    messageModal.classList.add('opacity-0');
-                    setTimeout(() => messageModal.classList.add('hidden'), 300);
-                    messageModalCloseBtn.removeEventListener('click', handler);
-                    resolve(true); 
-                };
-                messageModalCloseBtn.addEventListener('click', handler);
-            });
-        }
-        
-        function showPublicDisclaimer() {
-            return new Promise(resolve => {
-                publicDisclaimerModal.classList.remove('hidden', 'opacity-0');
-                publicDisclaimerModal.classList.add('opacity-100');
+                function openUploadMenu(slotIndex) {
+                    document.getElementById('upload-menu-title').textContent = `Post to Slot #${slotIndex + 1}`;
+                    uploadFileInput.dataset.slotIndex = slotIndex;
+                    uploadFileInput.value = '';
+                    uploadSelectOptions.classList.remove('hidden');
+                    uploadPostCreator.classList.add('hidden');
+                    document.getElementById('post-title-input').value = '';
+                    document.getElementById('post-public-checkbox').checked = false; // Default false
+                    uploadMenuModal.classList.remove('hidden');
+                    setTimeout(() => uploadMenuModal.classList.add('opacity-100'), 10);
+                }
                 
-                const handler = () => {
+                function closeUploadMenu() {
+                    uploadMenuModal.classList.remove('opacity-100');
+                    uploadMenuModal.classList.add('opacity-0');
+                    setTimeout(() => uploadMenuModal.classList.add('hidden'), 300);
+                    PENDING_UPLOAD_FILE = null;
+                }
+        
+                function showMessage(element, text, type = 'error') {
+                    element.textContent = text;
+                    element.className = `text-sm mt-2 min-h-[20px] ${type === 'success' ? 'text-green-400' : 'text-red-400'}`;
+                    setTimeout(() => element.textContent = '', 4000);
+                }
+        
+                function showCustomModal(title, body) {
+                    return new Promise(resolve => {
+                        messageModalTitle.textContent = title;
+                        messageModalBody.textContent = body;
+                        messageModal.classList.remove('hidden', 'opacity-0');
+                        messageModal.classList.add('opacity-100');
+                        
+                        const handler = () => {
+                            messageModal.classList.remove('opacity-100');
+                            messageModal.classList.add('opacity-0');
+                            setTimeout(() => messageModal.classList.add('hidden'), 300);
+                            messageModalCloseBtn.removeEventListener('click', handler);
+                            resolve(true); 
+                        };
+                        messageModalCloseBtn.addEventListener('click', handler);
+                    });
+                }
+                
+                // Function to hide the public disclaimer banner with fade-out
+                const hidePublicDisclaimer = () => {
                     publicDisclaimerModal.classList.remove('opacity-100');
                     publicDisclaimerModal.classList.add('opacity-0');
-                    setTimeout(() => publicDisclaimerModal.classList.add('hidden'), 300);
-                    publicDisclaimerAcceptBtn.removeEventListener('click', handler);
-                    localStorage.setItem('public_warning_seen', 'true');
-                    resolve(true);
-                };
-                publicDisclaimerAcceptBtn.addEventListener('click', handler);
-            });
-        }
         
-        function openTitleModal(postId, currentTitle = '') {
-            const input = document.getElementById('title-edit-input');
-            input.value = currentTitle;
-            editTitleForm.dataset.postId = postId;
-            titleModal.classList.remove('hidden');
-            setTimeout(() => titleModal.classList.add('opacity-100'), 10);
-        }
-
+                    setTimeout(() => {
+                        publicDisclaimerModal.style.display = 'none';
+                        document.body.style.overflow = '';
+                    }, TRANSITION_DURATION_MS);
+                };
+        
+                // Function to show the public disclaimer banner with fade-in
+                const showPublicDisclaimer = () => {
+                    return new Promise(resolve => {
+                        publicDisclaimerModal.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+        
+                        setTimeout(() => {
+                            publicDisclaimerModal.classList.remove('opacity-0');
+                            publicDisclaimerModal.classList.add('opacity-100');
+                        }, 10);
+                        
+                        const acceptHandler = () => {
+                            hidePublicDisclaimer();
+                            localStorage.setItem('public_warning_seen', 'true');
+                            publicDisclaimerAcceptBtn.removeEventListener('click', acceptHandler);
+                            publicDisclaimerCloseBtn.removeEventListener('click', closeHandler);
+                            resolve(true); 
+                        };
+                        
+                        const closeHandler = () => {
+                            hidePublicDisclaimer();
+                            publicDisclaimerAcceptBtn.removeEventListener('click', acceptHandler);
+                            publicDisclaimerCloseBtn.removeEventListener('click', closeHandler);
+                            resolve(false); // Resolve false if dismissed without understanding
+                        }
+        
+                        publicDisclaimerAcceptBtn.addEventListener('click', acceptHandler);
+                        publicDisclaimerCloseBtn.addEventListener('click', closeHandler);
+                    });
+                }
+                
+                function openTitleModal(postId, currentTitle = '') {
+                    const input = document.getElementById('title-edit-input');
+                    input.value = currentTitle;
+                    editTitleForm.dataset.postId = postId;
+                    titleModal.classList.remove('hidden');
+                    setTimeout(() => titleModal.classList.add('opacity-100'), 10);
+                }
         function closeTitleModal() {
             titleModal.classList.remove('opacity-100');
             titleModal.classList.add('opacity-0');
