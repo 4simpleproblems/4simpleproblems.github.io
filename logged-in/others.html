@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Others - 4SP</title>
+    <title>4SP - OTHERS</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,56 +63,74 @@
         }
 
         .menu-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem; /* Increased gap between cards */
+            display: grid; /* Use grid for layout */
+            grid-template-columns: 1fr; /* Single column */
+            gap: 1.5rem; 
             width: 100%;
         }
 
+        /* NEW: Button-like styling for menu cards */
         .menu-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 24px; /* More rounded */
-            padding: 2.5rem; /* Taller padding */
+            background: var(--menu-bg, #0000000); /* Use menu background for consistency */
+            border: 1px solid var(--menu-border, #333); /* Use menu border */
+            border-radius: 0.75rem; /* Match toolbar buttons */
+            color: var(--menu-text, #d1d5db);
+            padding: 1rem 1.5rem; /* Adjusted padding */
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
-            text-decoration: none;
-            color: var(--text-primary);
-            transition: all 0.2s ease;
-            width: 100%;
+            gap: 1rem; /* Space between image and text */
+            width: 100%; /* Ensure full width */
+            text-decoration: none; /* Remove underline for links */
         }
 
         .menu-card:hover {
-            border-color: var(--card-hover-border);
-            transform: translateY(-4px);
-            background-color: #101010; /* Slightly lighter on hover for contrast */
+            background-color: var(--menu-item-hover-bg, #2a2a2a); /* Use menu item hover bg */
+            border-color: var(--menu-item-hover-border, #6366f1); /* New hover border variable */
+            color: var(--menu-item-hover-text, #ffffff); /* Use menu item hover text */
+            transform: none; /* Remove translateY transform */
+        }
+        
+        /* Ensure specific hover styles apply correctly */
+        .menu-card:hover .card-title {
+            color: var(--menu-item-hover-text, #ffffff);
+        }
+
+        .menu-card:hover .card-desc {
+            color: var(--menu-item-hover-text, #ffffff);
         }
 
         .card-image {
-            width: 96px; /* Bigger preview image */
-            height: 96px; /* Bigger preview image */
+            width: 64px; /* Smaller image to fit button style */
+            height: 64px;
             object-fit: contain;
-            margin-right: 2rem; /* More space */
             flex-shrink: 0;
-            border-radius: 8px; /* Slightly rounded image */
+            border-radius: 0.5rem; /* Slightly rounded image */
+            padding: 8px; /* Padding inside the image area */
+            background-color: #1a1a1a; /* Background for the image */
+            border: 1px solid #333; /* Border for the image */
         }
 
         .card-content {
             display: flex;
             flex-direction: column;
             text-align: left;
-            flex-grow: 1; /* Allows content to take available space */
+            flex-grow: 1; 
         }
 
         .card-title {
-            font-size: 1.875rem; /* Bigger text */
+            font-size: 1.25rem; /* Smaller title */
             color: #fff;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
+            font-weight: 500 !important; /* Ensure boldness */
         }
 
         .card-desc {
-            font-size: 1.125rem; /* Bigger text */
-            color: #b0b0b0; /* Slightly lighter gray for description */
+            font-size: 0.9rem; /* Smaller description */
+            color: #b0b0b0;
+            font-weight: 300 !important; /* Ensure lighter weight */
         }
     </style>
 </head>
@@ -126,26 +144,26 @@
         <div id="main-wrapper">
             <div class="menu-container">
                 <!-- Games -->
-                <a href="../logged-in/injex.html" class="menu-card">
-                    <img src="../images/games.png" alt="Games Launcher" class="card-image" onerror="this.src='https://placehold.co/96x96/black/white?text=Games'">
+                <a href="../GAMES/index.html" class="menu-card">
+                    <img src="../images/games.png" alt="4SP Games" class="card-image" onerror="this.src='https://placehold.co/64x64/black/white?text=Games'">
                     <div class="card-content">
-                        <h3 class="card-title">Games Launcher</h3>
-                        <p class="card-desc">Access a curated collection of online games and applications.</p>
+                        <h3 class="card-title">4SP Games</h3>
+                        <p class="card-desc">Access over 1400 online games and applications.</p>
                     </div>
                 </a>
 
-                <!-- Levium (formerly Vern) -->
-                <a href="vern.html" class="menu-card">
-                    <img src="../images/vern.png" alt="Levium AI Assistant" class="card-image" onerror="this.src='https://placehold.co/96x96/black/white?text=AI'">
+                <!-- Levium -->
+                <a href="../logged-in/levium.html" class="menu-card">
+                    <img src="../images/vern.png" alt="Levium" class="card-image" onerror="this.src='https://placehold.co/64x64/black/white?text=Levium'">
                     <div class="card-content">
-                        <h3 class="card-title">Levium AI Assistant</h3>
-                        <p class="card-desc">Your personal AI companion for tasks and information.</p>
+                        <h3 class="card-title">Levium</h3>
+                        <p class="card-desc">The internet, for privacy and freedom.</p>
                     </div>
                 </a>
 
                 <!-- Securly Tester -->
                 <a href="securly-tester.html" class="menu-card">
-                    <img src="../images/securly-tester.png" alt="Securly Block Tester" class="card-image" onerror="this.src='https://placehold.co/96x96/black/white?text=Securly'">
+                    <img src="../images/securly-tester.png" alt="Securly Block Tester" class="card-image" onerror="this.src='https://placehold.co/64x64/black/white?text=Securly'">
                     <div class="card-content">
                         <h3 class="card-title">Securly Block Tester</h3>
                         <p class="card-desc">Check the block status of URLs against Securly filters.</p>
