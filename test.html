@@ -592,7 +592,7 @@
         // Feed Toggles
         const feedToggleFriends = document.getElementById('feed-toggle-friends');
         const feedTogglePublic = document.getElementById('feed-toggle-public');
-        
+
         const friendsListItems = document.getElementById('friends-list-items'); 
         const dailyPostsContainer = document.getElementById('daily-posts-container');
         const uploadMessage = document.getElementById('upload-message');
@@ -700,6 +700,7 @@
             uploadSelectOptions.classList.remove('hidden');
             uploadPostCreator.classList.add('hidden');
             document.getElementById('post-title-input').value = '';
+            document.getElementById('post-public-checkbox').checked = false; // Reset checkbox
             uploadMenuModal.classList.remove('hidden');
             setTimeout(() => uploadMenuModal.classList.add('opacity-100'), 10);
         }
@@ -998,7 +999,7 @@
                  photoFeed.innerHTML = '<p class="text-red-400">Error loading feed. Check console.</p>';
             });
         }
-        
+
         feedToggleFriends.addEventListener('click', () => {
             if (CURRENT_FEED_MODE === 'friends') return;
             CURRENT_FEED_MODE = 'friends';
@@ -1158,7 +1159,7 @@
                 showMessage(uploadMessage, `Post creation failed: ${error.message || error}`);
             } finally {
                 createBtn.disabled = false;
-                createBtn.innerHTML = `<i class="fas fa-arrows-down-to-people mr-2"></i> Create Daily Post`; // Reset text
+                createPostBtn.innerHTML = `<i class="fas fa-check mr-2"></i> Create Daily Post`;
             }
         }
         
@@ -1421,7 +1422,7 @@
                     await handleFriendCodeLogic(user); 
                     await cleanupOldPosts(user); 
                     setupFriendListListener(user); 
-                    setupDailyPostsListener(user); // Initial setup for both profile and post listeners
+                    setupFeedListener(user); // Initial setup for both profile and post listeners
                     loadingScreen.style.display = 'none';
                     messengerUi.style.display = 'grid';
                 } catch (e) {
