@@ -386,8 +386,7 @@
         
         <aside class="left-panel">
             
-            <!-- Fixed Top Section -->
-            <div class="flex-shrink-0 mb-4 border-b border-gray-800 pb-4">
+            <div class="mb-6 border-b border-gray-800 pb-4">
                 <h2 class="text-xl font-bold mb-2">Your Friend Code</h2>
                 <p class="text-sm text-gray-400 mb-3">Share this code with friends to add them.</p>
                 <div id="friend-code-display" class="p-3 text-center bg-gray-900 rounded-md font-mono text-lg tracking-widest text-indigo-400">
@@ -395,7 +394,7 @@
                 </div>
             </div>
 
-            <div class="flex-shrink-0 mb-4 border-b border-gray-800 pb-4">
+            <div class="mb-6 border-b border-gray-800 pb-4">
                 <h2 class="text-xl font-bold mb-2">Add a Friend</h2>
                 <form id="add-friend-form" class="flex gap-2">
                     <input type="text" id="friend-code-input" placeholder="********" maxlength="8" class="friend-code-input-styled flex-grow p-2 bg-gray-900 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase tracking-widest text-center" style="font-family: monospace;" title="8 alphanumeric characters only">
@@ -406,43 +405,36 @@
                 <div id="add-friend-message" class="text-sm mt-2 min-h-[20px]"></div>
             </div>
 
-            <!-- Dynamic Content Area (Flex Grow) -->
-            <div id="sidebar-dynamic-content" class="flex-grow overflow-hidden flex flex-col relative">
-                
-                <!-- View 1: Friends -->
-                <div id="friends-view-container" class="sidebar-section h-full flex flex-col">
-                    <h2 class="text-xl font-bold mb-3 flex-shrink-0">Your Friends</h2>
-                    <div id="friends-list-wrapper" class="compact-list-wrapper">
-                        <div id="friends-list-items" class="compact-list-items"></div>
-                    </div>
-                </div>
-
-                <!-- View 2: Posts -->
-                <div id="posts-view-container" class="sidebar-section h-full flex flex-col hidden">
-                    <h2 class="text-xl font-bold mb-2 flex-shrink-0">Your Daily Posts</h2>
-                    <p class="text-sm text-gray-400 mb-3 flex-shrink-0">You get 5 post slots per day.</p>
-                    <div id="daily-posts-wrapper" class="compact-list-wrapper">
-                        <div id="daily-posts-container"></div>
-                    </div>
-                    <div id="upload-message" class="text-sm mt-2 min-h-[20px] flex-shrink-0"></div>
-                </div>
-
-                <!-- View 3: Blocked -->
-                <div id="blocked-view-container" class="sidebar-section h-full flex flex-col hidden">
-                    <h2 class="text-xl font-bold mb-3 flex-shrink-0">Blocked Users</h2>
-                    <div id="blocked-list-wrapper" class="compact-list-wrapper">
-                        <div id="blocked-list-items" class="compact-list-items">
-                            <p class="text-sm text-gray-500 p-2">You haven't blocked anyone.</p>
+            <div class="mb-6 border-b border-gray-800 pb-4">
+                <h2 class="text-xl font-bold mb-3">Your Friends</h2>
+                <div id="friends-list-wrapper" class="compact-list-wrapper">
+                    <div id="friends-list-items" class="compact-list-items">
                         </div>
-                    </div>
                 </div>
-
             </div>
 
-            <!-- Bottom Tabs -->
-            <div class="sidebar-bottom-controls flex-shrink-0">
-                <button id="sidebar-nav-friends" class="sidebar-control-btn active" title="Friends"><i class="fas fa-user-friends"></i></button>
-                <button id="sidebar-nav-posts" class="sidebar-control-btn" title="My Posts"><i class="fas fa-images"></i></button>
+            <div id="blocked-section" class="mb-6 border-b border-gray-800 pb-4 hidden">
+                <h2 class="text-xl font-bold mb-3">Blocked Users</h2>
+                <div id="blocked-list-wrapper" class="compact-list-wrapper">
+                    <div id="blocked-list-items" class="compact-list-items">
+                        <p class="text-sm text-gray-500 p-2">You haven't blocked anyone.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="daily-posts-section" class="mb-6">
+                <h2 class="text-xl font-bold mb-2">Your Daily Posts</h2>
+                <p class="text-sm text-gray-400 mb-3">You get 5 post slots per day.</p>
+                <div id="daily-posts-wrapper" class="compact-list-wrapper">
+                    <div id="daily-posts-container">
+                        </div>
+                </div>
+                <div id="upload-message" class="text-sm mt-2 min-h-[20px]"></div>
+            </div>
+
+            <div class="sidebar-bottom-controls">
+                <button id="sidebar-nav-posts" class="sidebar-control-btn active" title="My Posts"><i class="fas fa-images"></i></button>
+                <button id="sidebar-nav-friends" class="sidebar-control-btn" title="Friends"><i class="fas fa-user-friends"></i></button>
                 <button id="sidebar-nav-blocked" class="sidebar-control-btn" title="Blocked Users"><i class="fas fa-user-shield"></i></button>
             </div>
         </aside>
@@ -554,14 +546,11 @@
         const sidebarNavPosts = document.getElementById('sidebar-nav-posts');
         const sidebarNavFriends = document.getElementById('sidebar-nav-friends');
         const sidebarNavBlocked = document.getElementById('sidebar-nav-blocked');
-        
-        // Corrected references to the new view containers
-        const postsViewContainer = document.getElementById('posts-view-container');
-        const friendsViewContainer = document.getElementById('friends-view-container');
-        const blockedViewContainer = document.getElementById('blocked-view-container');
-        
-        // Corrected reference for blockedListItems (it's inside blockedViewContainer now)
+        const dailyPostsSection = document.getElementById('daily-posts-section');
+        const friendsListWrapper = document.getElementById('friends-list-wrapper').parentElement; // The div containing title + wrapper
+        const blockedSection = document.getElementById('blocked-section');
         const blockedListItems = document.getElementById('blocked-list-items');
+
 
         // --- Firestore Document References & Collections ---
         const getUserProfileDocRef = (userId) => doc(db, 'users', userId);
@@ -1442,21 +1431,19 @@
              sidebarNavFriends.classList.remove('active');
              sidebarNavBlocked.classList.remove('active');
              
-             // Hide all view containers
-             postsViewContainer.classList.add('hidden');
-             friendsViewContainer.classList.add('hidden');
-             blockedViewContainer.classList.add('hidden');
+             dailyPostsSection.classList.add('hidden');
+             friendsListWrapper.classList.add('hidden');
+             blockedSection.classList.add('hidden');
              
-             // Show the active view container
              if (view === 'posts') {
                  sidebarNavPosts.classList.add('active');
-                 postsViewContainer.classList.remove('hidden');
+                 dailyPostsSection.classList.remove('hidden');
              } else if (view === 'friends') {
                  sidebarNavFriends.classList.add('active');
-                 friendsViewContainer.classList.remove('hidden');
+                 friendsListWrapper.classList.remove('hidden');
              } else if (view === 'blocked') {
                  sidebarNavBlocked.classList.add('active');
-                 blockedViewContainer.classList.remove('hidden');
+                 blockedSection.classList.remove('hidden');
                  renderBlockedList();
              }
         }
