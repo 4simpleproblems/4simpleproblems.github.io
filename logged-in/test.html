@@ -459,17 +459,6 @@
                  
                  <form id="create-post-form" class="flex flex-col gap-4">
                     <input type="text" id="post-title-input" placeholder="Enter your photo title (max 48 chars)" class="p-3 bg-gray-900 border border-gray-700 rounded-md focus:ring-indigo-500" maxlength="48" required>
-                    
-                    <div class="flex items-center gap-3 px-1">
-                        <div class="relative flex items-center">
-                            <input type="checkbox" id="post-public-checkbox" class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-gray-600 bg-gray-900 transition-all checked:border-[#4f46e5] checked:bg-[#4f46e5]">
-                            <i class="fas fa-check absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-white opacity-0 peer-checked:opacity-100 pointer-events-none"></i>
-                        </div>
-                        <label for="post-public-checkbox" class="text-sm text-gray-300 cursor-pointer select-none">
-                            <span class="font-medium text-white">Make Public?</span> <span class="text-gray-500">(Visible to everyone)</span>
-                        </label>
-                    </div>
-
                     <button type="submit" id="create-post-btn" class="btn-toolbar-style btn-primary-override font-semibold w-full">
                         <i class="fas fa-arrows-down-to-people mr-2"></i> Create Daily Post
                     </button>
@@ -524,13 +513,7 @@
         </aside>
 
         <section class="feed-panel">
-            <div class="flex justify-between items-center mb-4">
-                <h1 class="text-2xl font-bold">Today's Feed</h1>
-                <div class="flex items-center gap-1 bg-[#1a1a1a] p-1 rounded-lg border border-[#333]">
-                    <button id="feed-toggle-friends" class="px-4 py-1.5 rounded-md text-sm font-medium bg-[#4f46e5] text-white shadow-sm transition-all duration-200">Friends</button>
-                    <button id="feed-toggle-public" class="px-4 py-1.5 rounded-md text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200">Public</button>
-                </div>
-            </div>
+            <h1 class="text-2xl font-bold mb-4">Today's Feed</h1>
             <div id="photo-feed" class="photo-grid">
                 <p id="feed-placeholder">Add some friends to see their daily photos!</p>
             </div>
@@ -569,7 +552,6 @@
         // --- Global State & Constants ---
         let CURRENT_FRIENDS = [];
         let CURRENT_USERNAME = 'DailyUser'; 
-        let CURRENT_FEED_MODE = 'friends'; // 'friends' or 'public'
         let UNSUBSCRIBE_POSTS_LISTENER = () => {};
         let UNSUBSCRIBE_DAILY_SLOTS_LISTENER = () => {}; // NEW: Separate listener for daily post slots
         let MODAL_UNSUBSCRIBE_LISTENER = () => {}; 
@@ -589,10 +571,6 @@
         const addFriendForm = document.getElementById('add-friend-form');
         const addFriendMessage = document.getElementById('add-friend-message');
         const photoFeed = document.getElementById('photo-feed');
-        // Feed Toggles
-        const feedToggleFriends = document.getElementById('feed-toggle-friends');
-        const feedTogglePublic = document.getElementById('feed-toggle-public');
-
         const friendsListItems = document.getElementById('friends-list-items'); 
         const dailyPostsContainer = document.getElementById('daily-posts-container');
         const uploadMessage = document.getElementById('upload-message');
@@ -623,34 +601,15 @@
         
         async function cleanText(text, type = 'text') {
             if (!text || !text.trim()) return text;
+            const purgomalumUrl = `https://www.purgomalum.com/service/json?text=${encodeURIComponent(text)}`;
             try {
-                // Using profanity.dev API
-                const response = await fetch('https://profanity.dev/api/v1/message', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
-                });
-
-                if (!response.ok) {
-                     // Fallback to purgomalum if profanity.dev fails
-                     console.warn(`profanity.dev failed for ${type}, status: ${response.status}. Trying fallback.`);
-                     throw new Error('Primary API failed');
-                }
-                
+                const response = await fetch(purgomalumUrl);
+                if (!response.ok) throw new Error(`Purgomalum API HTTP error! Status: ${response.status}`);
                 const data = await response.json();
-                return data.censored || text;
+                return data.result || text;
             } catch (error) {
-                console.warn(`Primary profanity check failed for ${type}. Trying Purgomalum fallback.`, error);
-                const purgomalumUrl = `https://www.purgomalum.com/service/json?text=${encodeURIComponent(text)}`;
-                try {
-                    const fallbackResponse = await fetch(purgomalumUrl);
-                    if (!fallbackResponse.ok) throw new Error(`Purgomalum API HTTP error! Status: ${fallbackResponse.status}`);
-                    const fallbackData = await fallbackResponse.json();
-                    return fallbackData.result || text;
-                } catch (fallbackError) {
-                    console.error("All profanity filters failed. Returning original text.", fallbackError);
-                    return text;
-                }
+                console.error(`Profanity filtering with Purgomalum failed for ${type}. Returning original text.`, error);
+                return text;
             }
         }
         
@@ -700,7 +659,6 @@
             uploadSelectOptions.classList.remove('hidden');
             uploadPostCreator.classList.add('hidden');
             document.getElementById('post-title-input').value = '';
-            document.getElementById('post-public-checkbox').checked = false; // Reset checkbox
             uploadMenuModal.classList.remove('hidden');
             setTimeout(() => uploadMenuModal.classList.add('opacity-100'), 10);
         }
@@ -891,14 +849,7 @@
                     console.log("Daily post slots reset for new day.");
                 }
 
-                // FIX: Only query posts created by the current user to avoid permission errors when deleting
-                const oldPostsQuery = query(
-                    DAILY_PHOTO_COLLECTION, 
-                    where('creatorUid', '==', user.uid),
-                    where('createdAt', '<', startOfToday), 
-                    limit(50)
-                );
-                
+                const oldPostsQuery = query(DAILY_PHOTO_COLLECTION, where('createdAt', '<', startOfToday), limit(50));
                 const snapshot = await getDocs(oldPostsQuery);
                 if (snapshot.empty) return;
 
@@ -915,111 +866,59 @@
         // Real-Time Listener Implementations
         // =========================================================================
         
-        function updateFeedToggleUI() {
-            if (CURRENT_FEED_MODE === 'friends') {
-                feedToggleFriends.classList.replace('text-gray-400', 'text-white');
-                feedToggleFriends.classList.replace('hover:text-white', 'bg-[#4f46e5]');
-                feedToggleFriends.classList.add('bg-[#4f46e5]', 'shadow-sm');
-                feedToggleFriends.classList.remove('hover:bg-white/5');
-                
-                feedTogglePublic.classList.replace('text-white', 'text-gray-400');
-                feedTogglePublic.classList.replace('bg-[#4f46e5]', 'hover:text-white');
-                feedTogglePublic.classList.remove('bg-[#4f46e5]', 'shadow-sm');
-                feedTogglePublic.classList.add('hover:bg-white/5');
-            } else {
-                feedTogglePublic.classList.replace('text-gray-400', 'text-white');
-                feedTogglePublic.classList.replace('hover:text-white', 'bg-[#4f46e5]');
-                feedTogglePublic.classList.add('bg-[#4f46e5]', 'shadow-sm');
-                feedTogglePublic.classList.remove('hover:bg-white/5');
-                
-                feedToggleFriends.classList.replace('text-white', 'text-gray-400');
-                feedToggleFriends.classList.replace('bg-[#4f46e5]', 'hover:text-white');
-                feedToggleFriends.classList.remove('bg-[#4f46e5]', 'shadow-sm');
-                feedToggleFriends.classList.add('hover:bg-white/5');
-            }
-        }
-
-        function setupFeedListener(user) {
+        function setupFriendsFeedListener(user) {
             UNSUBSCRIBE_POSTS_LISTENER(); 
             const startOfDay = new Date();
             startOfDay.setHours(0, 0, 0, 0);
             
-            let photosQuery;
-
-            if (CURRENT_FEED_MODE === 'public') {
-                // Public Feed Logic: Show all posts marked isPublic from today
-                 photosQuery = query(
-                    DAILY_PHOTO_COLLECTION, 
-                    where('isPublic', '==', true), 
-                    where('createdAt', '>=', startOfDay), 
-                    orderBy('createdAt', 'desc'),
-                    limit(50) 
-                );
-            } else {
-                // Friends Feed Logic (Default)
-                const uidsToQuery = [user.uid, ...CURRENT_FRIENDS].slice(0, 10);
-                if (uidsToQuery.length === 0) {
-                     photoFeed.innerHTML = '<p id="feed-placeholder" class="text-gray-500">Add some friends to see their daily photos!</p>';
-                     return;
-                }
-                photosQuery = query(
-                    DAILY_PHOTO_COLLECTION, 
-                    where('creatorUid', 'in', uidsToQuery), 
-                    where('createdAt', '>=', startOfDay), 
-                    orderBy('createdAt', 'desc')
-                );
+            const uidsToQuery = [user.uid, ...CURRENT_FRIENDS].slice(0, 10);
+            if (uidsToQuery.length === 0) {
+                 photoFeed.innerHTML = '<p id="feed-placeholder" class="text-gray-500">Add some friends to see their daily photos!</p>';
+                 return;
             }
             
+            const photosQuery = query(DAILY_PHOTO_COLLECTION, where('creatorUid', 'in', uidsToQuery), where('createdAt', '>=', startOfDay), orderBy('createdAt', 'desc'));
+            
+            // REFACTOR: Use a full-snapshot processing approach to eliminate duplicate rendering issues.
             UNSUBSCRIBE_POSTS_LISTENER = onSnapshot(photosQuery, (snapshot) => {
                 const fragment = document.createDocumentFragment();
                 
+                // 1. Process the entire snapshot (in sorted order)
                 snapshot.docs.forEach(doc => {
                     const docId = doc.id;
                     const data = doc.data();
                     
-                    if (!data.title) return; 
+                    if (!data.title) return; // Skip posts without titles
                     
+                    // Try to reuse an existing element to minimize DOM thrashing
                     let thumb = document.querySelector(`.photo-thumbnail[data-photo-id="${docId}"]`);
                     
                     if (thumb) {
+                        // Update existing element properties
                         thumb.querySelector('.heart-count-display').innerHTML = formatCount(data.hearts?.length || 0);
                         thumb.querySelector('.comment-count-display').innerHTML = formatCount(data.comments?.length || 0);
                         thumb.querySelector('.title-text-span').textContent = data.title;
                     } else {
+                        // Create a new element
                         thumb = createPhotoThumbnailElement(docId, data);
                     }
+                    
+                    // Append the element (new or reused) to the fragment, preserving sort order
                     fragment.appendChild(thumb);
                 });
 
+                // 2. Clear the existing feed and replace it with the new, correct one
                 photoFeed.innerHTML = '';
                 photoFeed.appendChild(fragment);
 
-                const emptyMsg = CURRENT_FEED_MODE === 'public' 
-                    ? 'No public posts yet today. Be the first!' 
-                    : 'No posts found today from you or your friends!';
-
-                if (photoFeed.children.length === 0) photoFeed.innerHTML = `<p id="feed-placeholder" class="text-gray-500">${emptyMsg}</p>`;
+                if (photoFeed.children.length === 0) photoFeed.innerHTML = '<p id="feed-placeholder" class="text-gray-500">No posts found today from you or your friends!</p>';
                 else document.getElementById('feed-placeholder')?.remove();
 
             }, (error) => {
                  console.error("Error fetching feed:", error);
-                 photoFeed.innerHTML = '<p class="text-red-400">Error loading feed. Check console.</p>';
+                 photoFeed.innerHTML = '<p class="text-red-400">Error loading feed.</p>';
             });
         }
-
-        feedToggleFriends.addEventListener('click', () => {
-            if (CURRENT_FEED_MODE === 'friends') return;
-            CURRENT_FEED_MODE = 'friends';
-            updateFeedToggleUI();
-            setupFeedListener(auth.currentUser);
-        });
-
-        feedTogglePublic.addEventListener('click', () => {
-             if (CURRENT_FEED_MODE === 'public') return;
-             CURRENT_FEED_MODE = 'public';
-             updateFeedToggleUI();
-             setupFeedListener(auth.currentUser);
-        });
         
         /**
          * @brief Renders the user's daily post slots based on profile data and post snapshots.
@@ -1125,8 +1024,6 @@
             const userProfileRef = getUserProfileDocRef(currentUser.uid);
             
             let title = document.getElementById('post-title-input').value.trim();
-            const isPublic = document.getElementById('post-public-checkbox').checked;
-
             if (!title) { showMessage(uploadMessage, 'Title cannot be empty.', 'error'); return; }
             if (title.length > 48) title = title.substring(0, 48);
             const cleanedTitle = await cleanText(title, 'post title');
@@ -1145,22 +1042,13 @@
                 
                 // IMPORTANT: The post MUST have a title to be viewable on the feed
                 await setDoc(newPostRef, {
-                    creatorUid: currentUser.uid, 
-                    creatorUsername: CURRENT_USERNAME, 
-                    createdAt: serverTimestamp(),
-                    imageBase64, 
-                    title: cleanedTitle, 
-                    hearts: [], 
-                    comments: [],
-                    isPublic: isPublic // Save the public status
+                    creatorUid: currentUser.uid, creatorUsername: CURRENT_USERNAME, createdAt: serverTimestamp(),
+                    imageBase64, title: cleanedTitle, hearts: [], comments: []
                 });
                 await updateDoc(userProfileRef, { dailySlotsUsed: arrayUnion(newPostRef.id) });
 
                 closeUploadMenu();
                 showMessage(uploadMessage, 'Post created successfully!', 'success');
-                
-                // If the user posted publicly and is currently on the public feed, refresh might happen automatically via listener, 
-                // but if they are on friends feed, they might not see it immediately in the main feed area unless we switch them or they switch.
             } catch (error) {
                 console.error("Post creation error:", error);
                 showMessage(uploadMessage, `Post creation failed: ${error.message || error}`);
@@ -1290,6 +1178,91 @@
             });
         }
         
+        photoModal.addEventListener('click', e => {
+            if (e.target === photoModal || e.target.closest('#close-modal-btn')) closePhotoModal();
+            
+            const heartBtn = e.target.closest('#heart-btn');
+            if (heartBtn) {
+                const photoId = heartBtn.dataset.postId;
+                
+                // --- NEW: Hearting/Unhearting Delay Logic ---
+                if (Date.now() - LAST_HEART_TIMESTAMP < HEART_DELAY_MS) {
+                    return; // Secretly ignore the click if within the delay period
+                }
+                LAST_HEART_TIMESTAMP = Date.now();
+                // ---------------------------------------------
+
+                const isHearted = heartBtn.dataset.hearted === 'true';
+                updateDoc(doc(DAILY_PHOTO_COLLECTION, photoId), { 
+                    hearts: isHearted ? arrayRemove(auth.currentUser.uid) : arrayUnion(auth.currentUser.uid) 
+                });
+            }
+
+            // NEW: Fullscreen Image Toggle Logic
+            const imageToggle = e.target.closest('[data-image-toggle]');
+            if (imageToggle) {
+                const modalContentContainer = document.getElementById('modal-content-container');
+                // Toggle the class on the modal content to trigger CSS transitions (Step 5)
+                modalContentContainer.classList.toggle('fullscreen-image-mode');
+            }
+
+            const deleteTrigger = e.target.closest('#delete-post-trigger-btn');
+            if (deleteTrigger) {
+                document.getElementById('photo-view-main').style.opacity = '0.1';
+                document.getElementById('delete-confirmation-view').classList.remove('hidden');
+            }
+            const cancelDelete = e.target.closest('#cancel-delete-btn');
+            if (cancelDelete) {
+                document.getElementById('delete-confirmation-view').classList.add('hidden');
+                document.getElementById('photo-view-main').style.opacity = '1';
+            }
+            const confirmDelete = e.target.closest('#confirm-delete-btn');
+            if (confirmDelete) {
+                // IMPORTANT: Use the correct post ID lookup from the heart button dataset as it's reliable in the modal
+                const currentPostId = document.getElementById('heart-btn')?.dataset.postId;
+                if (currentPostId) {
+                    deleteDoc(doc(DAILY_PHOTO_COLLECTION, currentPostId))
+                        .then(() => {
+                            closePhotoModal();
+                            showMessage(uploadMessage, 'Post deleted.', 'success');
+                        })
+                        .catch(error => showCustomModal("Deletion Error", `Failed to delete post: ${error.message}`));
+                } else {
+                     showCustomModal("Deletion Error", `Could not find post ID.`);
+                }
+            }
+        });
+
+        document.getElementById('modal-content-container').addEventListener('submit', async e => {
+            if (e.target.id !== 'comment-form') return;
+            e.preventDefault();
+            const input = document.getElementById('comment-input');
+            const btn = document.getElementById('comment-submit-btn');
+            let text = input.value.trim();
+            if (!text) return;
+            if (Date.now() - LAST_COMMENT_TIMESTAMP < COMMENT_DELAY_MS) {
+                const remaining = Math.ceil((COMMENT_DELAY_MS - (Date.now() - LAST_COMMENT_TIMESTAMP)) / 1000);
+                return showMessage(document.getElementById('modal-comment-message'), `Please wait ${remaining}s.`, 'error');
+            }
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+            try {
+                const cleanedText = await cleanText(text, 'comment');
+                // Use the data-post-id from the heart button to get the current post ID
+                const currentPostId = document.getElementById('heart-btn')?.dataset.postId;
+                if (!currentPostId) throw new Error("Could not find current post ID for comment.");
+                
+                await updateDoc(doc(DAILY_PHOTO_COLLECTION, currentPostId), { comments: arrayUnion({ uid: auth.currentUser.uid, username: CURRENT_USERNAME, text: cleanedText, timestamp: new Date() }) });
+                input.value = '';
+                LAST_COMMENT_TIMESTAMP = Date.now();
+            } catch (error) {
+                showMessage(document.getElementById('modal-comment-message'), `Comment failed: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-comment"></i>`;
+            }
+        });
+        
         titleModal.addEventListener('click', e => { if (e.target === titleModal || e.target.closest('#title-modal-close-btn')) closeTitleModal(); });
         uploadMenuModal.addEventListener('click', e => { if (e.target === uploadMenuModal || e.target.closest('#upload-menu-close-btn')) closeUploadMenu(); });
 
@@ -1344,7 +1317,7 @@
                     await handleFriendCodeLogic(user); 
                     await cleanupOldPosts(user); 
                     setupFriendListListener(user); 
-                    setupFeedListener(user); // Initial setup for both profile and post listeners
+                    setupDailyPostsListener(user); // Initial setup for both profile and post listeners
                     loadingScreen.style.display = 'none';
                     messengerUi.style.display = 'grid';
                 } catch (e) {
@@ -1380,7 +1353,7 @@
                 // Only re-run the feed listener if the actual friends list changes
                 if (friends.length !== CURRENT_FRIENDS.length || !friends.every((val, i) => val === CURRENT_FRIENDS[i])) {
                     CURRENT_FRIENDS = friends; 
-                    setupFeedListener(user); 
+                    setupFriendsFeedListener(user); 
                 }
                 
                 const pendingRequests = profileData.pending_requests || [];
