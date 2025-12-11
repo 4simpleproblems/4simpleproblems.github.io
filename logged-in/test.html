@@ -43,236 +43,431 @@
             font-weight: 400 !important; 
         }
 
-        /* --- SIDEBAR STYLING (Fixed, Full Height, Pure Black) --- */
-        .left-panel {
-            position: fixed;
-            top: 4rem; /* Below navbar */
-            left: 0;
-            bottom: 0;
-            width: 350px;
-            background-color: #000000;
-            border-right: 1px solid #1a1a1a;
-            border-radius: 0;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            z-index: 40;
-            overflow: hidden; /* Internal scrolling only */
+        /* --- ADDED: THEME-AWARE STYLES (from notes.html) --- */
+        
+        .btn-toolbar-style {
+            background: var(--menu-bg, #0000000);
+            border: 1px solid var(--menu-border, #333);
+            border-radius: 0.75rem;
+            color: var(--menu-text, #d1d5db);
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center; /* ADDED */
+            gap: 0.5rem;
+        }
+        /* MODIFIED: Mode Toggle Hover now keeps black background, but text highlights */
+        .btn-toolbar-style:hover {
+            background-color: var(--menu-bg, #000000); /* Force to Menu BG (black) */
+            border-color: var(--menu-border, #fff); /* Force to Menu Border */
+            color: var(--tab-hover-text, #ffffff); /* Keep the text highlight color */
         }
         
-        /* Adjust main container to account for fixed sidebar */
-        .messenger-container {
-            display: block; /* Remove grid */
-            padding-left: 370px; /* 350px sidebar + 20px gap */
-            max-width: 100%;
-            margin: 2rem auto;
-            padding-right: 1rem;
+        /* MODIFIED: Files Button now uses Active Tab Texture */
+        .btn-toolbar-style.btn-primary-override {
+            background-color: var(--tab-active-bg, rgba(79, 70, 229, 0.1));
+            border: 1px solid var(--tab-active-border, #4f46e5);
+            color: var(--tab-active-text, #4f46e5);
+        }
+        /* Files Button Hover now uses Active Tab Hover Texture */
+        .btn-toolbar-style.btn-primary-override:hover {
+            background-color: var(--tab-active-hover-bg, rgba(79, 70, 229, 0.15));
+            border-color: var(--tab-active-hover-border, #6366f1);
+            color: var(--tab-active-hover-text, #6366f1);
         }
 
-        .sidebar-bottom-controls {
-            display: flex;
-            width: 100%;
-            margin-top: auto;
-            border-top: 1px solid #1a1a1a;
-            padding: 0;
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.25rem; /* 36px */
+            height: 2.25rem; /* 36px */
+            border-radius: 0.5rem;
+            background-color: transparent;
+            border: 1px solid transparent;
+            color: var(--tab-text, #9ca3af);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover {
+            background-color: var(--tab-active-bg, rgba(79, 70, 229, 0.1));
+            color: var(--tab-active-text, #4f46e5);
+            border-color: var(--tab-active-border, #4f46e5);
+        }
+        .btn-icon.active {
+             background-color: var(--tab-active-bg, rgba(79, 70, 229, 0.1));
+            color: var(--tab-active-text, #4f46e5);
+            border-color: var(--tab-active-border, #4f46e5);
+        }
+        /* --- END: THEME-AWARE STYLES --- */
+
+
+        /* Responsive Container */
+        .messenger-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* --- CONSISTENT PANEL STYLING (UPDATED: Matched to notes.html) --- */
+        .left-panel, .feed-panel { 
+            background-color: #0d0d0d; /* UPDATED */
+            border: 1px solid #1a1a1a; /* UPDATED */
+            border-radius: 1rem; 
+            padding: 1.5rem; 
+            height: fit-content;
         }
         
-        .sidebar-control-btn {
-            flex-grow: 1; /* Wide tabs */
-            padding: 1rem 0;
-            border-radius: 0;
-            color: #6b7280;
+        /* General input styling to use thin font */
+        input.p-2 {
+            font-weight: 300 !important; 
+        }
+
+        /* --- Custom Friend Code Input Styling (8 character underlines) --- */
+        .friend-code-input-styled {
+            /* Create 8 repeating lines for each character space */
+            background-image: linear-gradient(to right, #1a1a1a 0%, #1a1a1a 90%); /* UPDATED */
+            background-size: 12.5% 2px; 
+            background-repeat: repeat-x;
+            background-position: 0 90%;
+            letter-spacing: 0.5rem !important; 
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .friend-code-input-styled:focus {
+             /* Change color on focus */
+             background-image: linear-gradient(to right, #4f46e5 0%, #4f46e5 90%);
+        }
+        
+        /* --- Compact List Styling for Friends and Daily Posts (UPDATED) --- */
+        .compact-list-wrapper {
+             background-color: #0d0d0d; /* UPDATED */
+             border-radius: 0.75rem; 
+             padding: 0.25rem 0.5rem; 
+             border: 1px solid #1a1a1a; /* UPDATED */
+             margin-top: 0.75rem;
+        }
+        .compact-list-items {
+            overflow-y: auto;
+            max-height: 250px; 
+            padding-right: 0.25rem; 
+        }
+        
+        /* Custom scrollbar styles */
+        .compact-list-items::-webkit-scrollbar { width: 8px; }
+        .compact-list-items::-webkit-scrollbar-thumb { background-color: #4f46e5; border-radius: 4px; }
+        .compact-list-items::-webkit-scrollbar-track { background-color: #1f2937; }
+
+        /* General style for a list item/card (Friends list & NEW Daily Posts) */
+        .compact-list-item {
+            background-color: transparent; 
+            border-radius: 0.5rem; 
+            margin-bottom: 0.25rem; /* Spacing */
+            padding: 0.5rem 0.5rem; 
+            transition: background-color 0.2s;
+            /* Removed border-bottom for cleaner look with rounded cards */
+            border-bottom: none;
+        }
+        .compact-list-item:hover {
+            background-color: #1f1f1f; /* Keep hover distinct */
+            transform: none; 
+        }
+        .compact-list-item:last-child {
+             border-bottom: none;
+        }
+        
+        /* NEW: Daily Post specific styles to match the friend cards */
+        .daily-post-card {
+            border-bottom: none; /* Ensure no border separation for rounded cards */
+        }
+        .daily-post-card:last-child {
+             border-bottom: none;
+        }
+        
+        /* FIX: Ensure comments section can scroll (UPDATED: Increased max-height for activation) */
+        #comments-section {
+            overflow-y: auto;
+            max-height: 50vh; /* Set maximum height to enforce scrolling */
+            flex-grow: 1; 
+        }
+        
+        /* FIX: Added global break-words for comment text to prevent horizontal overflow */
+        .comment-text {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* --- NEW: FEED DISPLAY STYLING --- */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 1rem; 
+        }
+        .photo-thumbnail {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            aspect-ratio: 1 / 1; 
+            background-color: #040404;
+        }
+        .photo-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        /* Overlay for darkening only */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4); 
+            pointer-events: none; 
+        }
+        
+        /* UPDATED: Title Overlay (Title is now static and clipped) */
+        .title-overlay {
+            position: absolute;
+            top: 0.5rem; 
+            right: 0.5rem; 
+            
+            /* NEW: Label styling */
+            background-color: rgba(0, 0, 0, 0.75); /* Solid, dark background */
+            border-radius: 0.5rem; /* Label rounding */
+            padding: 0.25rem 0.5rem; /* Smaller padding for label look */
+            max-width: 70%; /* Constraint width */
+            
+            color: white;
+            font-size: 0.75rem; 
+            font-weight: 600;
+            
+            background: rgba(0, 0, 0, 0.75);
+            text-shadow: none; 
+            height: 1.5rem; 
+            display: flex;
+            justify-content: flex-start;
+            align-items: center; 
+            overflow: hidden; 
+            z-index: 10; 
+        }
+
+        .title-text-container {
+            max-width: 100%; 
+            overflow: hidden; /* Ensure text is clipped */
+            white-space: nowrap;
+            /* Marquee logic removed: text will clip naturally */
+        }
+        
+        .title-text-span {
+            /* Ensures long text that is clipped shows an ellipsis */
+            text-overflow: ellipsis; 
+            display: block; 
+        }
+        
+        #unread-comments-badge {
+            animation: popIn 0.3s ease-out;
+            height: 1.25rem; 
+            width: 1.25rem; 
+            font-size: 0.65rem;
+            line-height: 1.25rem;
+            text-align: center;
+        }
+        
+        .modal-title-container {
+             max-width: 100%;
+             overflow: hidden; /* Clips the modal title */
+             white-space: nowrap;
+             display: flex;
+             font-weight: 700;
+        }
+        .modal-title-text {
             font-size: 1.5rem;
-            background: transparent;
-            border: none;
-            transition: color 0.2s, background-color 0.2s;
+            line-height: 2rem;
+            display: inline-block;
+            white-space: nowrap;
+            text-overflow: ellipsis; 
+            overflow: hidden;
+            font-weight: 400 !important; /* CHANGED: Max font weight 400 */
+        }
+        
+        .photo-modal-img {
+            width: 100%; /* Fill container */
+            height: 100%; /* Fill container */
+            max-width: 100%;
+            object-fit: contain; 
+            transition: all 0.3s ease;
+        }
+        
+        /* NEW: Fullscreen Image Mode (Step 5: Styles to expand image and hide comments) */
+        .modal-content.fullscreen-image-mode {
+             /* Remove padding/gap for a true fullscreen feel within the modal */
+             padding: 0;
+             gap: 0;
+        }
+        .modal-content.fullscreen-image-mode #photo-view-main {
+            /* Fullscreen mode is handled within the modal-content container */
+            flex-direction: row; 
+            width: 100%;
+            height: 100%;
+            max-height: 90vh; /* Match modal-content max height */
+        }
+        .modal-content.fullscreen-image-mode #photo-display-area {
+            flex-grow: 10; /* Image dominates */
+        }
+        .modal-content.fullscreen-image-mode #photo-info-panel {
+            /* Fades away the comment section */
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+            transition: opacity 0.3s ease-out, width 0.3s ease-out;
+        }
+        #photo-info-panel {
+             transition: opacity 0.3s ease-in, width 0.3s ease-in;
+        }
+        /* --- END FEED STYLES --- */
+
+        .upload-drop-zone {
+            background-color: #0a0a0a;
+            border: 2px dashed #1a1a1a; /* UPDATED */
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            color: #505050;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+        .upload-drop-zone:hover {
+            border-color: #4f46e5;
+            background-color: #0d0d0d; /* UPDATED */
+        }
+        .upload-drop-zone.drag-over {
+            border-color: #818cf8;
+            background-color: #1a1a2e;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
-        }
-        .sidebar-control-btn:hover {
-            background-color: #0a0a0a;
-            color: #9ca3af;
-        }
-        .sidebar-control-btn.active {
-            color: #4f46e5; /* Vibrant icon color */
-            background-color: transparent; /* No bg change */
+            z-index: 50;
+            transition: opacity 0.3s ease;
         }
 
-        /* --- TOGGLE BUTTON STYLING (Matching Notes.html) --- */
+        .modal-content {
+            background-color: #0d0d0d; /* UPDATED */
+            border: 1px solid #1a1a1a; /* UPDATED */
+            border-radius: 1rem;
+            padding: 2rem;
+            
+            /* UPDATED: Set max dimensions based on a 16:9 aspect ratio */
+            max-width: 90%;
+            max-height: calc(90vw * 9 / 16); /* Max height is constrained by max width */
+            aspect-ratio: 16 / 9; /* CHANGED: Enforce 16:9 aspect ratio */
+            
+            display: flex;
+            flex-direction: column; 
+        }
+        #modal-content-container {
+            max-width: 1200px; /* Increased max width for 16:9 */
+            position: relative; 
+            flex-grow: 1; /* Allow content container to fill available space */
+        }
+        
+        #upload-menu-modal .modal-content {
+            max-width: 500px;
+            aspect-ratio: auto;
+            max-height: 90vh; 
+        }
+        #upload-menu-modal #image-preview-container {
+             max-height: 300px;
+             overflow: hidden;
+             border-radius: 0.5rem;
+        }
+
+        /* --- NEW STYLES FOR TEST.HTML UPDATES --- */
+        .sidebar-bottom-controls {
+            display: flex;
+            justify-content: space-around;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid #1a1a1a;
+        }
+        .sidebar-control-btn {
+            color: #6b7280;
+            font-size: 1.25rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+        .sidebar-control-btn:hover, .sidebar-control-btn.active {
+            color: #4f46e5;
+            background-color: rgba(79, 70, 229, 0.1);
+        }
+
+        .feed-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
         .feed-toggle {
-            background: #000000;
-            border: 1px solid #333;
-            border-radius: 0.75rem;
+            display: flex;
+            background-color: #1a1a1a;
+            border-radius: 0.5rem;
             padding: 0.25rem;
-            display: inline-flex;
             gap: 0.25rem;
         }
         .feed-toggle-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            color: #d1d5db;
-            background: transparent;
-            border: 1px solid transparent;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            color: #9ca3af;
             transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .feed-toggle-btn i {
-            font-size: 1rem;
-        }
-        .feed-toggle-btn:hover {
-            color: #ffffff;
         }
         .feed-toggle-btn.active {
-            background-color: rgba(79, 70, 229, 0.1);
-            border-color: #4f46e5;
-            color: #4f46e5;
-        }
-
-        /* --- MODAL UPDATES --- */
-        .modal-content {
-            background-color: #0d0d0d;
-            border: 1px solid #1a1a1a;
-            border-radius: 1rem;
-            padding: 1.5rem; /* Reduced padding */
-        }
-        
-        /* Modal Header Area */
-        .modal-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid #1a1a1a;
-            padding-bottom: 1rem;
-        }
-        
-        .modal-title-section {
-            flex-grow: 1;
-            overflow: hidden;
-            margin-right: 1rem;
-        }
-
-        .modal-actions-group {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        /* Action Buttons (Heart, Report, Delete, Block) */
-        .action-icon-btn {
-            font-size: 1.25rem;
-            color: #6b7280;
-            transition: color 0.2s;
-            cursor: pointer;
-            padding: 0.25rem;
-        }
-        .action-icon-btn:hover { color: #d1d5db; }
-        .action-icon-btn.hearted { color: #ef4444; }
-        .action-icon-btn.danger:hover { color: #ef4444; }
-
-        /* Close Button (Bigger with Outline) */
-        .modal-close-btn-styled {
-            width: 2.5rem;
-            height: 2.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #333;
-            border-radius: 0.5rem;
-            color: #9ca3af;
-            font-size: 1.25rem;
-            transition: all 0.2s;
-        }
-        .modal-close-btn-styled:hover {
-            background-color: #1a1a1a;
+            background-color: #4f46e5;
             color: white;
-            border-color: #4b5563;
+            font-weight: 500;
         }
 
-        /* Comments Section (Fading, Black BG, Rounded) */
-        #comments-section {
-            background-color: #000000;
-            border-radius: 1rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            /* Fading mask */
-            mask-image: linear-gradient(to bottom, transparent 0%, black 10px, black 90%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10px, black 90%, transparent 100%);
-        }
-
-        /* Message Input Area */
-        .message-input-container {
-            display: flex;
-            gap: 0.5rem;
-        }
-        .message-submit-btn {
-            width: 3rem;
-            height: 3rem; /* Bigger */
-            border: 1px solid #333; /* Outline */
-            border-radius: 0.5rem;
+        .report-btn {
+            color: #ef4444; 
+            font-size: 0.875rem;
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: #4f46e5;
-            transition: all 0.2s;
+            gap: 0.25rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
         }
-        .message-submit-btn:hover {
-            background-color: rgba(79, 70, 229, 0.1);
-            border-color: #4f46e5;
-        }
-
-        /* --- TOOLTIP STYLING --- */
-        .custom-tooltip {
-            position: fixed;
-            background-color: #000000;
-            border: 1px solid #333;
-            color: #e5e7eb;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.375rem;
-            font-size: 0.75rem;
-            pointer-events: none;
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.15s;
-            white-space: nowrap;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-        }
-        .custom-tooltip.visible {
+        .report-btn:hover {
             opacity: 1;
         }
-        
-        /* Scrollable Lists Fix */
-        .compact-list-items {
-            overflow-y: auto;
-            max-height: 100%; /* Fill available space in sidebar section */
-            /* Fading mask for internal lists too */
-            mask-image: linear-gradient(to bottom, black 90%, transparent 100%); 
-        }
-        .compact-list-wrapper {
-             background-color: #000000; /* Pure black */
-             flex-grow: 1;
-             display: flex;
-             flex-direction: column;
-             border: none; /* Removed border */
-        }
-        
-        /* Sections in sidebar should take up height */
-        .sidebar-section {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            overflow: hidden; /* Contain scroll */
-            margin-bottom: 1rem;
-        }
-        .sidebar-section.hidden {
-            display: none !important;
-        }
 
+        .admin-section {
+            display: none; /* Hidden by default */
+            margin-top: 2rem;
+            border-top: 1px solid #333;
+            padding-top: 1rem;
+        }
 
         
     </style>
@@ -1221,56 +1416,32 @@
                             <div id="photo-display-area" class="flex-grow flex justify-center items-center cursor-pointer relative" data-image-toggle>
                                 <img id="modal-main-image" src="${photoData.imageBase64}" alt="${photoData.title}" class="rounded-lg photo-modal-img">
                             </div>
-                            
                             <div id="photo-info-panel" class="w-full md:w-[350px] flex-shrink-0 flex flex-col relative">
-                                
-                                <!-- New Header Layout -->
-                                <div class="modal-header-row">
-                                    <div class="modal-title-section">
-                                        <div class="modal-title-container mb-1"><span class="modal-title-text text-white">${photoData.title}</span></div>
-                                        <p class="font-semibold text-lg text-indigo-400">${photoData.creatorUsername}</p>
-                                        <p class="text-xs text-gray-500">${new Date(photoData.createdAt?.toDate()).toLocaleString()}</p>
-                                    </div>
-                                    
-                                    <div class="modal-actions-group">
-                                        <!-- Heart -->
-                                        <button id="heart-btn" data-post-id="${photoId}" data-hearted="${hasHearted}" class="action-icon-btn ${hasHearted ? 'hearted' : ''}" title="${hasHearted ? 'Unheart' : 'Heart'}">
-                                            <i class="fas fa-heart"></i>
-                                        </button>
-                                        <span class="text-sm font-bold text-gray-400 mr-2">${formatCount(hearts.length)}</span>
-
-                                        <!-- Report -->
-                                        <button id="report-btn" class="action-icon-btn danger" data-post-id="${photoId}" title="Report">
-                                            <i class="fas fa-flag"></i>
-                                        </button>
-
-                                        <!-- Delete (if owner) -->
-                                        ${photoData.creatorUid === currentUser.uid ? `<button id="delete-post-trigger-btn" class="action-icon-btn danger" title="Delete"><i class="fas fa-trash-alt"></i></button>` : ''}
-                                        
-                                        <!-- Block (if not owner) -->
-                                        ${(photoData.creatorUid !== currentUser.uid && !BLOCKED_USERS.includes(photoData.creatorUid)) ? `<button id="block-user-btn" class="action-icon-btn danger" data-uid="${photoData.creatorUid}" data-username="${photoData.creatorUsername}" title="Block User"><i class="fas fa-ban"></i></button>` : ''}
-                                    </div>
-
-                                    <button id="close-modal-btn" class="modal-close-btn-styled" title="Close">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-
-                                <div class="absolute top-0 right-16">
+                                <button id="close-modal-btn" class="btn-icon absolute top-0 right-0 p-0" title="Close"><i class="fas fa-times"></i></button>
+                                <div class="absolute top-0 right-8">
                                     <span id="unread-comments-badge" class="hidden bg-red-600 text-white font-bold rounded-full flex items-center justify-center" title="Unread Comments"></span>
                                 </div>
-
-                                <div id="comments-section" class="flex-grow mb-4 pr-2"> 
-                                    ${comments.map(c => `<div class="mb-2"><p class="comment-text"><strong class="font-semibold text-indigo-300">${c.username}</strong>: <span class="text-gray-300">${c.text}</span></p></div>`).join('') || '<p class="text-sm text-gray-500 comment-text">No comments yet. Be the first!</p>'}
+                                <div class="border-b border-gray-700 pb-3 mb-3 pt-6">
+                                    <div class="modal-title-container mb-1"><span class="modal-title-text text-white">${photoData.title}</span></div>
+                                    <p class="font-semibold text-lg text-indigo-400">${photoData.creatorUsername}</p>
+                                    <div class="flex justify-between items-center mt-1">
+                                        <p class="text-sm text-gray-400">${new Date(photoData.createdAt?.toDate()).toLocaleString()}</p>
+                                        <button id="report-btn" class="report-btn" data-post-id="${photoId}"><i class="fas fa-flag"></i> Report</button>
+                                    </div>
+                                    ${photoData.creatorUid === currentUser.uid ? `<button id="delete-post-trigger-btn" class="text-red-400 text-sm mt-2 hover:text-red-500"><i class="fas fa-trash-alt mr-1"></i> Delete Post</button>` : ''}
+                                    ${(photoData.creatorUid !== currentUser.uid && !BLOCKED_USERS.includes(photoData.creatorUid)) ? `<button id="block-user-btn" class="text-gray-500 text-xs mt-2 hover:text-red-400" data-uid="${photoData.creatorUid}" data-username="${photoData.creatorUsername}"><i class="fas fa-ban"></i> Block User</button>` : ''}
                                 </div>
-                                
+                                <div id="comments-section" class="flex-grow mb-4 pr-2"> 
+                                    ${comments.map(c => `<div class="mb-2"><p class="comment-text"><strong class="font-semibold">${c.username}</strong>: ${c.text}</p></div>`).join('') || '<p class="text-sm text-gray-500 comment-text">No comments yet. Be the first!</p>'}
+                                </div>
+                                <div class="flex items-center gap-4 mb-4 pt-3 border-t border-gray-800 flex-shrink-0">
+                                    <button id="heart-btn" data-post-id="${photoId}" data-hearted="${hasHearted}" class="text-3xl ${hasHearted ? 'text-red-500' : 'text-gray-400'} hover:text-red-500 transition" title="${hasHearted ? 'Unheart' : 'Heart'}"><i class="fas fa-heart"></i></button>
+                                    <span class="text-xl">${formatCount(hearts.length)}</span>
+                                </div>
                                 <div id="modal-comment-message" class="text-sm min-h-[20px] flex-shrink-0"></div>
-                                
-                                <form id="comment-form" class="message-input-container flex-shrink-0">
-                                    <input type="text" id="comment-input" placeholder="Add a comment..." class="flex-grow p-3 bg-gray-900 border border-gray-700 rounded-md focus:ring-indigo-500 text-white" maxlength="480">
-                                    <button type="submit" id="comment-submit-btn" class="message-submit-btn" title="Send">
-                                        <i class="fas fa-paper-plane"></i>
-                                    </button>
+                                <form id="comment-form" class="flex gap-2 flex-shrink-0">
+                                    <input type="text" id="comment-input" placeholder="Add a comment..." class="flex-grow p-2 bg-gray-900 border border-gray-700 rounded-md" maxlength="480">
+                                    <button type="submit" id="comment-submit-btn" class="btn-icon" title="Post Comment"><i class="fas fa-comment"></i></button>
                                 </form>
                             </div>
                         </div>
@@ -1587,91 +1758,6 @@
                 }
             });
         }
-
-        // --- SMART TOOLTIPS LOGIC ---
-        function setupSmartTooltips() {
-            const tooltipEl = document.createElement('div');
-            tooltipEl.className = 'custom-tooltip';
-            document.body.appendChild(tooltipEl);
-            
-            let currentTarget = null;
-
-            const showTooltip = (e) => {
-                const target = e.target.closest('[title]');
-                if (!target) return;
-                
-                // Prevent native tooltip
-                const text = target.getAttribute('title');
-                if (!text) return;
-                
-                // Store original title and remove it to prevent native tooltip
-                target.dataset.tooltipText = text;
-                target.removeAttribute('title');
-                
-                tooltipEl.textContent = text;
-                tooltipEl.classList.add('visible');
-                currentTarget = target;
-                updatePosition(target);
-            };
-            
-            const hideTooltip = (e) => {
-                if (!currentTarget) return;
-                // Restore title
-                currentTarget.setAttribute('title', currentTarget.dataset.tooltipText);
-                tooltipEl.classList.remove('visible');
-                currentTarget = null;
-            };
-            
-            const updatePosition = (target) => {
-                if (!target || !tooltipEl.classList.contains('visible')) return;
-                
-                const targetRect = target.getBoundingClientRect();
-                const tooltipRect = tooltipEl.getBoundingClientRect();
-                const margin = 8;
-                
-                // Default: Bottom Center
-                let top = targetRect.bottom + margin;
-                let left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
-                
-                // Check Bottom Overflow
-                if (top + tooltipRect.height > window.innerHeight) {
-                    // Try Top
-                    top = targetRect.top - tooltipRect.height - margin;
-                }
-                
-                // Check Top Overflow (if top was chosen)
-                if (top < 0) {
-                     // Try Right (Vertical Center)
-                     top = targetRect.top + (targetRect.height / 2) - (tooltipRect.height / 2);
-                     left = targetRect.right + margin;
-                     
-                     // Check Right Overflow
-                     if (left + tooltipRect.width > window.innerWidth) {
-                         // Try Left
-                         left = targetRect.left - tooltipRect.width - margin;
-                     }
-                }
-                
-                // Horizontal Constraint (Keep within screen)
-                if (left < margin) left = margin;
-                if (left + tooltipRect.width > window.innerWidth - margin) left = window.innerWidth - tooltipRect.width - margin;
-
-                tooltipEl.style.top = `${top}px`;
-                tooltipEl.style.left = `${left}px`;
-            };
-
-            // Global Delegation for any element with 'title' initially or data-tooltip-text
-            document.body.addEventListener('mouseover', showTooltip, true); 
-            document.body.addEventListener('mouseout', hideTooltip, true);
-            // document.body.addEventListener('click', hideTooltip, true);
-        }
-        
-        // Initialize Tooltips
-        setupSmartTooltips();
-        
-        // Add data-tooltip attributes to sidebar buttons manually since they were static HTML
-        // (Actually, the smart tooltip function uses the 'title' attribute which is already there,
-        // so no extra JS is needed to add attributes!)
     </script>
 </body>
 </html>
