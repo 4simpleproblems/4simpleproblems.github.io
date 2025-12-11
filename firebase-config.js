@@ -1,5 +1,5 @@
 // firebase-config.js (No changes needed)
-firebaseConfig = {
+export const firebaseConfig = {
     apiKey: "AIzaSyAZBKAckVa4IMvJGjcyndZx6Y1XD52lgro",
     authDomain: "project-zirconium.firebaseapp.com",
     projectId: "project-zirconium",
