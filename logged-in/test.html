@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="../navigation.js"></script>
     <script src="../injector.js"></script>
 
     <style>
@@ -671,7 +670,7 @@
                 ui.feed.appendChild(fragment);
             }, (err) => {
                 console.error("Feed Error:", err);
-                ui.feed.innerHTML = '<p class="col-span-full text-center text-red-400">Error loading feed. Check permissions.</p>';
+                ui.feed.innerHTML = `<p class="col-span-full text-center text-red-400">Feed Error: ${err.code || err.message}. <br> Check console for indexing links.</p>`;
             });
         }
 
@@ -733,6 +732,17 @@
             
             if (!PENDING_UPLOAD_FILE || !title) return;
             
+            // --- FIX FOR AUTHENTICATION ERROR: Force re-auth check ---
+            if (!auth.currentUser) {
+                 console.warn("User appears unauthenticated. Attempting re-auth...");
+                 try {
+                     await signInAnonymously(auth);
+                 } catch (authErr) {
+                     alert("Authentication failed. Cannot upload.");
+                     return;
+                 }
+            }
+            
             btn.disabled = true;
             btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Uploading Media...`;
             
@@ -769,7 +779,12 @@
                 
             } catch (error) {
                 console.error("Upload Error:", error);
-                alert("Upload failed: " + error.message);
+                // Specifically warn about storage rules if permission denied
+                if (error.code === 'storage/unauthorized') {
+                     alert("Upload failed: Permission Denied. Check Firebase Storage Rules.");
+                } else {
+                     alert("Upload failed: " + error.message);
+                }
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fas fa-paper-plane mr-2"></i> Create Post`;
