@@ -891,7 +891,7 @@
                     console.log("Daily post slots reset for new day.");
                 }
 
-                const oldPostsQuery = query(DAILY_PHOTO_COLLECTION, where('createdAt', '<', startOfToday), limit(50));
+                const oldPostsQuery = query(DAILY_PHOTO_COLLECTION, where('creatorUid', '==', user.uid), where('createdAt', '<', startOfToday), limit(50));
                 const snapshot = await getDocs(oldPostsQuery);
                 if (snapshot.empty) return;
 
