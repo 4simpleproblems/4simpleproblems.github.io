@@ -17,7 +17,6 @@
     <script src="../navigation.js"></script>
     <script src="../injector.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Moment.js for time handling in charts -->
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
 
@@ -36,7 +35,6 @@
             font-weight: 400 !important;
         }
 
-        /* Table Styles */
         .user-table {
             width: 100%;
             border-collapse: collapse;
@@ -104,7 +102,6 @@
             background-color: rgba(234, 179, 8, 0.2);
         }
 
-        /* Modal Styles */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -133,7 +130,6 @@
             width: 90%;
         }
 
-        /* Chart Container */
         .chart-container {
             background-color: #0d0d0d;
             border: 1px solid #1a1a1a;
@@ -141,6 +137,26 @@
             padding: 1rem;
             height: 300px;
             margin-bottom: 2rem;
+        }
+        
+        /* Ban Modal Presets */
+        .preset-chip {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 1rem;
+            color: #9ca3af;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .preset-chip:hover {
+            background: #2a2a2a;
+            color: white;
+            border-color: #555;
         }
     </style>
 </head>
@@ -169,7 +185,6 @@
                 </div>
             </div>
             
-             <!-- Stats Cards -->
              <div class="grid grid-cols-2 gap-4 h-full">
                 <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6 flex flex-col justify-center items-center">
                     <span class="text-gray-400 text-sm mb-2">Total Users</span>
@@ -216,9 +231,7 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="user-table-body">
-                        <!-- Rows will be injected here -->
-                    </tbody>
+                    <tbody id="user-table-body"></tbody>
                 </table>
             </div>
             <div id="loading-users" class="p-8 text-center text-gray-500">
@@ -233,10 +246,42 @@
         <div class="modal-content">
             <div class="flex justify-between items-start mb-6">
                 <h3 class="text-xl text-white">User Details</h3>
-                <button id="close-modal" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark fa-lg"></i></button>
+                <button id="close-user-modal" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark fa-lg"></i></button>
             </div>
-            <div id="modal-body" class="space-y-4">
-                <!-- Content injected via JS -->
+            <div id="user-modal-body" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <!-- Ban User Modal -->
+    <div id="ban-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-start mb-6">
+                <h3 class="text-xl text-white">Ban User</h3>
+                <button id="close-ban-modal" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark fa-lg"></i></button>
+            </div>
+            <div class="space-y-4">
+                <p class="text-gray-400 text-sm" id="ban-user-target">Banning user: ...</p>
+                
+                <div>
+                    <label class="block text-sm text-gray-500 mb-2">Presets</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="preset-chip" data-reason="Violation of Terms of Service" data-link="../legal.html">Terms of Service</button>
+                        <button class="preset-chip" data-reason="Posting Explicit Content on Dailyphoto">Explicit Content</button>
+                        <button class="preset-chip" data-reason="Spamming or Harassment">Spam/Harassment</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-500 mb-2">Reason (Optional)</label>
+                    <textarea id="ban-reason" class="w-full bg-[#1a1a1a] text-white border border-[#333] rounded-lg p-3 text-sm focus:outline-none focus:border-red-500 min-h-[100px]" placeholder="Enter reason for ban..."></textarea>
+                </div>
+                
+                <input type="hidden" id="ban-link" value="">
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button id="cancel-ban" class="px-4 py-2 text-gray-400 hover:text-white text-sm">Cancel</button>
+                    <button id="confirm-ban" class="px-6 py-2 bg-red-900/50 hover:bg-red-800 text-red-200 border border-red-700 rounded-lg text-sm transition">Ban User</button>
+                </div>
             </div>
         </div>
     </div>
@@ -266,21 +311,20 @@
         let admins = new Set();
         let bannedUsers = new Set();
         let chartInstance = null;
+        let userToBan = null;
 
         const providerImages = {
             'google.com': '../images/google-icon.png',
             'microsoft.com': '../images/microsoft.png',
             'github.com': '../images/github-mark-white.png',
             'twitter.com': '../images/x.png',
-            'password': 'fa-solid fa-envelope' // Special case for icons
+            'password': 'fa-solid fa-envelope'
         };
 
         const init = async () => {
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    // Verify Admin Status
                     const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-                    // Also allow the hardcoded superadmin
                     const isSuperAdmin = user.email === '4simpleproblems@gmail.com';
                     
                     if (adminDoc.exists() || isSuperAdmin) {
@@ -296,18 +340,14 @@
 
         const loadData = async () => {
             try {
-                // Fetch Admins
                 const adminsSnap = await getDocs(collection(db, 'admins'));
                 admins = new Set(adminsSnap.docs.map(d => d.id));
                 document.getElementById('total-admins-count').textContent = admins.size;
 
-                // Fetch Bans
                 const bansSnap = await getDocs(collection(db, 'bans'));
                 bannedUsers = new Set(bansSnap.docs.map(d => d.id));
                 document.getElementById('total-banned-count').textContent = bannedUsers.size;
 
-                // Fetch Users
-                // Ideally this should be paginated, but for now we fetch all
                 const usersSnap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
                 allUsers = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
@@ -319,16 +359,12 @@
                 
             } catch (error) {
                 console.error("Error loading data:", error);
-                document.getElementById('loading-users').textContent = "Error loading data. Check console.";
+                document.getElementById('loading-users').textContent = "Error loading data.";
             }
         };
 
         const getProviderHtml = (authMethod) => {
             if (!authMethod) return '<span class="text-gray-500">-</span>';
-            // Handle multiple providers if stored as array, or single string
-            // Assuming string for now based on authentication.html
-            
-            // Map common provider strings
             let key = authMethod;
             if (authMethod.includes('google')) key = 'google.com';
             if (authMethod.includes('github')) key = 'github.com';
@@ -348,7 +384,6 @@
 
         const formatDate = (timestamp) => {
             if (!timestamp) return 'Unknown';
-            // Handle Firestore Timestamp
             const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
             return date.toLocaleDateString();
         };
@@ -388,7 +423,7 @@
                     <td>${statusBadge}</td>
                     <td>
                         <div class="flex items-center">
-                            <button class="action-btn ${isBanned ? 'btn-unblock' : 'btn-block'}" data-action="toggle-ban" data-uid="${user.id}">
+                            <button class="action-btn ${isBanned ? 'btn-unblock' : 'btn-block'}" data-action="toggle-ban" data-uid="${user.id}" data-username="${user.username || user.email}">
                                 ${isBanned ? '<i class="fa-solid fa-unlock"></i>' : '<i class="fa-solid fa-ban"></i>'}
                             </button>
                             <button class="action-btn ${isAdmin ? 'btn-remove-admin' : 'btn-admin'}" data-action="toggle-admin" data-uid="${user.id}">
@@ -403,7 +438,6 @@
                 tbody.appendChild(tr);
             });
 
-            // Add Event Listeners to Buttons
             tbody.querySelectorAll('button').forEach(btn => {
                 btn.addEventListener('click', handleAction);
             });
@@ -416,21 +450,20 @@
             
             if (action === 'toggle-ban') {
                 const isBanned = bannedUsers.has(uid);
-                if (confirm(`Are you sure you want to ${isBanned ? 'unban' : 'ban'} this user?`)) {
-                    try {
-                        if (isBanned) {
+                if (isBanned) {
+                    // Unban immediately
+                    if (confirm(`Are you sure you want to unban this user?`)) {
+                        try {
                             await deleteDoc(doc(db, 'bans', uid));
                             bannedUsers.delete(uid);
-                        } else {
-                            await setDoc(doc(db, 'bans', uid), { 
-                                bannedAt: new Date(),
-                                reason: 'Admin Action'
-                            });
-                            bannedUsers.add(uid);
-                        }
-                        renderTable(getFilteredUsers());
-                        document.getElementById('total-banned-count').textContent = bannedUsers.size;
-                    } catch (err) { alert("Action failed: " + err.message); }
+                            renderTable(getFilteredUsers());
+                            document.getElementById('total-banned-count').textContent = bannedUsers.size;
+                        } catch (err) { alert("Unban failed: " + err.message); }
+                    }
+                } else {
+                    // Open Ban Modal
+                    userToBan = { uid, username: btn.dataset.username };
+                    openBanModal();
                 }
             } else if (action === 'toggle-admin') {
                 const isAdmin = admins.has(uid);
@@ -455,12 +488,59 @@
             }
         };
 
+        // --- Ban Modal Logic ---
+        const openBanModal = () => {
+            document.getElementById('ban-user-target').textContent = `Banning user: ${userToBan.username}`;
+            document.getElementById('ban-reason').value = '';
+            document.getElementById('ban-link').value = '';
+            document.getElementById('ban-modal').classList.add('open');
+        };
+
+        const closeBanModal = () => {
+            document.getElementById('ban-modal').classList.remove('open');
+            userToBan = null;
+        };
+
+        document.getElementById('close-ban-modal').addEventListener('click', closeBanModal);
+        document.getElementById('cancel-ban').addEventListener('click', closeBanModal);
+        
+        // Presets Logic
+        document.querySelectorAll('.preset-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const reason = chip.dataset.reason;
+                const link = chip.dataset.link || '';
+                document.getElementById('ban-reason').value = reason;
+                document.getElementById('ban-link').value = link;
+            });
+        });
+
+        document.getElementById('confirm-ban').addEventListener('click', async () => {
+            if (!userToBan) return;
+            const reason = document.getElementById('ban-reason').value.trim() || 'Admin Action';
+            const link = document.getElementById('ban-link').value;
+
+            try {
+                await setDoc(doc(db, 'bans', userToBan.uid), { 
+                    bannedAt: new Date(),
+                    reason: reason,
+                    link: link || null
+                });
+                bannedUsers.add(userToBan.uid);
+                renderTable(getFilteredUsers());
+                document.getElementById('total-banned-count').textContent = bannedUsers.size;
+                closeBanModal();
+            } catch (err) {
+                alert("Ban failed: " + err.message);
+            }
+        });
+
+        // --- User Details Modal ---
         const showUserDetails = (uid) => {
             const user = allUsers.find(u => u.id === uid);
             if (!user) return;
 
             const modal = document.getElementById('user-modal');
-            const body = document.getElementById('modal-body');
+            const body = document.getElementById('user-modal-body');
             
             body.innerHTML = `
                 <div class="flex items-center gap-4 mb-4">
@@ -498,7 +578,7 @@
             modal.classList.add('open');
         };
 
-        document.getElementById('close-modal').addEventListener('click', () => {
+        document.getElementById('close-user-modal').addEventListener('click', () => {
             document.getElementById('user-modal').classList.remove('open');
         });
 
@@ -533,11 +613,10 @@
         document.getElementById('user-search').addEventListener('input', () => renderTable(getFilteredUsers()));
         document.getElementById('user-sort').addEventListener('change', () => renderTable(getFilteredUsers()));
 
-
         // Chart Logic
         const renderChart = (users) => {
             const ctx = document.getElementById('userGrowthChart').getContext('2d');
-            const period = document.getElementById('chart-period').value; // week, month, year
+            const period = document.getElementById('chart-period').value;
 
             const now = moment();
             let startDate;
@@ -554,9 +633,7 @@
                 unit = 'month';
             }
 
-            // Group data
             const groups = {};
-            // Initialize groups with 0
             if (period === 'year') {
                 for (let i = 0; i <= 12; i++) {
                     const d = moment().subtract(i, 'months').format('YYYY-MM');
@@ -582,9 +659,6 @@
             const labels = Object.keys(groups).sort();
             const data = labels.map(l => groups[l]);
 
-            // Cumulative check (optional, but requirements said "user count", usually implies total, 
-            // but "over the past year" usually means growth. Let's do new users per period for clarity).
-            
             if (chartInstance) chartInstance.destroy();
 
             chartInstance = new Chart(ctx, {

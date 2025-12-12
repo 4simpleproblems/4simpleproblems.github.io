@@ -45,7 +45,7 @@ function unlockPage() {
 
     const shield = document.getElementById('ban-enforcer-shield');
     if (shield) shield.remove();
-
+    
     // Reload page if we nuked the body previously, otherwise just unlock
     if (document.body.getAttribute('data-banned-nuke') === 'true') {
         window.location.reload();
@@ -73,35 +73,54 @@ function renderBanVisuals(banData) {
         banTimestamp = `on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
     }
 
+    // Optional Link Button (e.g., for TOS)
+    let actionButton = '';
+    if (banData.link) {
+         actionButton = `
+            <a href="${banData.link}" target="_blank" style="display: inline-flex; align-items: center; gap: 10px; padding: 12px 24px; background: #fff; color: #000; text-decoration: none; border-radius: 8px; font-weight: 600; transition: transform 0.2s; margin-right: 10px;">
+                <i class="fa-solid fa-external-link"></i> Review Policy
+            </a>
+         `;
+    }
+
+    // New Design (Reverted to v4.1 Visuals but with 'Strong' Nuke logic)
+    // Using inline styles to ensure it looks correct even if CSS is missing
     const banHTML = `
-        <div id="ban-enforcer-shield" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:#000000; z-index:2147483647; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Geist', sans-serif; color:white; text-align:center;">
-            <div style="max-width: 600px; padding: 40px; border: 1px solid #333; border-radius: 20px; background: #0a0a0a; box-shadow: 0 0 50px rgba(220, 38, 38, 0.2);">
-                <i class="fa-solid fa-ban" style="font-size: 4rem; color: #ef4444; margin-bottom: 20px;"></i>
-                <h1 style="font-size: 3rem; font-weight: 800; margin: 0 0 10px 0; letter-spacing: -1px;">Access Denied</h1>
-                <p style="font-size: 1.2rem; color: #ef4444; font-weight: 500; margin-bottom: 30px;">Account Suspended</p>
-                
-                <div style="background: #111; padding: 20px; border-radius: 10px; border: 1px solid #222; margin-bottom: 30px; text-align: left;">
-                    <p style="margin: 0; color: #9ca3af; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Reason</p>
-                    <p style="margin: 10px 0 0 0; color: white; font-size: 1.1rem;">${reason}</p>
-                </div>
-
-                <p style="font-size: 0.85rem; color: #555; margin-bottom: 30px;">
-                    Banned by administrator ${banTimestamp}.<br>ID: ${banData.uid || 'UNKNOWN'}
+        <div id="ban-enforcer-shield" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0, 0, 0, 0.95); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:2147483647; cursor:default;">
+            
+            <div id="ban-enforcer-message" style="position: fixed; bottom: 60px; left: 60px; color: #ffffff; font-family: 'Geist', sans-serif; z-index: 2147483647; text-align: left; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                <h1 style="font-size: 4rem; color: #ffffff; margin: 0 0 20px 0; font-weight: 800; line-height: 1; white-space: nowrap;">Access Denied</h1>
+                <p style="font-size: 1.25rem; margin: 0 0 10px 0; color: #ef4444; font-weight: 500;">Account Suspended</p>
+                <div style="width: 50px; height: 4px; background-color: #ef4444; margin-bottom: 20px;"></div>
+                <p style="font-size: 1rem; margin: 0 0 10px 0; color: #d1d5db; max-width: 500px; line-height: 1.6;">
+                    <strong>Reason:</strong> ${reason}
                 </p>
-
-                <a href="../index.html" style="display: inline-flex; align-items: center; gap: 10px; padding: 12px 24px; background: #fff; color: #000; text-decoration: none; border-radius: 8px; font-weight: 600; transition: transform 0.2s;">
-                    <i class="fa-solid fa-arrow-left"></i> Return Home
-                </a>
+                ${actionButton ? `<div style="margin-top: 20px;">${actionButton}</div>` : ''}
+                <p style="font-size: 0.85rem; color: #6b7280; margin-top: 20px;">
+                    Banned by administrator ${banTimestamp}.<br>
+                    ID: ${banData.uid || 'UNKNOWN'}
+                </p>
             </div>
+
+            <a href="../index.html" id="ban-enforcer-home-button" style="position: fixed; bottom: 60px; right: 60px; z-index: 2147483647; display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; background-color: transparent; border: 1px solid #333; border-radius: 0.75rem; color: #d1d5db; font-size: 20px; text-decoration: none; cursor: pointer; transition: all 0.2s; width: 50px; height: 50px;">
+                <i class="fa-solid fa-house"></i>
+            </a>
+
         </div>
     `;
 
     // 3. NUKE THE BODY CONTENT if not already done
-    // This is the "Stronger" part. We replace the entire body.
     if (!document.getElementById('ban-enforcer-shield')) {
         document.body.innerHTML = banHTML;
         document.body.setAttribute('data-banned-nuke', 'true');
-        // Stop any background scripts/media
+        
+        // Add hover effects via JS since we replaced style tags
+        const homeBtn = document.getElementById('ban-enforcer-home-button');
+        if(homeBtn) {
+            homeBtn.onmouseover = () => { homeBtn.style.backgroundColor = '#000'; homeBtn.style.borderColor = '#fff'; homeBtn.style.color = '#fff'; };
+            homeBtn.onmouseout = () => { homeBtn.style.backgroundColor = 'transparent'; homeBtn.style.borderColor = '#333'; homeBtn.style.color = '#d1d5db'; };
+        }
+
         window.stop(); 
     }
     
@@ -167,10 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }, error => {
                         console.error("Ban listener error:", error);
-                        // If permission denied, they might be banned/removed from DB, 
-                        // but usually bans are public read or user read. 
-                        // We fail safe (open) to avoid blocking valid users on network error,
-                        // unless we implement a "secure fail" mode.
                     });
                 });
             } else {
