@@ -574,6 +574,13 @@
         document.getElementById('sidebar-nav-friends').onclick = () => switchSidebar('friends');
         document.getElementById('sidebar-nav-blocked').onclick = () => switchSidebar('blocked');
 
+        // Helper for determining today's start (midnight)
+        function getTodayTimestamp() {
+            const today = new Date(); 
+            today.setHours(0,0,0,0);
+            return Timestamp.fromDate(today);
+        }
+
         // --- MODAL & UPLOAD LOGIC ---
         window.openPhotoModal = (photoId) => {
             const container = document.getElementById('modal-content-container');
@@ -587,6 +594,10 @@
             UNSUBSCRIBE_MODAL = onSnapshot(doc(DAILY_COLLECTION, photoId), (snap) => {
                 if (!snap.exists()) { modal.classList.add('hidden'); return; }
                 const data = snap.data();
+                // Check if post is from today (client-side safety check)
+                const todayTimestamp = getTodayTimestamp();
+                if (data.createdAt && data.createdAt.seconds < todayTimestamp.seconds) { modal.classList.add('hidden'); return; }
+
                 if (data.status === 'hidden') { modal.classList.add('hidden'); return; }
 
                 const currentUser = auth.currentUser;
@@ -717,7 +728,7 @@
                         
                         <div class="mt-4 flex gap-2 mb-4">
                             <button id="create-public-btn" class="btn-toolbar-style w-full" data-public="false">
-                                <i class="fas fa-lock"></i> Private Post
+                                <i class="fas fa-user-friends"></i> Friends Post
                             </button>
                         </div>
 
@@ -734,10 +745,10 @@
                     publicBtn.setAttribute('data-public', String(!isPublic));
                     publicBtn.classList.toggle('active', !isPublic);
                     publicBtn.classList.toggle('btn-primary-override', !isPublic);
-                    if (!isPublic) { // Was private, now public
+                    if (!isPublic) { // Was Friends, now public
                         publicBtn.innerHTML = `<i class="fas fa-globe"></i> Public Post`;
                     } else {
-                        publicBtn.innerHTML = `<i class="fas fa-lock"></i> Private Post`;
+                        publicBtn.innerHTML = `<i class="fas fa-user-friends"></i> Friends Post`;
                         publicBtn.classList.remove('btn-primary-override');
                     }
                 };
@@ -771,6 +782,7 @@
                         status: 'active'
                     });
                     
+                    // The dailySlotsUsed array holds all post IDs for a cleaner expiry check
                     await updateDoc(doc(db, USERS_COLLECTION, user.uid), { dailySlotsUsed: arrayUnion(ref.id) });
                     modal.classList.add('hidden');
                     PENDING_FILE = null;
@@ -794,13 +806,15 @@
                     <div class="overlay"></div>
                     <div class="absolute top-2 right-2 flex gap-2">
                         <span class="text-white text-xs bg-black/50 px-2 py-1 rounded backdrop-blur-sm"><i class="fas fa-heart text-red-400"></i> ${formatCount(data.hearts?.length)}</span>
+                        <span class="text-white text-xs bg-black/50 px-2 py-1 rounded backdrop-blur-sm"><i class="fas fa-comment text-indigo-400"></i> ${formatCount(data.comments?.length)}</span>
                     </div>
                     <div class="title-overlay">${data.title}</div>
                 `;
                 el.onclick = () => window.openPhotoModal(d.id);
                 feed.appendChild(el);
             });
-            if(feed.children.length === 0) feed.innerHTML = `<p class="text-gray-600 col-span-3 text-center py-10">No photos in this feed.</p>`;
+            // FIX: New no-post message
+            if(feed.children.length === 0) feed.innerHTML = `<p class="text-gray-500 col-span-3 text-center py-10 text-lg">No current posts. Create your own!</p>`;
         }
 
         function setupFeed(mode, user) {
@@ -810,15 +824,13 @@
             document.getElementById('feed-toggle-public').classList.toggle('active', mode === 'public');
             document.getElementById('feed-toggle-public').classList.toggle('btn-primary-override', mode === 'public');
 
-            // FIX: Use Firebase Timestamp for start of today for accurate server-side filtering
-            const today = new Date(); 
-            today.setHours(0,0,0,0);
-            const todayTimestamp = Timestamp.fromDate(today);
+            // FIX: Use Firebase Timestamp for start of today for accurate server-side filtering (11:59 PM clearance)
+            const todayTimestamp = getTodayTimestamp();
             
             let q;
             if(mode === 'friends') {
                 if(CURRENT_FRIENDS.length === 0) {
-                     document.getElementById('photo-feed').innerHTML = '<p class="text-gray-500 text-center col-span-3 mt-10">Add friends to see photos!</p>';
+                     document.getElementById('photo-feed').innerHTML = '<p class="text-gray-500 text-center col-span-3 mt-10 text-lg">Add friends to see photos!</p>';
                      return;
                 }
                 const uids = [user.uid, ...CURRENT_FRIENDS].slice(0, 10); 
@@ -873,7 +885,6 @@
                 BLOCKED_USERS = d.blocked_users || [];
                 
                 // Update Global Friends var for Feed
-                // If friends changed, refresh feed
                 let friendsChanged = false;
                 if (friends.length !== CURRENT_FRIENDS.length || !friends.every((val, i) => val === CURRENT_FRIENDS[i])) {
                     CURRENT_FRIENDS = friends;
@@ -883,12 +894,12 @@
                 if (friendsChanged && CURRENT_FEED_MODE === 'friends') setupFeed('friends', user);
                 if (!UNSUBSCRIBE_POSTS) setupFeed(CURRENT_FEED_MODE, user); // Initial feed load
 
-                // RENDER FRIENDS LIST & REQUESTS
+                // RENDER FRIENDS LIST & REQUESTS (omitted for brevity, assume working)
                 const fList = document.getElementById('friends-list-items');
-                fList.innerHTML = '';
-
-                // 1. Pending Requests
-                if (pending.length > 0) {
+                fList.innerHTML = ''; // Clear for re-render
+                
+                // 1. Render Requests... (omitted for brevity)
+                 if (pending.length > 0) {
                      const pTitle = document.createElement('div');
                      pTitle.className = "p-2 text-xs font-bold text-indigo-400 uppercase tracking-widest border-b border-[#1a1a1a] mb-2";
                      pTitle.textContent = "REQUESTS";
@@ -911,10 +922,10 @@
                      }
                 }
 
-                // 2. Friends
-                if (friends.length === 0 && pending.length === 0) {
+                // 2. Render Friends... (omitted for brevity)
+                 if (friends.length === 0 && pending.length === 0) {
                      fList.innerHTML = '<p class="text-gray-600 text-sm p-2">No friends yet.</p>';
-                } else if (friends.length > 0) {
+                 } else if (friends.length > 0) {
                     if (pending.length > 0) {
                         const fTitle = document.createElement('div');
                         fTitle.className = "p-2 text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-[#1a1a1a] mt-4 mb-2";
@@ -931,31 +942,49 @@
                          fList.appendChild(div);
                     });
                 }
-                
-                // RENDER SLOTS (with post titles)
+
+
+                // RENDER SLOTS (with post titles & daily clearance logic)
                 const slots = document.getElementById('daily-posts-container');
-                const used = d.dailySlotsUsed || [];
+                const rawUsedSlots = d.dailySlotsUsed || []; // This array contains all post IDs ever made in a slot
                 slots.innerHTML = '';
                 
-                // Fetch all post documents for used slots in parallel
-                const postDocs = await Promise.all(used.map(postId => getDoc(doc(DAILY_COLLECTION, postId))));
+                // Fetch all post documents in parallel
+                const postDocPromises = rawUsedSlots.map(postId => getDoc(doc(DAILY_COLLECTION, postId)));
+                const postDocs = await Promise.all(postDocPromises);
+                const todayTimestamp = getTodayTimestamp();
 
-                for(let i=0; i<5; i++) {
-                    const postId = used[i];
+                const postMap = postDocs.reduce((acc, doc) => { 
+                    if(doc.exists()) acc[doc.id] = doc.data(); 
+                    return acc; 
+                }, {});
+
+                for(let i=0; i<5; i++) { // 5 slots total
+                    const postId = rawUsedSlots[i]; // Post ID for this historical slot index
                     const div = document.createElement('div');
-                    div.className = 'compact-list-item flex justify-between items-center border border-[#1a1a1a] mb-1 p-2 rounded bg-[#0a0a0a]';
-                    
-                    if(postId) {
-                        const postDoc = postDocs.find(doc => doc.id === postId);
-                        const postTitle = postDoc?.data()?.title || 'Untitled Post';
+                    div.className = 'compact-list-item flex justify-between items-center border border-[#1a1a1a] mb-1 p-2 rounded';
 
-                        // Slot has a post
-                        div.innerHTML = `<span class="text-indigo-400 text-sm truncate" title="${postTitle}">${postTitle}</span> <button class="text-gray-400 hover:text-white" onclick="window.openPhotoModal('${postId}')"><i class="fas fa-eye"></i></button>`;
-                    } else if(i === used.length) {
-                        // Next available slot
+                    if (postId) {
+                        const postData = postMap[postId];
+                        
+                        // Check if post exists and was created today
+                        if (postData && postData.createdAt && postData.createdAt.seconds >= todayTimestamp.seconds) {
+                            // Active post from today
+                            const postTitle = postData.title || 'Untitled Post';
+                            div.className += ' bg-[#0a0a0a]';
+                            div.innerHTML = `<span class="text-indigo-400 text-sm truncate" title="${postTitle}">${postTitle}</span> <button class="text-gray-400 hover:text-white" onclick="window.openPhotoModal('${postId}')"><i class="fas fa-eye"></i></button>`;
+                        } else {
+                            // Deleted, or from a previous day (expired/cleared)
+                            div.className += ' bg-[#050505] text-gray-700 cursor-default';
+                            div.innerHTML = `<span class="text-sm">Post Used and Deleted</span> <i class="fas fa-trash-alt"></i>`;
+                        }
+                    } else if(i === rawUsedSlots.length && i < 5) {
+                         // Next available slot (Ready) - only if this is the first unused slot AND it's not beyond the 5 limit
+                        div.className += ' bg-[#0a0a0a]';
                         div.innerHTML = `<span class="text-gray-400 text-sm">Slot ${i+1} (Ready)</span> <button class="text-green-500 hover:text-green-400" onclick="openUpload(${i})"><i class="fas fa-plus"></i></button>`;
                     } else {
-                        // Locked slot
+                         // Locked slot
+                        div.className += ' bg-[#0a0a0a]';
                         div.innerHTML = `<span class="text-gray-600 text-sm">Slot ${i+1} (Locked)</span> <i class="fas fa-lock text-gray-700"></i>`;
                     }
                     slots.appendChild(div);
@@ -970,7 +999,7 @@
             });
         });
         
-        // --- NEW: Friend Logic Handlers ---
+        // --- Friend Logic Handlers ---
         
         async function sendFriendRequest(code) {
             const msgEl = document.getElementById('add-friend-message');
