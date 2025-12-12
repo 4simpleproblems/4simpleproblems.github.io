@@ -12,10 +12,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../navigation.js"></script>
-    <script src="../injector.js"></script>
 
+    <script src="../injector.js"></script>
     <style>
-        /* --- ANIMATIONS --- */
+        /* BUBBLY ANIMATIONS */
         @keyframes popIn {
             0% { transform: scale(0.8); opacity: 0; }
             80% { transform: scale(1.05); opacity: 1; }
@@ -28,7 +28,7 @@
             background-color: #040404; 
             color: #c0c0c0; 
             font-weight: 300; 
-            overflow: hidden; /* Prevent body scroll, handled internally */
+            overflow: hidden; 
             height: 100vh;
         }
         
@@ -36,7 +36,7 @@
             font-weight: 400 !important; 
         }
 
-        /* --- THEME BUTTONS (Matches notes.html) --- */
+        /* --- THEME BUTTONS --- */
         .btn-toolbar-style {
             background: #000000;
             border: 1px solid #333;
@@ -56,7 +56,6 @@
             color: #ffffff;
         }
         
-        /* Active/Primary Style */
         .btn-toolbar-style.active, .btn-primary-override {
             background-color: rgba(79, 70, 229, 0.1);
             border: 1px solid #4f46e5;
@@ -91,18 +90,18 @@
             background-color: rgba(79, 70, 229, 0.1);
         }
 
-        /* --- LAYOUT: Full Screen Flex --- */
+        /* --- LAYOUT --- */
         .messenger-container {
             display: flex;
             width: 100vw;
-            height: calc(100vh - 4rem); /* Subtract navbar height */
-            margin-top: 4rem; /* Push down below fixed nav */
+            height: calc(100vh - 4rem); 
+            margin-top: 4rem; 
         }
 
         /* --- SIDEBAR --- */
         .left-panel {
             width: 350px;
-            background-color: #000000; /* Pure Black */
+            background-color: #000000;
             border-right: 1px solid #1a1a1a;
             display: flex;
             flex-direction: column;
@@ -114,53 +113,44 @@
             padding: 1.5rem;
             overflow-y: auto;
             flex-grow: 1;
-            /* Fading effect at bottom of scroll area */
             mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
             -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
         }
-        /* Custom Scrollbar for black bg */
         .left-panel-scroll-content::-webkit-scrollbar { width: 6px; }
         .left-panel-scroll-content::-webkit-scrollbar-thumb { background-color: #333; border-radius: 3px; }
         .left-panel-scroll-content::-webkit-scrollbar-track { background-color: #000; }
 
+        /* Updated Sidebar Controls (From test.html) */
         .sidebar-bottom-controls {
             display: flex;
+            justify-content: space-around;
+            margin-top: auto;
+            padding-top: 1rem;
             border-top: 1px solid #1a1a1a;
-            background-color: #000000;
         }
         .sidebar-control-btn {
-            flex: 1; /* Equal Width */
             color: #6b7280;
             font-size: 1.25rem;
-            padding: 1rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
             background: transparent;
-            border: none;
-            cursor: pointer;
-            transition: color 0.2s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
-        .sidebar-control-btn:hover {
-            color: #d1d5db;
-            background-color: #0a0a0a;
-        }
-        /* Active state: Change ICON COLOR only */
-        .sidebar-control-btn.active {
-            color: #4f46e5; 
-            background-color: transparent;
+        .sidebar-control-btn:hover, .sidebar-control-btn.active {
+            color: #4f46e5;
+            background-color: rgba(79, 70, 229, 0.1);
         }
 
-        /* --- LISTS (Friends, Posts) --- */
+        /* --- LISTS --- */
         .compact-list-wrapper {
-             background-color: #000000; /* Pure Black */
+             background-color: #000000;
              border-radius: 0.75rem; 
              border: 1px solid #1a1a1a; 
              margin-top: 0.75rem;
         }
         .compact-list-items {
             overflow-y: auto;
-            max-height: 250px; /* Scrollable */
+            max-height: 250px; 
             padding: 0.25rem; 
         }
         .compact-list-items::-webkit-scrollbar { width: 4px; }
@@ -182,7 +172,6 @@
             overflow-y: auto;
         }
         
-        /* Feed Toggle Group */
         .feed-toggle {
             display: flex;
             gap: 0.5rem;
@@ -228,13 +217,16 @@
             display: flex; justify-content: center; align-items: center;
             z-index: 50; transition: opacity 0.3s ease;
         }
+        
+        /* UPDATED: 16:9 Aspect Ratio */
         .modal-content {
             background-color: #0d0d0d; 
             border: 1px solid #1a1a1a;
             border-radius: 1rem;
-            padding: 0; /* Removing padding to allow full layout control */
+            padding: 0; 
             max-width: 90%; width: 1200px;
-            height: 85vh;
+            max-height: 90vh; /* Safety Cap */
+            aspect-ratio: 16 / 9; /* Enforced 16:9 */
             display: flex; overflow: hidden;
             position: relative;
         }
@@ -245,9 +237,13 @@
             background-color: #000;
             display: flex; align-items: center; justify-content: center;
             position: relative;
+            overflow: hidden;
         }
+        /* UPDATED: Hover the height without stretching */
         .photo-modal-img {
-            max-width: 100%; max-height: 100%; object-fit: contain;
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; /* Fills the area */
         }
 
         /* Modal Right: Info */
@@ -262,7 +258,6 @@
             position: relative;
         }
         
-        /* Modal Header (Title + Actions) */
         .modal-header {
             display: flex; justify-content: space-between; align-items: flex-start;
             margin-bottom: 1rem; gap: 1rem;
@@ -272,41 +267,49 @@
             display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center;
         }
 
-        /* Comment Section (Pure Black + Fade) */
         #comments-section {
             flex-grow: 1;
-            background-color: #000000; /* Pure Black */
+            background-color: #000000; 
             border-radius: 0.75rem;
             padding: 1rem;
             margin-bottom: 1rem;
             overflow-y: auto;
             border: 1px solid #1a1a1a;
-            /* Fading mask */
             mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
             -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
         }
         
-        /* Input Area */
         .comment-input-area {
             display: flex; gap: 0.5rem; align-items: center;
         }
 
-        /* --- CUSTOM TOOLTIP --- */
-        #custom-tooltip {
-            position: fixed;
-            background-color: #000;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 0.4rem 0.8rem;
-            border-radius: 0.5rem;
-            font-size: 0.75rem;
-            pointer-events: none;
-            z-index: 10000;
-            opacity: 0;
-            transition: opacity 0.15s ease;
-            white-space: nowrap;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        /* Create Mode Inputs */
+        .create-input-username {
+            background: transparent;
+            border: 1px dashed #333;
+            color: #818cf8; /* Indigo */
+            font-size: 1.125rem; /* text-lg */
+            font-weight: bold;
+            width: 100%;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            outline: none;
         }
+        .create-input-username:focus { border-color: #4f46e5; }
+        
+        .create-input-desc {
+            background: transparent;
+            border: 1px dashed #333;
+            color: #d1d5db;
+            font-size: 0.875rem;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            outline: none;
+            resize: none;
+            height: 5rem;
+        }
+        .create-input-desc:focus { border-color: #4f46e5; }
 
         /* Helpers */
         .hidden { display: none !important; }
@@ -314,6 +317,14 @@
         .opacity-100 { opacity: 1; }
         
         input.thin-font { font-weight: 300 !important; }
+
+        /* Custom Tooltip */
+        #custom-tooltip {
+            position: fixed; background-color: #000; border: 1px solid #333; color: #fff;
+            padding: 0.4rem 0.8rem; border-radius: 0.5rem; font-size: 0.75rem;
+            pointer-events: none; z-index: 10000; opacity: 0; transition: opacity 0.15s ease;
+            white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
         
     </style>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-1D4F692C1Q"></script>
@@ -321,7 +332,6 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-1D4F692C1Q');
 </script>
 </head>
@@ -349,19 +359,12 @@
         </div>
     </div>
 
-    <div id="message-modal" class="modal-backdrop hidden opacity-0">
-        <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl w-full max-w-sm p-6 text-center">
-            <h3 id="message-modal-title" class="text-xl mb-4 text-white"></h3>
-            <p id="message-modal-body" class="mb-6 text-gray-400"></p>
-            <button id="message-modal-close-btn" class="btn-toolbar-style btn-primary-override w-full">Close</button>
-        </div>
-    </div>
-
+    <!-- MAIN PHOTO MODAL (Also used for Creation) -->
     <div id="photo-modal" class="modal-backdrop hidden">
-        <div id="modal-content-container" class="modal-content">
-            </div>
+        <div id="modal-content-container" class="modal-content"></div>
     </div>
     
+    <!-- EDIT TITLE MODAL -->
     <div id="title-modal" class="modal-backdrop hidden opacity-0">
         <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl w-full max-w-sm p-6 text-center">
             <h3 class="text-xl mb-4 text-white">Edit Title</h3>
@@ -373,6 +376,7 @@
         </div>
     </div>
     
+    <!-- UPLOAD SELECT MODAL (Initial Step) -->
     <div id="upload-menu-modal" class="modal-backdrop hidden opacity-0">
         <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl w-full max-w-sm p-6">
             <h3 id="upload-menu-title" class="text-xl mb-4 text-white">Post Photo</h3>
@@ -385,25 +389,6 @@
                  </label>
             </div>
             
-            <div id="upload-post-creator" class="hidden">
-                 <div class="mb-4 bg-black rounded-lg border border-[#333] overflow-hidden flex justify-center h-48">
-                    <img id="image-preview" src="#" class="h-full w-auto object-contain">
-                 </div>
-                 <form id="create-post-form" class="flex flex-col gap-4">
-                    <input type="text" id="post-title-input" placeholder="Caption..." class="p-3 bg-black border border-[#333] rounded-md focus:border-indigo-500 outline-none text-white thin-font" maxlength="48" required>
-                    <div class="flex gap-2 bg-black p-1 rounded-md border border-[#333]">
-                        <label class="flex-1 text-center cursor-pointer">
-                            <input type="radio" name="post-visibility" value="friends" class="hidden peer" checked>
-                            <div class="p-2 rounded peer-checked:bg-indigo-900/50 peer-checked:text-indigo-400 text-gray-500 text-sm transition-all"><i class="fas fa-user-friends"></i> Friends</div>
-                        </label>
-                        <label class="flex-1 text-center cursor-pointer">
-                            <input type="radio" name="post-visibility" value="public" class="hidden peer">
-                            <div class="p-2 rounded peer-checked:bg-indigo-900/50 peer-checked:text-indigo-400 text-gray-500 text-sm transition-all"><i class="fas fa-globe"></i> Public</div>
-                        </label>
-                    </div>
-                    <button type="submit" id="create-post-btn" class="btn-toolbar-style btn-primary-override w-full">Post</button>
-                 </form>
-            </div>
             <button id="upload-menu-close-btn" class="btn-toolbar-style mt-4 w-full">Cancel</button>
         </div>
     </div>
@@ -415,18 +400,14 @@
                 
                 <div class="mb-6 pb-4 border-b border-[#1a1a1a]">
                     <h2 class="text-lg text-white mb-2">My Code</h2>
-                    <div id="friend-code-display" class="p-2 text-center bg-black border border-[#333] rounded-md font-mono text-indigo-400 tracking-widest select-all cursor-pointer" data-tooltip="Click to Copy">
-                        ...
-                    </div>
+                    <div id="friend-code-display" class="p-2 text-center bg-black border border-[#333] rounded-md font-mono text-indigo-400 tracking-widest select-all cursor-pointer" data-tooltip="Click to Copy">...</div>
                 </div>
 
                 <div class="mb-6 pb-4 border-b border-[#1a1a1a]">
                     <h2 class="text-lg text-white mb-2">Add Friend</h2>
                     <form id="add-friend-form" class="flex gap-2">
                         <input type="text" id="friend-code-input" placeholder="CODE" maxlength="8" class="flex-grow p-2 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-center font-mono uppercase text-white thin-font">
-                        <button type="submit" class="btn-icon" data-tooltip="Send Request">
-                            <i class="fas fa-plus"></i>
-                        </button>
+                        <button type="submit" class="btn-icon" data-tooltip="Send Request"><i class="fas fa-plus"></i></button>
                     </form>
                     <div id="add-friend-message" class="text-xs mt-2 min-h-[16px]"></div>
                 </div>
@@ -437,7 +418,6 @@
                     <div id="daily-posts-wrapper" class="compact-list-wrapper">
                         <div id="daily-posts-container" class="compact-list-items"></div>
                     </div>
-                    <div id="upload-message" class="text-xs mt-2 min-h-[16px]"></div>
                 </div>
 
                 <div id="friends-section-wrapper" class="hidden">
@@ -456,10 +436,11 @@
 
             </div>
 
+            <!-- Sidebar Buttons (Matched to test.html) -->
             <div class="sidebar-bottom-controls">
-                <button id="sidebar-nav-posts" class="sidebar-control-btn active" data-tooltip="My Posts"><i class="fas fa-images"></i></button>
-                <button id="sidebar-nav-friends" class="sidebar-control-btn" data-tooltip="Friends"><i class="fas fa-user-friends"></i></button>
-                <button id="sidebar-nav-blocked" class="sidebar-control-btn" data-tooltip="Blocked Users"><i class="fas fa-user-shield"></i></button>
+                <button id="sidebar-nav-posts" class="sidebar-control-btn active" title="My Posts"><i class="fas fa-images"></i></button>
+                <button id="sidebar-nav-friends" class="sidebar-control-btn" title="Friends"><i class="fas fa-user-friends"></i></button>
+                <button id="sidebar-nav-blocked" class="sidebar-control-btn" title="Blocked Users"><i class="fas fa-user-shield"></i></button>
             </div>
         </aside>
 
@@ -477,13 +458,7 @@
                 </div>
             </div>
             
-            <div id="admin-reports-section" class="hidden mb-6 border-t border-[#333] pt-4">
-                 <h2 class="text-lg text-red-400 mb-2 font-bold">Admin Reports</h2>
-                 <div id="admin-reports-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-            </div>
-
-            <div id="photo-feed" class="photo-grid">
-                </div>
+            <div id="photo-feed" class="photo-grid"></div>
         </section>
 
     </main>
@@ -510,73 +485,47 @@
         let CURRENT_FRIENDS = [];
         let CURRENT_USERNAME = 'User'; 
         let UNSUBSCRIBE_POSTS = () => {};
-        let UNSUBSCRIBE_SLOTS = () => {}; 
         let UNSUBSCRIBE_MODAL = () => {}; 
-        let LAST_COMMENT_TIME = 0; 
         let BLOCKED_USERS = []; 
         let CURRENT_FEED_MODE = 'friends';
         let PENDING_FILE = null;
+        let PENDING_SLOT = 0;
         
         const DAILY_COLLECTION = collection(db, 'daily_photos');
         const USERS_COLLECTION = 'users';
 
-        // --- UI UTILS & TOOLTIPS ---
-        
-        // Tooltip Logic
+        // --- TOOLTIP ---
         const tooltipEl = document.getElementById('custom-tooltip');
         document.body.addEventListener('mouseover', (e) => {
-            const target = e.target.closest('[data-tooltip]');
-            if (!target) {
-                tooltipEl.style.opacity = 0;
-                return;
-            }
-            const text = target.getAttribute('data-tooltip');
+            const target = e.target.closest('[title]'); 
+            if (!target) { tooltipEl.style.opacity = 0; return; }
+            const text = target.getAttribute('title');
             if (!text) return;
+            
+            // Prevent default browser tooltip
+            target.dataset.originalTitle = text;
+            target.removeAttribute('title');
 
             tooltipEl.textContent = text;
             tooltipEl.style.opacity = 1;
             
             const rect = target.getBoundingClientRect();
-            const tipRect = tooltipEl.getBoundingClientRect();
-            const spaceAbove = rect.top;
-            const spaceBelow = window.innerHeight - rect.bottom;
-            
-            let top, left;
-
-            // Priority: Bottom -> Top -> Side
-            if (spaceBelow > tipRect.height + 10) {
-                top = rect.bottom + 8; // Below
-            } else if (spaceAbove > tipRect.height + 10) {
-                top = rect.top - tipRect.height - 8; // Above
-            } else {
-                top = rect.top + (rect.height / 2) - (tipRect.height / 2); // Center Y
-            }
-
-            // Center X
-            left = rect.left + (rect.width / 2) - (tipRect.width / 2);
-            
-            // Boundary checks
-            if (left < 10) left = 10;
-            if (left + tipRect.width > window.innerWidth - 10) left = window.innerWidth - tipRect.width - 10;
-
-            tooltipEl.style.top = `${top}px`;
-            tooltipEl.style.left = `${left}px`;
+            tooltipEl.style.top = `${rect.bottom + 8}px`;
+            tooltipEl.style.left = `${rect.left + (rect.width/2) - (tooltipEl.offsetWidth/2)}px`;
         });
         document.body.addEventListener('mouseout', (e) => {
-            if(e.target.closest('[data-tooltip]')) tooltipEl.style.opacity = 0;
+            const target = e.target.closest('[data-original-title]');
+            if(target) {
+                target.setAttribute('title', target.dataset.originalTitle);
+                tooltipEl.style.opacity = 0;
+            }
         });
 
-        // --- HELPER FUNCTIONS ---
+        // --- HELPERS ---
         function formatCount(num) {
             if (!num) return '0';
             if (num < 1000) return num;
             return (num / 1000).toFixed(1) + 'k';
-        }
-
-        function showMessage(el, text, type = 'error') {
-            el.textContent = text;
-            el.className = `text-xs mt-2 ${type === 'success' ? 'text-green-400' : 'text-red-400'}`;
-            setTimeout(() => el.textContent = '', 3000);
         }
 
         async function cleanText(text) {
@@ -610,25 +559,19 @@
         document.getElementById('sidebar-nav-friends').onclick = () => switchSidebar('friends');
         document.getElementById('sidebar-nav-blocked').onclick = () => switchSidebar('blocked');
 
-        // --- POST MODAL ---
+        // --- MODAL & UPLOAD LOGIC ---
         window.openPhotoModal = (photoId) => {
             const container = document.getElementById('modal-content-container');
             const modal = document.getElementById('photo-modal');
             modal.classList.remove('hidden');
             container.innerHTML = `<div class="w-full h-full flex items-center justify-center"><i class="fas fa-spinner fa-spin text-white text-2xl"></i></div>`;
             
-            UNSUBSCRIBE_MODAL(); // Clear prev
+            UNSUBSCRIBE_MODAL(); 
             
             UNSUBSCRIBE_MODAL = onSnapshot(doc(DAILY_COLLECTION, photoId), (snap) => {
-                if (!snap.exists()) {
-                    modal.classList.add('hidden');
-                    return alert("Post deleted.");
-                }
+                if (!snap.exists()) { modal.classList.add('hidden'); return; }
                 const data = snap.data();
-                if (data.status === 'hidden') {
-                    modal.classList.add('hidden');
-                    return alert("Content hidden.");
-                }
+                if (data.status === 'hidden') { modal.classList.add('hidden'); return; }
 
                 const currentUser = auth.currentUser;
                 const hearts = data.hearts || [];
@@ -636,29 +579,25 @@
                 const isHearted = hearts.includes(currentUser.uid);
                 const isOwner = data.creatorUid === currentUser.uid;
 
-                // --- MODAL HTML STRUCTURE UPDATE ---
+                // Render Modal Content
                 container.innerHTML = `
                     <div id="photo-display-area">
                          <img src="${data.imageBase64}" class="photo-modal-img">
                          <button id="close-modal-btn" class="absolute top-4 left-4 btn-icon" style="width: 40px; height: 40px; border-color: #333; background: black;" title="Close"><i class="fas fa-times text-lg"></i></button>
                     </div>
                     <div id="photo-info-panel">
-                        
                         <div class="modal-header">
                             <div class="modal-title-box">
                                 <h2 class="text-xl text-white font-normal truncate" title="${data.title}">${data.title || 'Untitled'}</h2>
                                 <p class="text-sm text-indigo-400 font-bold">${data.creatorUsername}</p>
                             </div>
-                            
                             <div class="modal-actions-box">
-                                <button id="heart-btn" class="text-2xl transition-colors ${isHearted ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}" data-tooltip="${isHearted ? 'Unlike' : 'Like'}">
+                                <button id="heart-btn" class="text-2xl transition-colors ${isHearted ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}" title="${isHearted ? 'Unlike' : 'Like'}">
                                     <i class="fas fa-heart"></i>
                                 </button>
                                 <span class="text-gray-400 text-sm font-mono mr-2">${formatCount(hearts.length)}</span>
-                                
-                                ${!isOwner ? `<button id="report-btn" class="text-gray-600 hover:text-red-400 text-lg" data-tooltip="Report Post"><i class="fas fa-flag"></i></button>` : ''}
-                                ${isOwner ? `<button id="delete-btn" class="text-gray-600 hover:text-red-400 text-lg" data-tooltip="Delete Post"><i class="fas fa-trash"></i></button>` : ''}
-                                ${!isOwner ? `<button id="block-btn" class="text-gray-600 hover:text-red-400 text-lg" data-tooltip="Block User"><i class="fas fa-ban"></i></button>` : ''}
+                                ${!isOwner ? `<button id="report-btn" class="text-gray-600 hover:text-red-400 text-lg" title="Report Post"><i class="fas fa-flag"></i></button>` : ''}
+                                ${isOwner ? `<button id="delete-btn" class="text-gray-600 hover:text-red-400 text-lg" title="Delete Post"><i class="fas fa-trash"></i></button>` : ''}
                             </div>
                         </div>
 
@@ -677,70 +616,139 @@
 
                         <form id="comment-form" class="comment-input-area mt-auto">
                             <input type="text" id="comment-input" placeholder="Add a comment..." class="flex-grow p-3 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-white thin-font text-sm" maxlength="140">
-                            <button type="submit" class="btn-icon" style="border-color: #333; width: 44px; height: 44px;" data-tooltip="Post Comment">
+                            <button type="submit" class="btn-icon" style="border-color: #333; width: 44px; height: 44px;" title="Post Comment">
                                 <i class="fas fa-paper-plane text-indigo-400"></i>
                             </button>
                         </form>
                     </div>
                 `;
 
-                // Scroll comments to bottom
-                const cSec = document.getElementById('comments-section');
-                cSec.scrollTop = cSec.scrollHeight;
-
-                // Event Bindings
-                document.getElementById('close-modal-btn').onclick = () => {
-                    modal.classList.add('hidden');
-                    UNSUBSCRIBE_MODAL();
-                };
-
-                document.getElementById('heart-btn').onclick = () => {
-                    updateDoc(doc(DAILY_COLLECTION, photoId), {
-                        hearts: isHearted ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid)
-                    });
-                };
-
-                if(document.getElementById('report-btn')) {
-                    document.getElementById('report-btn').onclick = async () => {
-                        if(!confirm("Report this post?")) return;
-                        await updateDoc(doc(DAILY_COLLECTION, photoId), { reports: arrayUnion(currentUser.uid) });
-                        alert("Reported. Thank you.");
-                        modal.classList.add('hidden');
-                    };
-                }
-
-                if(document.getElementById('delete-btn')) {
-                     document.getElementById('delete-btn').onclick = async () => {
-                         if(confirm("Delete this post permanently?")) {
-                             await deleteDoc(doc(DAILY_COLLECTION, photoId));
-                             modal.classList.add('hidden');
-                         }
-                     };
-                }
-                
-                if(document.getElementById('block-btn')) {
-                    document.getElementById('block-btn').onclick = async () => {
-                        if(confirm(`Block ${data.creatorUsername}?`)) {
-                             await updateDoc(doc(db, USERS_COLLECTION, currentUser.uid), { blocked_users: arrayUnion(data.creatorUid) });
-                             modal.classList.add('hidden');
-                        }
-                    };
-                }
-
+                // Events
+                document.getElementById('close-modal-btn').onclick = () => { modal.classList.add('hidden'); UNSUBSCRIBE_MODAL(); };
+                document.getElementById('heart-btn').onclick = () => updateDoc(doc(DAILY_COLLECTION, photoId), { hearts: isHearted ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid) });
                 document.getElementById('comment-form').onsubmit = async (e) => {
                     e.preventDefault();
                     const input = document.getElementById('comment-input');
                     const text = input.value.trim();
                     if(!text) return;
-                    
-                    const clean = await cleanText(text);
-                    await updateDoc(doc(DAILY_COLLECTION, photoId), {
-                        comments: arrayUnion({ uid: currentUser.uid, username: CURRENT_USERNAME, text: clean, timestamp: new Date() })
-                    });
+                    await updateDoc(doc(DAILY_COLLECTION, photoId), { comments: arrayUnion({ uid: currentUser.uid, username: CURRENT_USERNAME, text: await cleanText(text), timestamp: new Date() }) });
                     input.value = '';
                 };
+                if(document.getElementById('delete-btn')) {
+                    document.getElementById('delete-btn').onclick = async () => { if(confirm("Delete?")) { await deleteDoc(doc(DAILY_COLLECTION, photoId)); modal.classList.add('hidden'); }};
+                }
             });
         };
+
+        // --- UPLOAD FLOW (CREATION LOOKALIKE) ---
+        window.openUpload = (idx) => {
+            PENDING_SLOT = idx;
+            document.getElementById('upload-menu-modal').classList.remove('hidden', 'opacity-0');
+            document.getElementById('upload-select-options').classList.remove('hidden');
+            document.getElementById('upload-file-input').value = ''; 
+        };
+        document.getElementById('upload-menu-close-btn').onclick = () => document.getElementById('upload-menu-modal').classList.add('hidden');
+
+        document.getElementById('upload-file-input').onchange = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            PENDING_FILE = file;
+            
+            // Close selection menu
+            document.getElementById('upload-menu-modal').classList.add('hidden');
+
+            // Open Creation "Lookalike" Modal
+            const container = document.getElementById('modal-content-container');
+            const modal = document.getElementById('photo-modal');
+            modal.classList.remove('hidden');
+            
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const imgData = ev.target.result;
+                
+                // INJECT CREATION INTERFACE (Matches Post Detail Look)
+                container.innerHTML = `
+                    <div id="photo-display-area">
+                         <img src="${imgData}" class="photo-modal-img">
+                         <button id="cancel-create-btn" class="absolute top-4 left-4 btn-icon" style="width: 40px; height: 40px; border-color: #333; background: black;" title="Cancel"><i class="fas fa-times text-lg"></i></button>
+                    </div>
+                    <div id="photo-info-panel">
+                        <div class="modal-header">
+                            <div class="modal-title-box">
+                                <label class="text-xs text-gray-500 mb-1 block">Username (Overrides default)</label>
+                                <input type="text" id="create-username" class="create-input-username" value="${CURRENT_USERNAME}" placeholder="Enter Username">
+                            </div>
+                            <div class="modal-actions-box opacity-50 cursor-not-allowed">
+                                <i class="fas fa-heart text-gray-600 text-2xl"></i>
+                                <span class="text-gray-400 text-sm font-mono">0</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="text-xs text-gray-500 mb-1 block">Description / Caption (Max 150)</label>
+                            <textarea id="create-description" class="create-input-desc" maxlength="150" placeholder="Write a description..."></textarea>
+                        </div>
+                        
+                        <div class="mt-4 flex gap-2 mb-4">
+                            <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-400">
+                                <input type="checkbox" id="create-public" class="rounded bg-black border-gray-700">
+                                Public Post?
+                            </label>
+                        </div>
+
+                        <!-- Spacer -->
+                        <div class="flex-grow bg-[#050505] rounded border border-[#1a1a1a] p-4 mb-4 flex items-center justify-center">
+                            <span class="text-gray-600 italic text-sm">Preview Mode</span>
+                        </div>
+
+                        <button id="confirm-post-btn" class="btn-toolbar-style btn-primary-override w-full" style="height: 50px; font-size: 1.1rem;">
+                            <i class="fas fa-paper-plane"></i> Post Photo
+                        </button>
+                    </div>
+                `;
+
+                // Bind Creation Events
+                document.getElementById('cancel-create-btn').onclick = () => {
+                    modal.classList.add('hidden');
+                    PENDING_FILE = null;
+                };
+
+                document.getElementById('confirm-post-btn').onclick = async () => {
+                    const btn = document.getElementById('confirm-post-btn');
+                    btn.disabled = true;
+                    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Posting...`;
+                    
+                    const user = auth.currentUser;
+                    const username = document.getElementById('create-username').value.trim() || CURRENT_USERNAME;
+                    const desc = document.getElementById('create-description').value.trim();
+                    const isPublic = document.getElementById('create-public').checked;
+
+                    const ref = doc(DAILY_COLLECTION);
+                    
+                    // Compress (Simplified for brevity)
+                    const finalImg = imgData; // In prod use canvas compress
+
+                    await setDoc(ref, {
+                        creatorUid: user.uid, 
+                        creatorUsername: await cleanText(username), 
+                        createdAt: serverTimestamp(),
+                        imageBase64: finalImg, 
+                        title: await cleanText(desc) || "Daily Photo", // Title acts as description/caption
+                        hearts: [], comments: [], 
+                        isPublic: isPublic, 
+                        status: 'active'
+                    });
+                    
+                    await updateDoc(doc(db, USERS_COLLECTION, user.uid), { dailySlotsUsed: arrayUnion(ref.id) });
+                    
+                    modal.classList.add('hidden');
+                    PENDING_FILE = null;
+                    alert("Posted successfully!");
+                };
+            };
+            reader.readAsDataURL(file);
+        };
+
 
         // --- FEED LOGIC ---
         function renderFeed(snap) {
@@ -770,7 +778,6 @@
             UNSUBSCRIBE_POSTS();
             document.getElementById('feed-toggle-friends').classList.toggle('active', mode === 'friends');
             document.getElementById('feed-toggle-friends').classList.toggle('btn-primary-override', mode === 'friends');
-            
             document.getElementById('feed-toggle-public').classList.toggle('active', mode === 'public');
             document.getElementById('feed-toggle-public').classList.toggle('btn-primary-override', mode === 'public');
 
@@ -782,12 +789,11 @@
                      document.getElementById('photo-feed').innerHTML = '<p class="text-gray-500 text-center col-span-3 mt-10">Add friends to see photos!</p>';
                      return;
                 }
-                const uids = [user.uid, ...CURRENT_FRIENDS].slice(0, 10); // Limit due to Firebase 'in' constraint
+                const uids = [user.uid, ...CURRENT_FRIENDS].slice(0, 10); 
                 q = query(DAILY_COLLECTION, where('creatorUid', 'in', uids), where('createdAt', '>=', today), orderBy('createdAt', 'desc'));
             } else {
-                q = query(DAILY_COLLECTION, where('visibility', '==', 'public'), where('status', '!=', 'hidden'), where('createdAt', '>=', today), orderBy('createdAt', 'desc'), limit(50));
+                q = query(DAILY_COLLECTION, where('isPublic', '==', true), where('status', '!=', 'hidden'), where('createdAt', '>=', today), orderBy('createdAt', 'desc'), limit(50));
             }
-            
             UNSUBSCRIBE_POSTS = onSnapshot(q, renderFeed);
         }
 
@@ -818,7 +824,7 @@
         onAuthStateChanged(auth, async (user) => {
             if (!user) { await signInAnonymously(auth); return; }
             document.getElementById('loading-screen').style.display = 'none';
-            document.getElementById('messenger-ui').style.display = 'flex'; // Use flex for layout
+            document.getElementById('messenger-ui').style.display = 'flex'; 
 
             // Load Profile
             const userRef = doc(db, USERS_COLLECTION, user.uid);
@@ -828,11 +834,10 @@
                 CURRENT_FRIENDS = d.friends || [];
                 BLOCKED_USERS = d.blocked_users || [];
                 
-                // Render Friends List
+                // Render Friends
                 const fList = document.getElementById('friends-list-items');
-                if(CURRENT_FRIENDS.length === 0) {
-                    fList.innerHTML = '<p class="text-gray-600 text-sm p-2">No friends yet.</p>';
-                } else {
+                if(CURRENT_FRIENDS.length === 0) fList.innerHTML = '<p class="text-gray-600 text-sm p-2">No friends yet.</p>';
+                else {
                     Promise.all(CURRENT_FRIENDS.map(uid => getDoc(doc(db, USERS_COLLECTION, uid)))).then(snaps => {
                         fList.innerHTML = snaps.map(s => {
                             const name = s.data()?.username || 'Unknown';
@@ -859,7 +864,6 @@
                     slots.appendChild(div);
                 }
 
-                // Initial Feed
                 if(CURRENT_FEED_MODE === 'friends') setupFeed('friends', user);
             });
             
@@ -867,55 +871,11 @@
             const codeQ = query(collection(db, 'friend_codes'), where('userId', '==', user.uid), limit(1));
             getDocs(codeQ).then(s => {
                 if(!s.empty) document.getElementById('friend-code-display').textContent = s.docs[0].id;
-                else {
-                    // Generate code logic omitted for brevity, assumes exists or handled elsewhere
-                    document.getElementById('friend-code-display').textContent = "GEN-ERR"; 
-                }
+                else document.getElementById('friend-code-display').textContent = "GEN-ERR"; 
             });
         });
-        
-        // --- UPLOAD LOGIC ---
-        window.openUpload = (idx) => {
-            document.getElementById('upload-menu-modal').classList.remove('hidden', 'opacity-0');
-            document.getElementById('upload-select-options').classList.remove('hidden');
-            document.getElementById('upload-post-creator').classList.add('hidden');
-            document.getElementById('upload-file-input').dataset.slotIndex = idx;
-        };
-        
-        document.getElementById('upload-file-input').onchange = (e) => {
-            const file = e.target.files[0];
-            if(!file) return;
-            PENDING_FILE = file;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                document.getElementById('image-preview').src = ev.target.result;
-                document.getElementById('upload-select-options').classList.add('hidden');
-                document.getElementById('upload-post-creator').classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        };
-        document.getElementById('create-post-form').onsubmit = async (e) => {
-             e.preventDefault();
-             // Simplistic upload for brevity - assumes compressImage exists or direct base64
-             const title = document.getElementById('post-title-input').value;
-             const vis = document.querySelector('input[name="post-visibility"]:checked').value;
-             const reader = new FileReader();
-             reader.readAsDataURL(PENDING_FILE);
-             reader.onload = async (ev) => {
-                 const base64 = ev.target.result; // Should compress in prod
-                 const user = auth.currentUser;
-                 const ref = doc(DAILY_COLLECTION);
-                 await setDoc(ref, {
-                     creatorUid: user.uid, creatorUsername: CURRENT_USERNAME, createdAt: serverTimestamp(),
-                     imageBase64: base64, title: title, hearts: [], comments: [], visibility: vis, status: 'active'
-                 });
-                 await updateDoc(doc(db, USERS_COLLECTION, user.uid), { dailySlotsUsed: arrayUnion(ref.id) });
-                 document.getElementById('upload-menu-modal').classList.add('hidden');
-             };
-        };
-        document.getElementById('upload-menu-close-btn').onclick = () => document.getElementById('upload-menu-modal').classList.add('hidden');
 
-        // Global Friend Remove (exposed for HTML onclick)
+        // Global Actions
         window.removeFriend = async (fid) => {
             if(!confirm("Remove friend?")) return;
             const uid = auth.currentUser.uid;
@@ -925,14 +885,10 @@
             await batch.commit();
         };
 
-        // Render Blocked
         async function renderBlockedList() {
             const list = document.getElementById('blocked-list-items');
             list.innerHTML = '';
-            if(BLOCKED_USERS.length === 0) {
-                list.innerHTML = '<p class="text-gray-600 p-2 text-sm">No blocked users.</p>';
-                return;
-            }
+            if(BLOCKED_USERS.length === 0) { list.innerHTML = '<p class="text-gray-600 p-2 text-sm">No blocked users.</p>'; return; }
             BLOCKED_USERS.forEach(uid => {
                 list.innerHTML += `<div class="compact-list-item flex justify-between"><span class="text-gray-400 text-sm">User ${uid.substr(0,5)}...</span> <button onclick="unblock('${uid}')" class="text-indigo-400 text-xs border border-indigo-900 px-2 rounded">Unblock</button></div>`;
             });
