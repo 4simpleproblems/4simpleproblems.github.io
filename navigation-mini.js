@@ -145,6 +145,9 @@ const applyCounterZoom = () => {
             await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
             await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js");
             await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js");
+            
+            // Load Ban Enforcer (Must be after Firebase)
+            await loadScript("ban-enforcer.js");
 
             // Now that scripts are loaded, we can use the `firebase` global object
             initializeApp(); // No longer passing pages here as allPages is global
