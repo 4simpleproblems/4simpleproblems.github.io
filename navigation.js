@@ -7,9 +7,13 @@
  *
  * --- UPDATES & FEATURES ---
  * ... [Previous changelog kept] ...
- * 27. **(NEW) COUNTER-ZOOM LOGIC:** The navbar now detects browser zoom/DPI changes 
+ * 27. (NEW) COUNTER-ZOOM LOGIC: The navbar now detects browser zoom/DPI changes 
  * and inversely scales itself to maintain a consistent physical size on screen, 
  * regardless of the browser's zoom level.
+ * 28. (MODIFIED) GLIDE GRADIENT EXPANSION: Scroll glide gradients now extend fully
+ * to the edges of the tab container for seamless visual blending.
+ * 29. (MODIFIED) SCRIPT INJECTION: Added injection logic for ban-enforcer.js,
+ * url-changer.js, and panic-key.js.
  */
 
 // =========================================================================
@@ -53,8 +57,9 @@ const DEFAULT_THEME = {
     'logged-out-icon-border': '#374151',
     'logged-out-icon-color': '#DADADA',
     'glide-icon-color': '#ffffff',
-    'glide-gradient-left': 'linear-gradient(to right, #000000, transparent)',
-    'glide-gradient-right': 'linear-gradient(to left, #000000, transparent)',
+    // MODIFIED: Increased gradient spread to blend better with navbar-bg
+    'glide-gradient-left': 'linear-gradient(to right, #000000 0%, transparent 100%)',
+    'glide-gradient-right': 'linear-gradient(to left, #000000 0%, transparent 100%)',
     'tab-text': '#9ca3af',
     'tab-hover-text': '#ffffff',
     'tab-hover-border': '#d1d5db',
@@ -155,6 +160,25 @@ let db;
             document.head.appendChild(link);
         });
     };
+    
+    // NEW FUNCTION: Inject all custom scripts
+    const injectUtilityScripts = async () => {
+        const scriptsToLoad = [
+            '../ban-enforcer.js',
+            '../url-changer.js',
+            '../panic-key.js'
+        ];
+        // Load scripts sequentially to respect potential dependencies
+        for (const src of scriptsToLoad) {
+            try {
+                await loadScript(src);
+                console.log(`Successfully loaded utility script: ${src}`);
+            } catch (error) {
+                console.warn(`Failed to load utility script ${src}:`, error);
+                // Continue loading other scripts even if one fails
+            }
+        }
+    };
 
     const debounce = (func, delay) => {
         let timeoutId;
@@ -228,6 +252,9 @@ let db;
     };
 
     const run = async () => {
+        // MODIFIED: Inject utility scripts first
+        await injectUtilityScripts();
+
         if (!document.getElementById('navbar-container')) {
             const navbarDiv = document.createElement('div');
             navbarDiv.id = 'navbar-container';
@@ -254,6 +281,8 @@ let db;
                     <div id="auth-controls-wrapper" class="flex items-center gap-3 flex-shrink-0">
                         <div class="auth-toggle-placeholder"></div>
                     </div>
+                    <button id="glide-left" class="scroll-glide-button"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button id="glide-right" class="scroll-glide-button"><i class="fa-solid fa-chevron-right"></i></button>
                 </nav>
             </header>
         `;
@@ -301,6 +330,7 @@ let db;
                 /* Width is handled dynamically by applyCounterZoom now */
                 width: 100%; 
             }
+            /* Nav now acts as the relative container for glide buttons */
             .auth-navbar nav { padding: 0 1rem; height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; position: relative; }
             .initial-avatar {
                 background: var(--avatar-gradient);
@@ -351,7 +381,11 @@ let db;
             }
             .auth-menu-link i.w-4, .auth-menu-button i.w-4 { width: 1rem; text-align: center; } 
 
-            .tab-wrapper { flex-grow: 1; display: flex; align-items: center; position: relative; min-width: 0; margin: 0 1rem; justify-content: center; }
+            .tab-wrapper { 
+                flex-grow: 1; display: flex; align-items: center; 
+                /* MODIFIED: Removed relative from tab-wrapper since gliders are now on nav */
+                min-width: 0; margin: 0 1rem; justify-content: center; 
+            }
             .tab-scroll-container { 
                 flex-grow: 1; display: flex; align-items: center; 
                 overflow-x: auto; -webkit-overflow-scrolling: touch; 
@@ -360,17 +394,25 @@ let db;
                 max-width: 100%; padding-left: 16px; padding-right: 16px; 
             }
             .tab-scroll-container::-webkit-scrollbar { display: none; }
+            
+            /* MODIFIED: Positioning scroll-glide-button relative to .auth-navbar nav */
             .scroll-glide-button {
                 position: absolute; top: 0; height: 100%; width: 64px; display: flex; align-items: center; justify-content: center; 
                 color: var(--glide-icon-color); font-size: 1.2rem; cursor: pointer; opacity: 1; 
                 transition: opacity 0.3s, color 0.3s ease; z-index: 10; pointer-events: auto;
             }
             #glide-left { 
-                left: 0; background: var(--glide-gradient-left); justify-content: flex-start; padding-left: 8px; 
+                /* MODIFIED: Positioning to align with the nav padding (1rem) */
+                left: 1rem; 
+                /* MODIFIED: Adjusted for seamless blending */
+                background: var(--glide-gradient-left); justify-content: flex-start; padding-left: 8px; 
                 transition: opacity 0.3s, color 0.3s ease, background 0.3s ease;
             }
             #glide-right { 
-                right: 0; background: var(--glide-gradient-right); justify-content: flex-end; padding-right: 8px; 
+                /* MODIFIED: Positioning to align with the nav padding (1rem) */
+                right: 1rem; 
+                /* MODIFIED: Adjusted for seamless blending */
+                background: var(--glide-gradient-right); justify-content: flex-end; padding-right: 8px; 
                 transition: opacity 0.3s, color 0.3s ease, background 0.3s ease;
             }
             .scroll-glide-button.hidden { opacity: 0 !important; pointer-events: none !important; }
@@ -885,6 +927,9 @@ let db;
             const tabWrapper = navElement.querySelector('.tab-wrapper');
             const authControlsWrapper = document.getElementById('auth-controls-wrapper');
             const navbarLogo = document.getElementById('navbar-logo');
+            // MODIFIED: Get scroll glider buttons which are now children of nav
+            const leftButton = document.getElementById('glide-left');
+            const rightButton = document.getElementById('glide-right');
 
             const logoPath = DEFAULT_THEME['logo-src']; 
             if (navbarLogo) navbarLogo.src = logoPath;
@@ -905,11 +950,9 @@ let db;
 
             if (tabWrapper) {
                 tabWrapper.innerHTML = `
-                    <button id="glide-left" class="scroll-glide-button"><i class="fa-solid fa-chevron-left"></i></button>
                     <div class="tab-scroll-container">
                         ${tabsHtml}
                     </div>
-                    <button id="glide-right" class="scroll-glide-button"><i class="fa-solid fa-chevron-right"></i></button>
                 `;
             }
 
@@ -920,6 +963,7 @@ let db;
             const tabContainer = tabWrapper.querySelector('.tab-scroll-container'); 
             const tabCount = tabContainer ? tabContainer.querySelectorAll('.nav-tab').length : 0;
 
+            // Logic to center tabs if count is low
             if (tabCount <= 9) {
                 if(tabContainer) {
                     tabContainer.style.justifyContent = 'center';
@@ -933,6 +977,11 @@ let db;
                     tabContainer.style.flexGrow = '1';
                 }
             }
+            
+            // Re-append glide buttons to the nav element if they were removed/moved (they are now siblings of tab-wrapper)
+            // This is primarily for robustness, but not strictly needed if nav.innerHTML logic in run() is maintained.
+            if (!navElement.contains(leftButton) && leftButton) navElement.appendChild(leftButton);
+            if (!navElement.contains(rightButton) && rightButton) navElement.appendChild(rightButton);
 
             setupEventListeners(user);
 
@@ -984,6 +1033,7 @@ let db;
 
         const updateScrollGilders = () => {
             const container = document.querySelector('.tab-scroll-container');
+            // MODIFIED: Buttons are now direct children of the nav element, not tab-wrapper
             const leftButton = document.getElementById('glide-left');
             const rightButton = document.getElementById('glide-right');
             const tabCount = document.querySelectorAll('.nav-tab').length;
