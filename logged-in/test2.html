@@ -28,7 +28,7 @@
             background-color: #040404; 
             color: #c0c0c0; 
             font-weight: 300; 
-            overflow: hidden; 
+            overflow: hidden; /* Prevent body scroll */
             height: 100vh;
         }
         
@@ -84,29 +84,27 @@
             border-color: #fff;
             color: #fff;
         }
-        .btn-icon.active {
-            border-color: #4f46e5;
-            color: #4f46e5;
-            background-color: rgba(79, 70, 229, 0.1);
-        }
-
+        
         /* --- LAYOUT --- */
         .messenger-container {
-            display: flex;
+            display: block; /* Changed from grid to block since sidebar is fixed */
             width: 100vw;
             height: calc(100vh - 4rem); 
             margin-top: 4rem; 
         }
 
-        /* --- SIDEBAR --- */
+        /* --- SIDEBAR (Fixed Left) --- */
         .left-panel {
+            position: fixed;
+            top: 4rem;
+            left: 0;
+            bottom: 0;
             width: 350px;
             background-color: #000000;
             border-right: 1px solid #1a1a1a;
             display: flex;
             flex-direction: column;
-            flex-shrink: 0;
-            position: relative;
+            z-index: 50;
         }
 
         .left-panel-scroll-content {
@@ -120,25 +118,35 @@
         .left-panel-scroll-content::-webkit-scrollbar-thumb { background-color: #333; border-radius: 3px; }
         .left-panel-scroll-content::-webkit-scrollbar-track { background-color: #000; }
 
-        /* Updated Sidebar Controls (From test.html) */
+        /* Sidebar Tabs - Full Width, No Rounded Corners */
         .sidebar-bottom-controls {
             display: flex;
-            justify-content: space-around;
-            margin-top: auto;
-            padding-top: 1rem;
+            width: 100%;
             border-top: 1px solid #1a1a1a;
+            background-color: #000000;
+            padding: 0; 
         }
         .sidebar-control-btn {
+            flex: 1; 
             color: #6b7280;
             font-size: 1.25rem;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            transition: all 0.2s;
+            padding: 1rem 0;
             background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0; /* Not rounded */
         }
-        .sidebar-control-btn:hover, .sidebar-control-btn.active {
-            color: #4f46e5;
-            background-color: rgba(79, 70, 229, 0.1);
+        .sidebar-control-btn:hover {
+            color: #d1d5db;
+            /* No bg change on hover */
+        }
+        .sidebar-control-btn.active {
+            color: #4f46e5; /* Highlight icon color only */
+            background-color: transparent;
         }
 
         /* --- LISTS --- */
@@ -166,10 +174,17 @@
 
         /* --- FEED PANEL --- */
         .feed-panel { 
-            flex-grow: 1;
+            margin-left: 350px; /* Push to right of sidebar */
+            height: 100%;
             background-color: #040404;
             padding: 1.5rem; 
-            overflow-y: auto;
+            overflow-y: auto; /* Independent scroll */
+        }
+        
+        /* Inner container to mimic the "old" centered card look */
+        .feed-content-inner {
+            max-width: 1000px; /* Constrain width */
+            margin: 0 auto; /* Center */
         }
         
         .feed-toggle {
@@ -215,23 +230,22 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.9);
             display: flex; justify-content: center; align-items: center;
-            z-index: 50; transition: opacity 0.3s ease;
+            z-index: 200; /* UPDATED: Higher Z-Index than Sidebar (50) and ensuring it is on top */
+            transition: opacity 0.3s ease;
         }
         
-        /* UPDATED: 16:9 Aspect Ratio */
         .modal-content {
             background-color: #0d0d0d; 
             border: 1px solid #1a1a1a;
             border-radius: 1rem;
             padding: 0; 
             max-width: 90%; width: 1200px;
-            max-height: 90vh; /* Safety Cap */
-            aspect-ratio: 16 / 9; /* Enforced 16:9 */
+            max-height: 90vh; 
+            aspect-ratio: 16 / 9; 
             display: flex; overflow: hidden;
             position: relative;
         }
         
-        /* Modal Left: Image */
         #photo-display-area {
             flex: 2;
             background-color: #000;
@@ -239,14 +253,12 @@
             position: relative;
             overflow: hidden;
         }
-        /* UPDATED: Hover the height without stretching */
         .photo-modal-img {
             width: 100%; 
             height: 100%; 
-            object-fit: cover; /* Fills the area */
+            object-fit: cover; 
         }
 
-        /* Modal Right: Info */
         #photo-info-panel {
             flex: 1;
             min-width: 350px;
@@ -260,9 +272,10 @@
         
         .modal-header {
             display: flex; justify-content: space-between; align-items: flex-start;
-            margin-bottom: 1rem; gap: 1rem;
+            margin-bottom: 0.5rem; gap: 1rem;
         }
         .modal-title-box { flex-grow: 1; overflow: hidden; }
+        
         .modal-actions-box { 
             display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center;
         }
@@ -282,34 +295,6 @@
         .comment-input-area {
             display: flex; gap: 0.5rem; align-items: center;
         }
-
-        /* Create Mode Inputs */
-        .create-input-username {
-            background: transparent;
-            border: 1px dashed #333;
-            color: #818cf8; /* Indigo */
-            font-size: 1.125rem; /* text-lg */
-            font-weight: bold;
-            width: 100%;
-            padding: 0.25rem;
-            border-radius: 0.25rem;
-            outline: none;
-        }
-        .create-input-username:focus { border-color: #4f46e5; }
-        
-        .create-input-desc {
-            background: transparent;
-            border: 1px dashed #333;
-            color: #d1d5db;
-            font-size: 0.875rem;
-            width: 100%;
-            padding: 0.5rem;
-            border-radius: 0.25rem;
-            outline: none;
-            resize: none;
-            height: 5rem;
-        }
-        .create-input-desc:focus { border-color: #4f46e5; }
 
         /* Helpers */
         .hidden { display: none !important; }
@@ -359,36 +344,34 @@
         </div>
     </div>
 
-    <!-- MAIN PHOTO MODAL (Also used for Creation) -->
+    <!-- MAIN PHOTO MODAL -->
     <div id="photo-modal" class="modal-backdrop hidden">
         <div id="modal-content-container" class="modal-content"></div>
     </div>
     
     <!-- EDIT TITLE MODAL -->
     <div id="title-modal" class="modal-backdrop hidden opacity-0">
-        <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl w-full max-w-sm p-6 text-center">
-            <h3 class="text-xl mb-4 text-white">Edit Title</h3>
+        <div class="modal-content w-full max-w-sm p-6 text-center">
+            <h3 class="text-xl font-bold mb-4 text-white">Edit Title</h3>
             <form id="edit-title-form" data-post-id="" class="flex flex-col gap-4">
                 <input type="text" id="title-edit-input" placeholder="Title (max 48 chars)" class="p-3 bg-black border border-[#333] rounded-md focus:border-indigo-500 outline-none text-white thin-font" maxlength="48" required>
-                <button type="submit" class="btn-toolbar-style btn-primary-override w-full">Save</button>
+                <button type="submit" class="btn-toolbar-style btn-primary-override w-full">Save Title</button>
             </form>
             <button id="title-modal-close-btn" class="btn-toolbar-style mt-3 w-full">Cancel</button>
         </div>
     </div>
     
-    <!-- UPLOAD SELECT MODAL (Initial Step) -->
+    <!-- UPLOAD SELECT MODAL -->
     <div id="upload-menu-modal" class="modal-backdrop hidden opacity-0">
         <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl w-full max-w-sm p-6">
             <h3 id="upload-menu-title" class="text-xl mb-4 text-white">Post Photo</h3>
             <input type="file" id="upload-file-input" class="hidden" accept="image/*" data-slot-index="">
-            
             <div id="upload-select-options" class="flex flex-col gap-3 mb-6">
                  <label for="upload-file-input" id="upload-drop-area" class="bg-black border-2 border-dashed border-[#333] rounded-lg p-8 text-center cursor-pointer hover:border-indigo-500 transition-colors">
                     <i class="fas fa-cloud-upload-alt text-4xl mb-3 text-gray-500"></i>
                     <span class="block font-semibold text-gray-400">Select Image</span>
                  </label>
             </div>
-            
             <button id="upload-menu-close-btn" class="btn-toolbar-style mt-4 w-full">Cancel</button>
         </div>
     </div>
@@ -436,7 +419,6 @@
 
             </div>
 
-            <!-- Sidebar Buttons (Matched to test.html) -->
             <div class="sidebar-bottom-controls">
                 <button id="sidebar-nav-posts" class="sidebar-control-btn active" title="My Posts"><i class="fas fa-images"></i></button>
                 <button id="sidebar-nav-friends" class="sidebar-control-btn" title="Friends"><i class="fas fa-user-friends"></i></button>
@@ -445,20 +427,22 @@
         </aside>
 
         <section class="feed-panel">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl text-white">Today's Feed</h1>
-                
-                <div class="feed-toggle">
-                    <button id="feed-toggle-friends" class="btn-toolbar-style btn-primary-override active">
-                        <i class="fas fa-user-friends"></i> Friends
-                    </button>
-                    <button id="feed-toggle-public" class="btn-toolbar-style">
-                        <i class="fas fa-globe"></i> Public
-                    </button>
+            <div class="feed-content-inner">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl text-white">Today's Feed</h1>
+                    
+                    <div class="feed-toggle">
+                        <button id="feed-toggle-friends" class="btn-toolbar-style btn-primary-override active">
+                            <i class="fas fa-user-friends"></i> Friends
+                        </button>
+                        <button id="feed-toggle-public" class="btn-toolbar-style">
+                            <i class="fas fa-globe"></i> Public
+                        </button>
+                    </div>
                 </div>
+                
+                <div id="photo-feed" class="photo-grid"></div>
             </div>
-            
-            <div id="photo-feed" class="photo-grid"></div>
         </section>
 
     </main>
@@ -473,10 +457,7 @@
         import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs, serverTimestamp, orderBy, deleteDoc, onSnapshot, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { firebaseConfig } from "../firebase-config.js";
         
-        if (!firebaseConfig || !firebaseConfig.apiKey) {
-            document.getElementById('loading-screen').innerHTML = '<p class="text-red-500">Config Error</p>';
-            throw new Error("Missing Firebase Config.");
-        }
+        if (!firebaseConfig || !firebaseConfig.apiKey) throw new Error("Missing Firebase Config.");
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -494,25 +475,52 @@
         const DAILY_COLLECTION = collection(db, 'daily_photos');
         const USERS_COLLECTION = 'users';
 
-        // --- TOOLTIP ---
+        // --- TOOLTIP LOGIC (INTELLIGENT) ---
         const tooltipEl = document.getElementById('custom-tooltip');
+        
         document.body.addEventListener('mouseover', (e) => {
             const target = e.target.closest('[title]'); 
             if (!target) { tooltipEl.style.opacity = 0; return; }
+            
             const text = target.getAttribute('title');
             if (!text) return;
             
-            // Prevent default browser tooltip
             target.dataset.originalTitle = text;
             target.removeAttribute('title');
-
+            
             tooltipEl.textContent = text;
             tooltipEl.style.opacity = 1;
             
             const rect = target.getBoundingClientRect();
-            tooltipEl.style.top = `${rect.bottom + 8}px`;
-            tooltipEl.style.left = `${rect.left + (rect.width/2) - (tooltipEl.offsetWidth/2)}px`;
+            const tipRect = tooltipEl.getBoundingClientRect();
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const gap = 10;
+
+            let top, left;
+
+            if (rect.bottom + tipRect.height + gap <= winH) {
+                top = rect.bottom + gap;
+                left = rect.left + (rect.width/2) - (tipRect.width/2);
+            } else if (rect.top - tipRect.height - gap >= 0) {
+                top = rect.top - tipRect.height - gap;
+                left = rect.left + (rect.width/2) - (tipRect.width/2);
+            } else {
+                top = rect.top + (rect.height/2) - (tipRect.height/2);
+                if (rect.left > winW / 2) {
+                    left = rect.left - tipRect.width - gap; 
+                } else {
+                    left = rect.right + gap; 
+                }
+            }
+            
+            if (left < gap) left = gap;
+            if (left + tipRect.width > winW - gap) left = winW - tipRect.width - gap;
+
+            tooltipEl.style.top = `${top}px`;
+            tooltipEl.style.left = `${left}px`;
         });
+        
         document.body.addEventListener('mouseout', (e) => {
             const target = e.target.closest('[data-original-title]');
             if(target) {
@@ -583,10 +591,11 @@
                 container.innerHTML = `
                     <div id="photo-display-area">
                          <img src="${data.imageBase64}" class="photo-modal-img">
-                         <button id="close-modal-btn" class="absolute top-4 left-4 btn-icon" style="width: 40px; height: 40px; border-color: #333; background: black;" title="Close"><i class="fas fa-times text-lg"></i></button>
                     </div>
                     <div id="photo-info-panel">
-                        <div class="modal-header">
+                        <button id="close-modal-btn" class="absolute top-2 right-2 btn-icon" style="z-index: 50; border: none; background: transparent;" title="Close"><i class="fas fa-times text-xl text-gray-400 hover:text-white"></i></button>
+                        
+                        <div class="modal-header mt-6">
                             <div class="modal-title-box">
                                 <h2 class="text-xl text-white font-normal truncate" title="${data.title}">${data.title || 'Untitled'}</h2>
                                 <p class="text-sm text-indigo-400 font-bold">${data.creatorUsername}</p>
@@ -595,9 +604,11 @@
                                 <button id="heart-btn" class="text-2xl transition-colors ${isHearted ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}" title="${isHearted ? 'Unlike' : 'Like'}">
                                     <i class="fas fa-heart"></i>
                                 </button>
-                                <span class="text-gray-400 text-sm font-mono mr-2">${formatCount(hearts.length)}</span>
-                                ${!isOwner ? `<button id="report-btn" class="text-gray-600 hover:text-red-400 text-lg" title="Report Post"><i class="fas fa-flag"></i></button>` : ''}
-                                ${isOwner ? `<button id="delete-btn" class="text-gray-600 hover:text-red-400 text-lg" title="Delete Post"><i class="fas fa-trash"></i></button>` : ''}
+                                <span class="text-gray-400 text-sm font-mono">${formatCount(hearts.length)}</span>
+                                
+                                ${!isOwner ? `<button id="report-btn" class="text-gray-600 hover:text-red-400 text-lg ml-2" title="Report Post"><i class="fas fa-flag"></i></button>` : ''}
+                                ${isOwner ? `<button id="delete-btn" class="text-gray-600 hover:text-red-400 text-lg ml-2" title="Delete Post"><i class="fas fa-trash"></i></button>` : ''}
+                                ${!isOwner ? `<button id="block-btn" class="text-gray-600 hover:text-red-400 text-lg ml-2" title="Block User"><i class="fas fa-ban"></i></button>` : ''}
                             </div>
                         </div>
 
@@ -634,8 +645,16 @@
                     await updateDoc(doc(DAILY_COLLECTION, photoId), { comments: arrayUnion({ uid: currentUser.uid, username: CURRENT_USERNAME, text: await cleanText(text), timestamp: new Date() }) });
                     input.value = '';
                 };
+                
+                // --- Report/Delete/Block Handlers ---
+                if(document.getElementById('report-btn')) {
+                    document.getElementById('report-btn').onclick = async () => { if(confirm("Report this post?")) { await updateDoc(doc(DAILY_COLLECTION, photoId), { reports: arrayUnion(currentUser.uid) }); alert("Reported."); }};
+                }
                 if(document.getElementById('delete-btn')) {
-                    document.getElementById('delete-btn').onclick = async () => { if(confirm("Delete?")) { await deleteDoc(doc(DAILY_COLLECTION, photoId)); modal.classList.add('hidden'); }};
+                    document.getElementById('delete-btn').onclick = async () => { if(confirm("Delete permanently?")) { await deleteDoc(doc(DAILY_COLLECTION, photoId)); modal.classList.add('hidden'); }};
+                }
+                 if(document.getElementById('block-btn')) {
+                    document.getElementById('block-btn').onclick = async () => { if(confirm("Block user?")) { await updateDoc(doc(db, USERS_COLLECTION, currentUser.uid), { blocked_users: arrayUnion(data.creatorUid) }); modal.classList.add('hidden'); }};
                 }
             });
         };
@@ -653,11 +672,8 @@
             const file = e.target.files[0];
             if(!file) return;
             PENDING_FILE = file;
-            
-            // Close selection menu
             document.getElementById('upload-menu-modal').classList.add('hidden');
 
-            // Open Creation "Lookalike" Modal
             const container = document.getElementById('modal-content-container');
             const modal = document.getElementById('photo-modal');
             modal.classList.remove('hidden');
@@ -665,28 +681,25 @@
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const imgData = ev.target.result;
-                
-                // INJECT CREATION INTERFACE (Matches Post Detail Look)
                 container.innerHTML = `
                     <div id="photo-display-area">
                          <img src="${imgData}" class="photo-modal-img">
-                         <button id="cancel-create-btn" class="absolute top-4 left-4 btn-icon" style="width: 40px; height: 40px; border-color: #333; background: black;" title="Cancel"><i class="fas fa-times text-lg"></i></button>
+                         <button id="cancel-create-btn" class="absolute top-4 right-4 btn-icon" style="width: 48px; height: 48px; border-color: #333; background: black; border-radius: 8px;" title="Cancel"><i class="fas fa-times text-xl text-gray-400"></i></button>
                     </div>
                     <div id="photo-info-panel">
                         <div class="modal-header">
                             <div class="modal-title-box">
-                                <label class="text-xs text-gray-500 mb-1 block">Username (Overrides default)</label>
-                                <input type="text" id="create-username" class="create-input-username" value="${CURRENT_USERNAME}" placeholder="Enter Username">
+                                <label class="text-xs text-gray-500 mb-1 block">Username</label>
+                                <input type="text" id="create-username" class="w-full bg-transparent border-b border-[#333] text-indigo-400 font-bold outline-none mb-2" value="${CURRENT_USERNAME}" placeholder="Enter Username">
                             </div>
                             <div class="modal-actions-box opacity-50 cursor-not-allowed">
                                 <i class="fas fa-heart text-gray-600 text-2xl"></i>
-                                <span class="text-gray-400 text-sm font-mono">0</span>
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="text-xs text-gray-500 mb-1 block">Description / Caption (Max 150)</label>
-                            <textarea id="create-description" class="create-input-desc" maxlength="150" placeholder="Write a description..."></textarea>
+                            <label class="text-xs text-gray-500 mb-1 block">Caption (Title)</label>
+                            <textarea id="create-description" class="w-full bg-black border border-[#333] rounded p-2 text-white outline-none h-20 resize-none" maxlength="150" placeholder="Write a caption..."></textarea>
                         </div>
                         
                         <div class="mt-4 flex gap-2 mb-4">
@@ -696,23 +709,13 @@
                             </label>
                         </div>
 
-                        <!-- Spacer -->
-                        <div class="flex-grow bg-[#050505] rounded border border-[#1a1a1a] p-4 mb-4 flex items-center justify-center">
-                            <span class="text-gray-600 italic text-sm">Preview Mode</span>
-                        </div>
-
-                        <button id="confirm-post-btn" class="btn-toolbar-style btn-primary-override w-full" style="height: 50px; font-size: 1.1rem;">
-                            <i class="fas fa-paper-plane"></i> Post Photo
+                        <button id="confirm-post-btn" class="btn-toolbar-style btn-primary-override w-full mt-auto" style="height: 50px;">
+                            <i class="fas fa-paper-plane"></i> Post
                         </button>
                     </div>
                 `;
 
-                // Bind Creation Events
-                document.getElementById('cancel-create-btn').onclick = () => {
-                    modal.classList.add('hidden');
-                    PENDING_FILE = null;
-                };
-
+                document.getElementById('cancel-create-btn').onclick = () => { modal.classList.add('hidden'); PENDING_FILE = null; };
                 document.getElementById('confirm-post-btn').onclick = async () => {
                     const btn = document.getElementById('confirm-post-btn');
                     btn.disabled = true;
@@ -724,31 +727,24 @@
                     const isPublic = document.getElementById('create-public').checked;
 
                     const ref = doc(DAILY_COLLECTION);
-                    
-                    // Compress (Simplified for brevity)
-                    const finalImg = imgData; // In prod use canvas compress
-
                     await setDoc(ref, {
                         creatorUid: user.uid, 
                         creatorUsername: await cleanText(username), 
                         createdAt: serverTimestamp(),
-                        imageBase64: finalImg, 
-                        title: await cleanText(desc) || "Daily Photo", // Title acts as description/caption
+                        imageBase64: imgData, 
+                        title: await cleanText(desc) || "Daily Photo",
                         hearts: [], comments: [], 
                         isPublic: isPublic, 
                         status: 'active'
                     });
                     
                     await updateDoc(doc(db, USERS_COLLECTION, user.uid), { dailySlotsUsed: arrayUnion(ref.id) });
-                    
                     modal.classList.add('hidden');
                     PENDING_FILE = null;
-                    alert("Posted successfully!");
                 };
             };
             reader.readAsDataURL(file);
         };
-
 
         // --- FEED LOGIC ---
         function renderFeed(snap) {
@@ -824,29 +820,84 @@
         onAuthStateChanged(auth, async (user) => {
             if (!user) { await signInAnonymously(auth); return; }
             document.getElementById('loading-screen').style.display = 'none';
-            document.getElementById('messenger-ui').style.display = 'flex'; 
+            document.getElementById('messenger-ui').style.display = 'block'; 
+
+            // Initialize default Sidebar View
+            switchSidebar('posts');
 
             // Load Profile
             const userRef = doc(db, USERS_COLLECTION, user.uid);
-            onSnapshot(userRef, (snap) => {
+            
+            onSnapshot(userRef, async (snap) => {
                 const d = snap.data() || {};
                 CURRENT_USERNAME = d.username || 'User';
-                CURRENT_FRIENDS = d.friends || [];
+                const friends = d.friends || [];
+                const pending = d.pending_requests || [];
                 BLOCKED_USERS = d.blocked_users || [];
                 
-                // Render Friends
+                // Update Global Friends var for Feed
+                // If friends changed, refresh feed
+                let friendsChanged = false;
+                if (friends.length !== CURRENT_FRIENDS.length || !friends.every((val, i) => val === CURRENT_FRIENDS[i])) {
+                    CURRENT_FRIENDS = friends;
+                    friendsChanged = true;
+                }
+                
+                if (friendsChanged && CURRENT_FEED_MODE === 'friends') setupFeed('friends', user);
+
+                // RENDER FRIENDS LIST & REQUESTS
                 const fList = document.getElementById('friends-list-items');
-                if(CURRENT_FRIENDS.length === 0) fList.innerHTML = '<p class="text-gray-600 text-sm p-2">No friends yet.</p>';
-                else {
-                    Promise.all(CURRENT_FRIENDS.map(uid => getDoc(doc(db, USERS_COLLECTION, uid)))).then(snaps => {
-                        fList.innerHTML = snaps.map(s => {
-                            const name = s.data()?.username || 'Unknown';
-                            return `<div class="compact-list-item flex justify-between"><span class="text-gray-300">${name}</span><button class="text-red-400 hover:text-red-500" onclick="removeFriend('${s.id}')"><i class="fas fa-minus-circle"></i></button></div>`;
-                        }).join('');
+                fList.innerHTML = '';
+
+                // 1. Pending Requests
+                if (pending.length > 0) {
+                     const pTitle = document.createElement('div');
+                     pTitle.className = "p-2 text-xs font-bold text-indigo-400 uppercase tracking-widest border-b border-[#1a1a1a] mb-2";
+                     pTitle.textContent = "REQUESTS";
+                     fList.appendChild(pTitle);
+
+                     // Fetch profiles for pending
+                     // Optimization: In a real app, cache profiles. Here we fetch.
+                     for (const uid of pending) {
+                         const pDoc = await getDoc(doc(db, USERS_COLLECTION, uid));
+                         const pName = pDoc.data()?.username || 'Unknown';
+                         
+                         const el = document.createElement('div');
+                         el.className = "compact-list-item flex justify-between items-center bg-indigo-900/10 border border-indigo-900/30 mb-1";
+                         el.innerHTML = `
+                            <span class="text-indigo-200 text-sm truncate max-w-[100px]">${pName}</span>
+                            <div class="flex gap-1">
+                                <button class="w-6 h-6 flex items-center justify-center bg-green-900/50 text-green-400 rounded hover:bg-green-900" onclick="handleRequest('${uid}', 'accept')"><i class="fas fa-check text-xs"></i></button>
+                                <button class="w-6 h-6 flex items-center justify-center bg-red-900/50 text-red-400 rounded hover:bg-red-900" onclick="handleRequest('${uid}', 'deny')"><i class="fas fa-times text-xs"></i></button>
+                            </div>
+                         `;
+                         fList.appendChild(el);
+                     }
+                }
+
+                // 2. Friends
+                if (friends.length === 0 && pending.length === 0) {
+                     fList.innerHTML = '<p class="text-gray-600 text-sm p-2">No friends yet.</p>';
+                } else if (friends.length > 0) {
+                    if (pending.length > 0) {
+                        const fTitle = document.createElement('div');
+                        fTitle.className = "p-2 text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-[#1a1a1a] mt-4 mb-2";
+                        fTitle.textContent = "FRIENDS";
+                        fList.appendChild(fTitle);
+                    }
+                    
+                    // Render friends (using Promise.all for speed)
+                    const friendSnaps = await Promise.all(friends.map(uid => getDoc(doc(db, USERS_COLLECTION, uid))));
+                    friendSnaps.forEach(s => {
+                         const name = s.data()?.username || 'Unknown';
+                         const div = document.createElement('div');
+                         div.className = "compact-list-item flex justify-between";
+                         div.innerHTML = `<span class="text-gray-300">${name}</span><button class="text-red-400 hover:text-red-500" onclick="removeFriend('${s.id}')"><i class="fas fa-minus-circle"></i></button>`;
+                         fList.appendChild(div);
                     });
                 }
                 
-                // Render Slots
+                // Render Slots (existing logic)
                 const slots = document.getElementById('daily-posts-container');
                 const used = d.dailySlotsUsed || [];
                 slots.innerHTML = '';
@@ -863,8 +914,6 @@
                     }
                     slots.appendChild(div);
                 }
-
-                if(CURRENT_FEED_MODE === 'friends') setupFeed('friends', user);
             });
             
             // Friend Code
@@ -874,6 +923,83 @@
                 else document.getElementById('friend-code-display').textContent = "GEN-ERR"; 
             });
         });
+        
+        // --- NEW: Friend Logic Handlers ---
+        
+        async function sendFriendRequest(code) {
+            const msgEl = document.getElementById('add-friend-message');
+            msgEl.textContent = "Searching...";
+            msgEl.className = "text-xs mt-2 min-h-[16px] text-gray-500";
+            
+            try {
+                // 1. Find the user with this code
+                // Note: Codes are document IDs in 'friend_codes' collection
+                const codeDoc = await getDoc(doc(db, 'friend_codes', code));
+                
+                if (!codeDoc.exists()) {
+                     msgEl.textContent = "Code not found.";
+                     msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                     return;
+                }
+                
+                const targetUid = codeDoc.data().userId;
+                if (targetUid === auth.currentUser.uid) {
+                     msgEl.textContent = "You can't add yourself.";
+                     msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                     return;
+                }
+
+                if (CURRENT_FRIENDS.includes(targetUid)) {
+                     msgEl.textContent = "Already friends.";
+                     msgEl.className = "text-xs mt-2 min-h-[16px] text-yellow-500";
+                     return;
+                }
+
+                // 2. Add to their pending_requests
+                // Use arrayUnion to avoid duplicates
+                await updateDoc(doc(db, USERS_COLLECTION, targetUid), {
+                    pending_requests: arrayUnion(auth.currentUser.uid)
+                });
+                
+                msgEl.textContent = "Request sent!";
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-green-500";
+                document.getElementById('friend-code-input').value = '';
+
+            } catch (e) {
+                console.error(e);
+                msgEl.textContent = "Error sending request.";
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+            }
+        }
+        
+        window.handleRequest = async (targetUid, action) => {
+             const myUid = auth.currentUser.uid;
+             const batch = writeBatch(db);
+             const myRef = doc(db, USERS_COLLECTION, myUid);
+             
+             if (action === 'accept') {
+                 const theirRef = doc(db, USERS_COLLECTION, targetUid);
+                 batch.update(myRef, { 
+                     friends: arrayUnion(targetUid),
+                     pending_requests: arrayRemove(targetUid)
+                 });
+                 // Also add me to their friends
+                 batch.update(theirRef, {
+                     friends: arrayUnion(myUid)
+                 });
+             } else {
+                 batch.update(myRef, {
+                     pending_requests: arrayRemove(targetUid)
+                 });
+             }
+             await batch.commit();
+        };
+
+        document.getElementById('add-friend-form').onsubmit = (e) => {
+            e.preventDefault();
+            const code = document.getElementById('friend-code-input').value.trim();
+            if(code) sendFriendRequest(code);
+        };
 
         // Global Actions
         window.removeFriend = async (fid) => {
@@ -897,7 +1023,6 @@
              await updateDoc(doc(db, USERS_COLLECTION, auth.currentUser.uid), { blocked_users: arrayRemove(uid) });
              renderBlockedList();
         };
-
     </script>
 </body>
 </html>
