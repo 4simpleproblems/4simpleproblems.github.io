@@ -28,7 +28,7 @@
             background-color: #040404; 
             color: #c0c0c0; 
             font-weight: 300; 
-            overflow: hidden; 
+            overflow: hidden; /* Prevent body scroll */
             height: 100vh;
         }
         
@@ -36,7 +36,7 @@
             font-weight: 400 !important; 
         }
 
-        /* --- THEME BUTTONS (Matches notes.html) --- */
+        /* --- THEME BUTTONS --- */
         .btn-toolbar-style {
             background: #000000;
             border: 1px solid #333;
@@ -87,29 +87,30 @@
         
         /* --- LAYOUT --- */
         .messenger-container {
-            display: flex;
+            display: block; /* Changed from grid to block since sidebar is fixed */
             width: 100vw;
             height: calc(100vh - 4rem); 
             margin-top: 4rem; 
         }
 
-        /* --- SIDEBAR --- */
+        /* --- SIDEBAR (Fixed Left) --- */
         .left-panel {
+            position: fixed;
+            top: 4rem;
+            left: 0;
+            bottom: 0;
             width: 350px;
             background-color: #000000;
             border-right: 1px solid #1a1a1a;
             display: flex;
             flex-direction: column;
-            flex-shrink: 0;
-            position: relative;
-            height: 100%; /* Fill container */
+            z-index: 50;
         }
 
         .left-panel-scroll-content {
             padding: 1.5rem;
             overflow-y: auto;
             flex-grow: 1;
-            /* Fading effect at bottom of scroll area */
             mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
             -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
         }
@@ -117,19 +118,19 @@
         .left-panel-scroll-content::-webkit-scrollbar-thumb { background-color: #333; border-radius: 3px; }
         .left-panel-scroll-content::-webkit-scrollbar-track { background-color: #000; }
 
-        /* Sidebar Bottom Controls - Full Width Tabs */
+        /* Sidebar Tabs - Full Width, No Rounded Corners */
         .sidebar-bottom-controls {
             display: flex;
             width: 100%;
             border-top: 1px solid #1a1a1a;
             background-color: #000000;
-            padding: 0; /* No padding, buttons touch edges */
+            padding: 0; 
         }
         .sidebar-control-btn {
-            flex: 1; /* Equal width */
+            flex: 1; 
             color: #6b7280;
             font-size: 1.25rem;
-            padding: 1rem;
+            padding: 1rem 0;
             background: transparent;
             border: none;
             cursor: pointer;
@@ -137,14 +138,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            border-radius: 0; /* Squared off */
+            border-radius: 0; /* Not rounded */
         }
         .sidebar-control-btn:hover {
             color: #d1d5db;
-            background-color: #0a0a0a;
+            /* No bg change on hover */
         }
         .sidebar-control-btn.active {
-            color: #4f46e5; /* Only icon changes color */
+            color: #4f46e5; /* Highlight icon color only */
             background-color: transparent;
         }
 
@@ -173,10 +174,17 @@
 
         /* --- FEED PANEL --- */
         .feed-panel { 
-            flex-grow: 1;
+            margin-left: 350px; /* Push to right of sidebar */
+            height: 100%;
             background-color: #040404;
             padding: 1.5rem; 
-            overflow-y: auto;
+            overflow-y: auto; /* Independent scroll */
+        }
+        
+        /* Inner container to mimic the "old" centered card look */
+        .feed-content-inner {
+            max-width: 1000px; /* Constrain width */
+            margin: 0 auto; /* Center */
         }
         
         .feed-toggle {
@@ -261,27 +269,24 @@
             position: relative;
         }
         
-        /* Modal Header (Title + Top Right Actions) */
         .modal-header {
             display: flex; justify-content: space-between; align-items: flex-start;
             margin-bottom: 0.5rem; gap: 1rem;
         }
         .modal-title-box { flex-grow: 1; overflow: hidden; }
         
-        /* Top Right Action Cluster */
         .modal-actions-box { 
             display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center;
         }
 
         #comments-section {
             flex-grow: 1;
-            background-color: #000000; /* Pure Black */
+            background-color: #000000; 
             border-radius: 0.75rem;
             padding: 1rem;
             margin-bottom: 1rem;
             overflow-y: auto;
             border: 1px solid #1a1a1a;
-            /* Fade Effect */
             mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
             -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
         }
@@ -421,20 +426,22 @@
         </aside>
 
         <section class="feed-panel">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl text-white">Today's Feed</h1>
-                
-                <div class="feed-toggle">
-                    <button id="feed-toggle-friends" class="btn-toolbar-style btn-primary-override active">
-                        <i class="fas fa-user-friends"></i> Friends
-                    </button>
-                    <button id="feed-toggle-public" class="btn-toolbar-style">
-                        <i class="fas fa-globe"></i> Public
-                    </button>
+            <div class="feed-content-inner">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl text-white">Today's Feed</h1>
+                    
+                    <div class="feed-toggle">
+                        <button id="feed-toggle-friends" class="btn-toolbar-style btn-primary-override active">
+                            <i class="fas fa-user-friends"></i> Friends
+                        </button>
+                        <button id="feed-toggle-public" class="btn-toolbar-style">
+                            <i class="fas fa-globe"></i> Public
+                        </button>
+                    </div>
                 </div>
+                
+                <div id="photo-feed" class="photo-grid"></div>
             </div>
-            
-            <div id="photo-feed" class="photo-grid"></div>
         </section>
 
     </main>
@@ -816,7 +823,10 @@
         onAuthStateChanged(auth, async (user) => {
             if (!user) { await signInAnonymously(auth); return; }
             document.getElementById('loading-screen').style.display = 'none';
-            document.getElementById('messenger-ui').style.display = 'flex'; 
+            document.getElementById('messenger-ui').style.display = 'block'; 
+
+            // Initialize default Sidebar View
+            switchSidebar('posts');
 
             // Load Profile
             const userRef = doc(db, USERS_COLLECTION, user.uid);
