@@ -3315,6 +3315,9 @@
                             msg = 'Link cancelled by user.';
                         } else if (error.code === 'auth/requires-recent-login') {
                             msg = 'Please sign out and sign in again to link a new provider.';
+                        } else if (error.code === 'auth/invalid-credential') {
+                            // Explicitly identifying the configuration error from logs
+                            msg = `Configuration Error: The Client ID or Secret for ${config.name} is incorrect in the Firebase Console.`;
                         }
                         showMessage(messageElement, msg, 'error');
                     }
@@ -3371,6 +3374,8 @@
                             msg = 'Operation cancelled by user.';
                         } else if (error.code === 'auth/requires-recent-login') {
                             msg = 'Please sign out and sign in again to set a new primary provider.';
+                        } else if (error.code === 'auth/invalid-credential') {
+                            msg = `Configuration Error: Invalid Client ID/Secret. Check Firebase Console settings for ${config.name}.`;
                         }
                         showMessage(messageElement, msg, 'error');
                     }

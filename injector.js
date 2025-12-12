@@ -8,10 +8,10 @@
     // 1. DEFINE YOUR SCRIPTS HERE
     // Update this array (and ONLY this array) to manage your application's scripts.
     const scriptsToLoad = [
+      '../ban-enforcer.js',
       '../url-changer.js',
       '../panic-key.js',
       '../navigation.js',
-      '../ban-enforcer.js',
       '../admin_keybinds.js'
     ];
 

@@ -189,14 +189,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const waitForFirestore = (callback) => {
-        const maxRetries = 50;
+        const maxRetries = 100;
         let attempts = 0;
         const check = () => {
             if (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function') {
                 callback(firebase.firestore());
             } else {
                 attempts++;
-                if (attempts < maxRetries) setTimeout(check, 100);
+                if (attempts < maxRetries) setTimeout(check, 50);
             }
         };
         check();
@@ -226,14 +226,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Initialize
-    if (typeof firebase === 'undefined') {
-        const checkFirebase = setInterval(() => {
-            if (typeof firebase !== 'undefined') {
-                clearInterval(checkFirebase);
-                initListener();
-            }
-        }, 100);
-    } else {
-        initListener();
-    }
+    const attemptInit = () => {
+        if (typeof firebase !== 'undefined') {
+            initListener();
+        } else {
+            const checkFirebase = setInterval(() => {
+                if (typeof firebase !== 'undefined') {
+                    clearInterval(checkFirebase);
+                    initListener();
+                }
+            }, 50);
+        }
+    };
+    attemptInit();
 });
