@@ -355,16 +355,16 @@ let db;
             }
             .tab-scroll-container::-webkit-scrollbar { display: none; }
             .scroll-glide-button {
-                position: absolute; top: 0; height: 100%; width: 96px; display: flex; align-items: center; justify-content: center; 
+                position: absolute; top: 0; height: 100%; width: 100px; display: flex; align-items: center; justify-content: center; 
                 color: var(--glide-icon-color); font-size: 1.2rem; cursor: pointer; opacity: 1; 
                 transition: opacity 0.3s, color 0.3s ease; z-index: 10; pointer-events: auto;
             }
             #glide-left { 
-                left: 0; background: linear-gradient(to right, var(--menu-bg) 20%, transparent); justify-content: flex-start; padding-left: 8px; 
+                left: -1px; background: linear-gradient(to right, var(--menu-bg) 25%, transparent); justify-content: flex-start; padding-left: 8px; 
                 transition: opacity 0.3s, color 0.3s ease, background 0.3s ease;
             }
             #glide-right { 
-                right: 0; background: linear-gradient(to left, var(--menu-bg) 20%, transparent); justify-content: flex-end; padding-right: 8px; 
+                right: -1px; background: linear-gradient(to left, var(--menu-bg) 25%, transparent); justify-content: flex-end; padding-right: 8px; 
                 transition: opacity 0.3s, color 0.3s ease, background 0.3s ease;
             }
             .scroll-glide-button.hidden { opacity: 0 !important; pointer-events: none !important; }
