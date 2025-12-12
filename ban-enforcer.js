@@ -1,5 +1,5 @@
 /**
- * ban-enforcer.js (v6.0 - Overlay + Guard)
+ * ban-enforcer.js (v6.1 - Overlay + Guard + High Priority Styles)
  *
  * This script protects the website by blocking interaction ONLY 
  * when the user's ban status is verified as true.
@@ -10,9 +10,10 @@
  * 3. Overlay approach (preserves original body content behind opacity).
  * 4. Aggressive Interval Guard to prevent element deletion.
  * 5. Excludes 'messenger-v2.html' from enforcement.
+ * 6. High-specificity CSS (!important) to prevent theme overrides.
  */
 
-console.log("Debug: ban-enforcer.js v6.0 loaded.");
+console.log("Debug: ban-enforcer.js v6.1 loaded.");
 
 // --- Global State ---
 let banGuardInterval = null;
@@ -72,11 +73,30 @@ function renderBanVisuals(banData) {
         banTimestamp = `on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
     }
 
-    // Optional Link Button (e.g., for TOS)
+    // Optional Link Button (Glassy Red Style)
     let actionButton = '';
     if (banData.link) {
          actionButton = `
-            <a href="${banData.link}" target="_blank" style="display: inline-flex; align-items: center; gap: 10px; padding: 12px 24px; background: #fff; color: #000; text-decoration: none; border-radius: 8px; font-weight: 600; transition: transform 0.2s; margin-right: 10px; pointer-events: auto;">
+            <a href="${banData.link}" target="_blank" 
+               onmouseover="this.style.borderColor='#ef4444'; this.style.color='#ef4444'; this.style.backgroundColor='rgba(239, 68, 68, 0.1)';" 
+               onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.3)'; this.style.color='#ffffff'; this.style.backgroundColor='rgba(255, 255, 255, 0.05)';"
+               style="
+                display: inline-flex !important; 
+                align-items: center !important; 
+                gap: 10px !important; 
+                padding: 12px 24px !important; 
+                background-color: rgba(255, 255, 255, 0.05) !important; 
+                backdrop-filter: blur(10px) !important;
+                -webkit-backdrop-filter: blur(10px) !important;
+                color: #ffffff !important; 
+                text-decoration: none !important; 
+                border: 1px solid rgba(255, 255, 255, 0.3) !important;
+                border-radius: 0.75rem !important; 
+                font-weight: 500 !important; 
+                transition: all 0.2s ease !important; 
+                margin-right: 10px !important; 
+                pointer-events: auto !important;
+               ">
                 <i class="fa-solid fa-external-link"></i> Review Policy
             </a>
          `;
@@ -92,10 +112,11 @@ function renderBanVisuals(banData) {
         document.documentElement.appendChild(shield); // Append to HTML to cover everything
     }
     shield.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        background-color: rgba(0, 0, 0, 0.95);
-        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-        z-index: 2147483646; cursor: default;
+        position: fixed !important; top: 0 !important; left: 0 !important; 
+        width: 100vw !important; height: 100vh !important;
+        background-color: rgba(0, 0, 0, 0.95) !important;
+        backdrop-filter: blur(10px) !important; -webkit-backdrop-filter: blur(10px) !important;
+        z-index: 2147483646 !important; cursor: default !important;
     `;
 
     // 2. Message Box
@@ -106,19 +127,20 @@ function renderBanVisuals(banData) {
         document.documentElement.appendChild(messageBox);
     }
     messageBox.style.cssText = `
-        position: fixed; bottom: 60px; left: 60px; color: #ffffff;
-        font-family: 'Geist', sans-serif; z-index: 2147483647;
-        text-align: left; text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        position: fixed !important; bottom: 60px !important; left: 60px !important; 
+        color: #ffffff !important;
+        font-family: 'Geist', sans-serif !important; z-index: 2147483647 !important;
+        text-align: left !important; text-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
     `;
     messageBox.innerHTML = `
-        <h1 style="font-size: 4rem; color: #ffffff; margin: 0 0 20px 0; font-weight: 800; line-height: 1; white-space: nowrap;">Access Denied</h1>
-        <p style="font-size: 1.25rem; margin: 0 0 10px 0; color: #ef4444; font-weight: 500;">Account Suspended</p>
-        <div style="width: 50px; height: 4px; background-color: #ef4444; margin-bottom: 20px;"></div>
-        <p style="font-size: 1rem; margin: 0 0 10px 0; color: #d1d5db; max-width: 500px; line-height: 1.6;">
-            <strong>Reason:</strong> ${reason}
+        <h1 style="font-size: 4rem !important; color: #ffffff !important; margin: 0 0 20px 0 !important; font-weight: 800 !important; line-height: 1 !important; white-space: nowrap !important;">Access Denied</h1>
+        <p style="font-size: 1.25rem !important; margin: 0 0 10px 0 !important; color: #ef4444 !important; font-weight: 500 !important;">Account Suspended</p>
+        <div style="width: 50px !important; height: 4px !important; background-color: #ef4444 !important; margin-bottom: 20px !important;"></div>
+        <p style="font-size: 1rem !important; margin: 0 0 10px 0 !important; color: #d1d5db !important; max-width: 500px !important; line-height: 1.6 !important;">
+            <strong style="font-weight: bold !important;">Reason:</strong> ${reason}
         </p>
-        ${actionButton ? `<div style="margin-top: 20px;">${actionButton}</div>` : ''}
-        <p style="font-size: 0.85rem; color: #6b7280; margin-top: 20px;">
+        ${actionButton ? `<div style="margin-top: 20px !important;">${actionButton}</div>` : ''}
+        <p style="font-size: 0.85rem !important; color: #6b7280 !important; margin-top: 20px !important;">
             Banned by administrator ${banTimestamp}.<br>
             ID: ${banData.uid || 'UNKNOWN'}
         </p>
@@ -134,19 +156,31 @@ function renderBanVisuals(banData) {
         document.documentElement.appendChild(homeButton);
     }
     homeButton.style.cssText = `
-        position: fixed; bottom: 60px; right: 60px; z-index: 2147483647;
-        display: inline-flex; align-items: center; justify-content: center;
-        padding: 0.5rem 1rem; background-color: transparent;
-        border: 1px solid #333; border-radius: 0.75rem; color: #d1d5db;
-        font-size: 20px; text-decoration: none; cursor: pointer;
-        transition: all 0.2s; width: 50px; height: 50px; pointer-events: auto;
+        position: fixed !important; bottom: 60px !important; right: 60px !important; 
+        z-index: 2147483647 !important;
+        display: inline-flex !important; align-items: center !important; justify-content: center !important;
+        padding: 0.5rem 1rem !important; background-color: transparent !important;
+        border: 1px solid #333 !important; border-radius: 0.75rem !important; color: #d1d5db !important;
+        font-size: 20px !important; text-decoration: none !important; cursor: pointer !important;
+        transition: all 0.2s !important; width: 50px !important; height: 50px !important; 
+        pointer-events: auto !important;
     `;
-    homeButton.onmouseover = () => { homeButton.style.backgroundColor = '#000'; homeButton.style.borderColor = '#fff'; homeButton.style.color = '#fff'; };
-    homeButton.onmouseout = () => { homeButton.style.backgroundColor = 'transparent'; homeButton.style.borderColor = '#333'; homeButton.style.color = '#d1d5db'; };
+    
+    // Manual Hover Logic for Home Button (using JS because of inline styles)
+    homeButton.onmouseover = () => { 
+        homeButton.style.setProperty('background-color', '#000', 'important'); 
+        homeButton.style.setProperty('border-color', '#fff', 'important'); 
+        homeButton.style.setProperty('color', '#fff', 'important'); 
+    };
+    homeButton.onmouseout = () => { 
+        homeButton.style.setProperty('background-color', 'transparent', 'important'); 
+        homeButton.style.setProperty('border-color', '#333', 'important'); 
+        homeButton.style.setProperty('color', '#d1d5db', 'important'); 
+    };
 
     // 4. Lock Scrolling
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
+    document.documentElement.style.setProperty('overflow', 'hidden', 'important');
+    document.body.style.setProperty('overflow', 'hidden', 'important');
 }
 
 /**
