@@ -7,9 +7,15 @@
  *
  * --- UPDATES & FEATURES ---
  * ... [Previous changelog kept] ...
- * 27. **(NEW) COUNTER-ZOOM LOGIC:** The navbar now detects browser zoom/DPI changes 
+ * 27. (NEW) COUNTER-ZOOM LOGIC: The navbar now detects browser zoom/DPI changes 
  * and inversely scales itself to maintain a consistent physical size on screen, 
  * regardless of the browser's zoom level.
+ * 28. (MODIFIED) GLIDE GRADIENT EXPANSION: Scroll glide gradients now extend fully
+ * to the edges of the tab container for seamless visual blending.
+ * 29. (MODIFIED) SCRIPT INJECTION: Added injection logic for ban-enforcer.js,
+ * url-changer.js, and panic-key.js.
+ * 30. (MODIFIED) GLIDE BUTTON POSITIONING: Relocated glide buttons to sit immediately
+ * next to the tab container edges, fixing the excessive spacing issue.
  */
 
 // =========================================================================
@@ -19,7 +25,7 @@ const FIREBASE_CONFIG = {
     apiKey: "AIzaSyAZBKAckVa4IMvJGjcyndZx6Y1XD52lgro",
     authDomain: "project-zirconium.firebaseapp.com",
     projectId: "project-zirconium",
-    storageBucket: "project-zirconium.firebaseapp.com",
+    storageBucket: "project-zirconium.firebasestorage.app",
     messagingSenderId: "1096564243475",
     appId: "1:1096564243475:web:6d0956a70125eeea1ad3e6",
     measurementId: "G-1D4F692C1Q"
@@ -27,7 +33,7 @@ const FIREBASE_CONFIG = {
 // =========================================================================
 
 // --- Configuration ---
-const PAGE_CONFIG_URL = '../page-identification-test.json';
+const PAGE_CONFIG_URL = '../page-identification.json';
 const PRIVILEGED_EMAIL = '4simpleproblems@gmail.com'; 
 const THEME_STORAGE_KEY = 'user-navbar-theme';
 const lightThemeNames = ['Light', 'Lavender', 'Rose Gold', 'Mint', 'Pink']; // Define light theme names
@@ -53,8 +59,9 @@ const DEFAULT_THEME = {
     'logged-out-icon-border': '#374151',
     'logged-out-icon-color': '#DADADA',
     'glide-icon-color': '#ffffff',
-    'glide-gradient-left': 'linear-gradient(to right, #000000, transparent)',
-    'glide-gradient-right': 'linear-gradient(to left, #000000, transparent)',
+    // MODIFIED: Increased gradient spread to blend better with navbar-bg
+    'glide-gradient-left': 'linear-gradient(to right, #000000 0%, transparent 100%)',
+    'glide-gradient-right': 'linear-gradient(to left, #000000 0%, transparent 100%)',
     'tab-text': '#9ca3af',
     'tab-hover-text': '#ffffff',
     'tab-hover-border': '#d1d5db',
@@ -155,6 +162,25 @@ let db;
             document.head.appendChild(link);
         });
     };
+    
+    // NEW FUNCTION: Inject all custom scripts
+    const injectUtilityScripts = async () => {
+        const scriptsToLoad = [
+            '../ban-enforcer.js',
+            '../url-changer.js',
+            '../panic-key.js'
+        ];
+        // Load scripts sequentially to respect potential dependencies
+        for (const src of scriptsToLoad) {
+            try {
+                await loadScript(src);
+                console.log(`Successfully loaded utility script: ${src}`);
+            } catch (error) {
+                console.warn(`Failed to load utility script ${src}:`, error);
+                // Continue loading other scripts even if one fails
+            }
+        }
+    };
 
     const debounce = (func, delay) => {
         let timeoutId;
@@ -228,6 +254,9 @@ let db;
     };
 
     const run = async () => {
+        // MODIFIED: Inject utility scripts first
+        await injectUtilityScripts();
+
         if (!document.getElementById('navbar-container')) {
             const navbarDiv = document.createElement('div');
             navbarDiv.id = 'navbar-container';
@@ -245,16 +274,12 @@ let db;
                         <img src="${logoPath}" alt="4SP Logo" class="h-10 w-auto" id="navbar-logo">
                     </a>
                     <div class="tab-wrapper">
-                        <div class="tab-scroll-container flex justify-center items-center overflow-hidden">
-                            <div class="nav-tab-placeholder"></div>
-                            <div class="nav-tab-placeholder hidden sm:block"></div>
-                            <div class="nav-tab-placeholder hidden md:block"></div>
-                        </div>
+                        <div class="nav-tab-placeholder"></div>
                     </div>
                     <div id="auth-controls-wrapper" class="flex items-center gap-3 flex-shrink-0">
                         <div class="auth-toggle-placeholder"></div>
                     </div>
-                </nav>
+                    </nav>
             </header>
         `;
 
@@ -301,6 +326,7 @@ let db;
                 /* Width is handled dynamically by applyCounterZoom now */
                 width: 100%; 
             }
+            /* Nav now acts as the relative container for glide buttons */
             .auth-navbar nav { padding: 0 1rem; height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; position: relative; }
             .initial-avatar {
                 background: var(--avatar-gradient);
@@ -351,26 +377,58 @@ let db;
             }
             .auth-menu-link i.w-4, .auth-menu-button i.w-4 { width: 1rem; text-align: center; } 
 
-            .tab-wrapper { flex-grow: 1; display: flex; align-items: center; position: relative; min-width: 0; margin: 0 1rem; justify-content: center; }
+            .tab-wrapper { 
+                flex-grow: 1; 
+                display: flex; 
+                align-items: center; 
+                /* MODIFIED: Remove position: relative here, let .glider-tabs-container handle it */
+                min-width: 0; 
+                margin: 0 1rem; 
+                /* MODIFIED: Center the child container */
+                justify-content: center; 
+            }
+            
+            /* NEW: Container to wrap tabs and gliders, which will be the new relative parent */
+            .glider-tabs-container {
+                display: flex;
+                align-items: center;
+                position: relative; /* CRITICAL: Gliders are absolute relative to this */
+                height: 100%;
+                /* Ensures the container hugs the tabs content when possible */
+                max-width: 100%; 
+            }
+            
             .tab-scroll-container { 
-                flex-grow: 1; display: flex; align-items: center; 
+                flex-grow: 1; 
+                display: flex; 
+                align-items: center; 
                 overflow-x: auto; -webkit-overflow-scrolling: touch; 
                 scrollbar-width: none; -ms-overflow-style: none; 
                 padding-bottom: 5px; margin-bottom: -5px; scroll-behavior: smooth;
-                max-width: 100%; padding-left: 16px; padding-right: 16px; 
+                max-width: 100%; 
+                padding-left: 16px; 
+                padding-right: 16px; 
             }
             .tab-scroll-container::-webkit-scrollbar { display: none; }
+            
+            /* MODIFIED: Positioning scroll-glide-button relative to .glider-tabs-container (which is now in tabWrapper) */
             .scroll-glide-button {
                 position: absolute; top: 0; height: 100%; width: 64px; display: flex; align-items: center; justify-content: center; 
                 color: var(--glide-icon-color); font-size: 1.2rem; cursor: pointer; opacity: 1; 
                 transition: opacity 0.3s, color 0.3s ease; z-index: 10; pointer-events: auto;
             }
             #glide-left { 
-                left: 0; background: var(--glide-gradient-left); justify-content: flex-start; padding-left: 8px; 
+                /* MODIFIED: Sticking to the left edge of the .glider-tabs-container */
+                left: 0; 
+                /* MODIFIED: Adjusted for seamless blending */
+                background: var(--glide-gradient-left); justify-content: flex-start; padding-left: 8px; 
                 transition: opacity 0.3s, color 0.3s ease, background 0.3s ease;
             }
             #glide-right { 
-                right: 0; background: var(--glide-gradient-right); justify-content: flex-end; padding-right: 8px; 
+                /* MODIFIED: Sticking to the right edge of the .glider-tabs-container */
+                right: 0; 
+                /* MODIFIED: Adjusted for seamless blending */
+                background: var(--glide-gradient-right); justify-content: flex-end; padding-right: 8px; 
                 transition: opacity 0.3s, color 0.3s ease, background 0.3s ease;
             }
             .scroll-glide-button.hidden { opacity: 0 !important; pointer-events: none !important; }
@@ -473,11 +531,78 @@ let db;
         const PIN_HINT_SHOWN_KEY = 'navbar_pinHintShown';
 
         const getCurrentPageKey = () => {
+            const currentPathname = window.location.pathname.toLowerCase();
+            let bestMatchKey = null;
+            let longestMatchLength = 0; // Track the length of the matched canonical URL
+
+            const cleanPath = (path) => {
+                try {
+                    // If it's a relative path, resolve it against origin
+                    const resolved = new URL(path, window.location.origin).pathname.toLowerCase();
+                    // Normalize index.html
+                    if (resolved.endsWith('/index.html')) return resolved.substring(0, resolved.lastIndexOf('/')) + '/';
+                    if (resolved.length > 1 && resolved.endsWith('/')) return resolved.slice(0, -1);
+                    return resolved;
+                } catch (e) {
+                    return path; // Fallback for invalid URLs
+                }
+            };
+
+            const currentCanonical = cleanPath(currentPathname);
+            
+            // Collect all matching keys along with their canonical URLs
+            const potentialMatches = [];
+
             for (const [key, page] of Object.entries(allPages)) {
-                if (isTabActive(page.url, page.aliases)) return key;
+                const tabCanonical = cleanPath(page.url);
+                let isMatch = false;
+
+                // 1. Check primary URL
+                if (currentCanonical === tabCanonical) {
+                    isMatch = true;
+                }
+
+                // 2. Check suffix matching (existing logic)
+                // This is less reliable for full path differentiation, but kept for compatibility
+                const tabPathSuffix = new URL(page.url, window.location.origin).pathname.toLowerCase();
+                const tabSuffixClean = tabPathSuffix.startsWith('/') ? tabPathSuffix.substring(1) : tabPathSuffix;
+                // Avoid aggressive suffix matching for root/short paths
+                if (!isMatch && tabSuffixClean.length > 3 && currentPathname.endsWith(tabSuffixClean)) {
+                    isMatch = true;
+                }
+
+                // 3. Check Aliases (NEW)
+                if (!isMatch && page.aliases && Array.isArray(page.aliases)) {
+                    for (const alias of page.aliases) {
+                        const aliasCanonical = cleanPath(alias);
+                        if (currentCanonical === aliasCanonical) {
+                            isMatch = true;
+                            break;
+                        }
+                        // Also check alias suffixes if needed, though exact path matching is safer
+                        const aliasPathSuffix = new URL(alias, window.location.origin).pathname.toLowerCase();
+                         const aliasSuffixClean = aliasPathSuffix.startsWith('/') ? aliasPathSuffix.substring(1) : aliasPathSuffix;
+                        if (aliasSuffixClean.length > 3 && currentPathname.endsWith(aliasSuffixClean)) {
+                            isMatch = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isMatch) {
+                    potentialMatches.push({ key, canonicalUrl: tabCanonical });
+                }
             }
-            return null;
+
+            // From potential matches, find the one with the longest canonical URL (most specific)
+            if (potentialMatches.length > 0) {
+                potentialMatches.sort((a, b) => b.canonicalUrl.length - a.canonicalUrl.length);
+                return potentialMatches[0].key;
+            }
+
+            return null; // No match found
         };
+
         
         const getPinButtonHtml = () => {
             const pinnedPageKey = localStorage.getItem(PINNED_PAGE_KEY);
@@ -818,14 +943,14 @@ let db;
             const tabWrapper = navElement.querySelector('.tab-wrapper');
             const authControlsWrapper = document.getElementById('auth-controls-wrapper');
             const navbarLogo = document.getElementById('navbar-logo');
-
-            const logoPath = DEFAULT_THEME['logo-src']; 
-            if (navbarLogo) navbarLogo.src = logoPath;
             
-            const tabsHtml = Object.values(pages || {})
-                .filter(page => !(page.adminOnly && !isPrivilegedUser)) 
-                .map(page => {
-                    const isActive = isTabActive(page.url, page.aliases); // Pass aliases
+            // Determine the single active page key first
+            const activePageKey = getCurrentPageKey();
+
+            const tabsHtml = Object.entries(pages || {})
+                .filter(([, page]) => !(page.adminOnly && !isPrivilegedUser)) 
+                .map(([key, page]) => { // Get key and page from entry
+                    const isActive = (key === activePageKey); // Compare with the single activePageKey
                     const activeClass = isActive ? 'active' : '';
                     const iconClasses = getIconClass(page.icon);
                     return `<a href="${page.url}" class="nav-tab ${activeClass}"><i class="${iconClasses} mr-2"></i>${page.name}</a>`;
@@ -834,12 +959,15 @@ let db;
             const authControlsHtml = getAuthControlsHtml();
 
             if (tabWrapper) {
+                // MODIFIED: Injecting the new .glider-tabs-container which holds the buttons and scroll container
                 tabWrapper.innerHTML = `
-                    <button id="glide-left" class="scroll-glide-button"><i class="fa-solid fa-chevron-left"></i></button>
-                    <div class="tab-scroll-container">
-                        ${tabsHtml}
+                    <div class="glider-tabs-container">
+                        <button id="glide-left" class="scroll-glide-button"><i class="fa-solid fa-chevron-left"></i></button>
+                        <div class="tab-scroll-container">
+                            ${tabsHtml}
+                        </div>
+                        <button id="glide-right" class="scroll-glide-button"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
-                    <button id="glide-right" class="scroll-glide-button"><i class="fa-solid fa-chevron-right"></i></button>
                 `;
             }
 
@@ -850,20 +978,36 @@ let db;
             const tabContainer = tabWrapper.querySelector('.tab-scroll-container'); 
             const tabCount = tabContainer ? tabContainer.querySelectorAll('.nav-tab').length : 0;
 
+            // Logic to center tabs if count is low
             if (tabCount <= 9) {
                 if(tabContainer) {
                     tabContainer.style.justifyContent = 'center';
                     tabContainer.style.overflowX = 'hidden';
                     tabContainer.style.flexGrow = '0';
+                    
+                    // NEW: Ensure glider-tabs-container centers itself when content is small
+                    const gliderContainer = tabWrapper.querySelector('.glider-tabs-container');
+                    if (gliderContainer) {
+                        // By setting flex-grow: 0, the container will only be as wide as its content (the tabs).
+                        gliderContainer.style.flexGrow = '0';
+                        gliderContainer.style.justifyContent = 'center';
+                    }
                 }
             } else {
                 if(tabContainer) {
                     tabContainer.style.justifyContent = 'flex-start';
                     tabContainer.style.overflowX = 'auto';
                     tabContainer.style.flexGrow = '1';
+                    
+                    // NEW: Allow the glider-tabs-container to expand
+                    const gliderContainer = tabWrapper.querySelector('.glider-tabs-container');
+                    if (gliderContainer) {
+                        gliderContainer.style.flexGrow = '1';
+                        gliderContainer.style.justifyContent = 'flex-start';
+                    }
                 }
             }
-
+            
             setupEventListeners(user);
 
             let savedTheme;
@@ -917,7 +1061,7 @@ let db;
             const leftButton = document.getElementById('glide-left');
             const rightButton = document.getElementById('glide-right');
             const tabCount = document.querySelectorAll('.nav-tab').length;
-            const isNotScrolling = container && container.style.flexGrow === '0';
+            const isNotScrolling = container && container.style.overflowX === 'hidden'; // Check if scrolling is disabled due to low tab count
             
             if (tabCount <= 9 || isNotScrolling) {
                 if (leftButton) leftButton.classList.add('hidden');
@@ -1048,12 +1192,13 @@ let db;
                 
                 if (leftButton) {
                     leftButton.addEventListener('click', () => {
-                        tabContainer.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                        tabContainer.scrollLeft = 0; // Scroll to the beginning
                     });
                 }
                 if (rightButton) {
                     rightButton.addEventListener('click', () => {
-                        tabContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                        const maxScroll = tabContainer.scrollWidth - tabContainer.offsetWidth;
+                        tabContainer.scrollLeft = maxScroll; // Scroll to the end
                     });
                 }
             }
@@ -1154,12 +1299,25 @@ let db;
             let isPrivilegedUser = false;
             let userData = null;
             if (user) {
+                // Check if hardcoded privileged email
                 isPrivilegedUser = user.email === PRIVILEGED_EMAIL;
+
                 try {
-                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    // Fetch user data and check admin status in parallel
+                    const userDocPromise = db.collection('users').doc(user.uid).get();
+                    const adminDocPromise = db.collection('admins').doc(user.uid).get();
+
+                    const [userDoc, adminDoc] = await Promise.all([userDocPromise, adminDocPromise]);
+                    
                     userData = userDoc.exists ? userDoc.data() : null;
+
+                    // If not already privileged via email, check if they are in the admins collection
+                    if (!isPrivilegedUser && adminDoc.exists) {
+                        isPrivilegedUser = true;
+                    }
+
                 } catch (error) {
-                    console.error("Error fetching user data:", error);
+                    console.error("Error fetching user or admin data:", error);
                 }
             }
             currentUser = user;
