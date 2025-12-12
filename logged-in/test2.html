@@ -186,6 +186,7 @@
         .feed-content-inner {
             max-width: 1000px; /* Constrain width */
             margin: 0 auto; /* Center */
+            padding-bottom: 5rem; /* ADDED: Extra bottom padding for the feed content */
         }
         
         .feed-toggle {
@@ -228,7 +229,7 @@
         
         /* UPDATED: Heart/Comment Counter Styling */
         .photo-thumbnail .flex span {
-             border-radius: 2px; /* Slight rounding for counters */
+             border-radius: 0.5rem; /* Increased rounding for counters */
         }
         
         /* --- MODAL STYLES --- */
@@ -266,11 +267,13 @@
             display: flex; align-items: center; justify-content: center;
             position: relative;
             overflow: hidden;
+            cursor: pointer; /* Added cursor for image size toggle */
         }
         .photo-modal-img {
             width: 100%; 
             height: 100%; 
             object-fit: cover; 
+            transition: all 0.2s ease-in-out; /* Added transition for smooth sizing */
         }
 
         #photo-info-panel {
@@ -392,6 +395,20 @@
         <aside class="left-panel">
             <div class="left-panel-scroll-content">
                 
+                <div class="mb-6 pb-4 border-b border-[#1a1a1a]">
+                    <h2 class="text-lg text-white mb-2">My Code</h2>
+                    <div id="friend-code-display" class="p-2 text-center bg-black border border-[#333] rounded-md font-mono text-indigo-400 tracking-widest select-all cursor-pointer" data-tooltip="Click to Copy">...</div>
+                </div>
+
+                <div class="mb-6 pb-4 border-b border-[#1a1a1a]">
+                    <h2 class="text-lg text-white mb-2">Add Friend</h2>
+                    <form id="add-friend-form" class="flex gap-2">
+                        <input type="text" id="friend-code-input" placeholder="CODE" maxlength="8" class="flex-grow p-2 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-center font-mono uppercase text-white thin-font">
+                        <button type="submit" class="btn-icon" data-tooltip="Send Request"><i class="fas fa-plus"></i></button>
+                    </form>
+                    <div id="add-friend-message" class="text-xs mt-2 min-h-[16px]"></div>
+                </div>
+
                 <div id="daily-posts-section">
                     <h2 class="text-lg text-white mb-2">My Posts</h2>
                     <p class="text-xs text-gray-500 mb-2">5 slots / day</p>
@@ -401,28 +418,6 @@
                 </div>
 
                 <div id="friends-section-wrapper" class="hidden">
-                    
-                    <div class="mb-6 pb-4 border-b border-[#1a1a1a]">
-                        <h2 class="text-lg text-white mb-2">My Code</h2>
-                        <div id="friend-code-display" class="p-2 text-center bg-black border border-[#333] rounded-md font-mono text-indigo-400 tracking-widest select-all cursor-pointer" data-tooltip="Click to Copy">...</div>
-                    </div>
-
-                    <div class="mb-6 pb-4 border-b border-[#1a1a1a]">
-                        <h2 class="text-lg text-white mb-2">Add Friend (via Code)</h2>
-                        <form id="add-friend-form" class="flex gap-2">
-                            <input type="text" id="friend-code-input" placeholder="CODE" maxlength="8" class="flex-grow p-2 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-center font-mono uppercase text-white thin-font">
-                            <button type="submit" class="btn-icon" data-tooltip="Send Request"><i class="fas fa-plus"></i></button>
-                        </form>
-                        <div id="add-friend-message" class="text-xs mt-2 min-h-[16px]"></div>
-                        
-                        <h2 class="text-lg text-white mb-2 mt-6">Search (via Username)</h2>
-                        <form id="search-username-form" class="flex gap-2">
-                            <input type="text" id="username-input" placeholder="USERNAME" maxlength="48" class="flex-grow p-2 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-center text-white thin-font">
-                            <button type="submit" class="btn-icon" data-tooltip="Search User"><i class="fas fa-search"></i></button>
-                        </form>
-                        <div id="search-username-results" class="text-xs mt-2 min-h-[16px]"></div>
-                    </div>
-
                     <h2 class="text-lg text-white mb-2">Friends</h2>
                     <div id="friends-list-wrapper" class="compact-list-wrapper">
                         <div id="friends-list-items" class="compact-list-items"></div>
@@ -490,6 +485,8 @@
         let CURRENT_FEED_MODE = 'friends';
         let PENDING_FILE = null;
         let PENDING_SLOT = 0;
+        let PHOTO_DISPLAY_MODE = 0; // 0: cover, 1: contain-width, 2: contain-height
+
         
         const DAILY_COLLECTION = collection(db, 'daily_photos');
         const USERS_COLLECTION = 'users';
@@ -652,6 +649,36 @@
                         </form>
                     </div>
                 `;
+                
+                // --- NEW: Image Size Toggle Logic ---
+                const photoImg = container.querySelector('.photo-modal-img');
+                const photoArea = document.getElementById('photo-display-area');
+
+                // Reset mode for new modal
+                PHOTO_DISPLAY_MODE = 0; 
+                photoImg.style.width = '100%';
+                photoImg.style.height = '100%';
+                photoImg.style.objectFit = 'cover';
+                
+                photoArea.onclick = () => {
+                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 3; // Cycle 0, 1, 2
+
+                    if (PHOTO_DISPLAY_MODE === 0) { // Default/Cover
+                        photoImg.style.width = '100%';
+                        photoImg.style.height = '100%';
+                        photoImg.style.objectFit = 'cover';
+                    } else if (PHOTO_DISPLAY_MODE === 1) { // Contain Width (Restricted by Width)
+                        photoImg.style.width = '100%';
+                        photoImg.style.height = 'auto';
+                        photoImg.style.objectFit = 'contain';
+                    } else if (PHOTO_DISPLAY_MODE === 2) { // Contain Height (Restricted by Height)
+                        photoImg.style.width = 'auto';
+                        photoImg.style.height = '100%';
+                        photoImg.style.objectFit = 'contain';
+                    }
+                };
+                // --- END NEW: Image Size Toggle Logic ---
+
 
                 // Events
                 document.getElementById('close-modal-btn').onclick = () => { modal.classList.add('hidden'); UNSUBSCRIBE_MODAL(); };
@@ -669,9 +696,37 @@
                 if(document.getElementById('report-btn')) {
                     document.getElementById('report-btn').onclick = async () => { if(confirm("Report this post?")) { await updateDoc(doc(DAILY_COLLECTION, photoId), { reports: arrayUnion(currentUser.uid) }); alert("Reported."); }};
                 }
+                
+                // --- MODIFIED: Delete Handler for "Used then Deleted" feature ---
                 if(document.getElementById('delete-btn')) {
-                    document.getElementById('delete-btn').onclick = async () => { if(confirm("Delete permanently?")) { await deleteDoc(doc(DAILY_COLLECTION, photoId)); modal.classList.add('hidden'); }};
+                    document.getElementById('delete-btn').onclick = async () => { 
+                        if(confirm("Delete permanently? This slot will remain used.")) { 
+                            const user = auth.currentUser;
+                            const userRef = doc(db, USERS_COLLECTION, user.uid);
+                            
+                            // 1. Delete the post document
+                            await deleteDoc(doc(DAILY_COLLECTION, photoId)); 
+                            
+                            // 2. Replace the postId in dailySlotsUsed with 'DELETED'
+                            try {
+                                const userData = (await getDoc(userRef)).data();
+                                const slots = userData.dailySlotsUsed || [];
+                                const index = slots.indexOf(photoId);
+                                
+                                if (index > -1) {
+                                     slots[index] = 'DELETED'; // Mark slot as used-but-deleted
+                                     await updateDoc(userRef, { dailySlotsUsed: slots });
+                                }
+                            } catch(e) {
+                                console.error("Could not mark slot as deleted:", e);
+                            }
+                            
+                            modal.classList.add('hidden'); 
+                        }
+                    };
                 }
+                // --- END MODIFIED: Delete Handler ---
+                
                  if(document.getElementById('block-btn')) {
                     document.getElementById('block-btn').onclick = async () => { 
                         if(confirm(`Block user ${data.creatorUsername}? This will remove them from your friends list and hide their posts.`)) { 
@@ -738,6 +793,28 @@
                         </button>
                     </div>
                 `;
+                
+                // NEW: Image size toggle for creation preview (resets mode)
+                const photoImg = container.querySelector('.photo-modal-img');
+                const photoArea = document.getElementById('photo-display-area');
+                PHOTO_DISPLAY_MODE = 0; 
+                photoArea.onclick = () => {
+                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 3; // Cycle 0, 1, 2
+
+                    if (PHOTO_DISPLAY_MODE === 0) { // Default/Cover
+                        photoImg.style.width = '100%';
+                        photoImg.style.height = '100%';
+                        photoImg.style.objectFit = 'cover';
+                    } else if (PHOTO_DISPLAY_MODE === 1) { // Contain Width
+                        photoImg.style.width = '100%';
+                        photoImg.style.height = 'auto';
+                        photoImg.style.objectFit = 'contain';
+                    } else if (PHOTO_DISPLAY_MODE === 2) { // Contain Height
+                        photoImg.style.width = 'auto';
+                        photoImg.style.height = '100%';
+                        photoImg.style.objectFit = 'contain';
+                    }
+                };
 
                 document.getElementById('cancel-create-btn').onclick = () => { modal.classList.add('hidden'); PENDING_FILE = null; };
                 document.getElementById('confirm-post-btn').onclick = async () => {
@@ -762,7 +839,20 @@
                         status: 'active'
                     });
                     
-                    await updateDoc(doc(db, USERS_COLLECTION, user.uid), { dailySlotsUsed: arrayUnion(ref.id) });
+                    // MODIFIED: Create post in the correct slot (used.length is the next slot)
+                    const userRef = doc(db, USERS_COLLECTION, user.uid);
+                    const userData = (await getDoc(userRef)).data();
+                    const slots = userData.dailySlotsUsed || [];
+                    
+                    if (PENDING_SLOT < slots.length) {
+                         // Should not happen with current logic, but as a safeguard.
+                         slots[PENDING_SLOT] = ref.id;
+                    } else if (PENDING_SLOT === slots.length) {
+                         slots.push(ref.id);
+                    }
+                    
+                    await updateDoc(userRef, { dailySlotsUsed: slots });
+                    
                     modal.classList.add('hidden');
                     PENDING_FILE = null;
                 };
@@ -774,11 +864,9 @@
         function renderFeed(snap) {
             const feed = document.getElementById('photo-feed');
             feed.innerHTML = '';
-            
-            let postsRendered = 0;
             snap.forEach(d => {
                 const data = d.data();
-                // Client-side filter: Filter out blocked users (in case the query limit on not-in was hit)
+                // Filter out blocked users (already handled by query in friends mode, but good for public mode just in case)
                 if(BLOCKED_USERS.includes(data.creatorUid)) return;
                 
                 const el = document.createElement('div');
@@ -787,18 +875,16 @@
                     <img src="${data.imageBase64}" loading="lazy">
                     <div class="overlay"></div>
                     <div class="absolute top-2 right-2 flex gap-2">
-                        <span class="text-white text-xs bg-black/50 px-2 py-1 rounded-sm backdrop-blur-sm"><i class="fas fa-heart text-red-400"></i> ${formatCount(data.hearts?.length)}</span>
+                        <span class="text-white text-xs bg-black/50 px-2 py-1 rounded-lg backdrop-blur-sm"><i class="fas fa-heart text-red-400"></i> ${formatCount(data.hearts?.length)}</span>
                     </div>
                     <div class="title-overlay">${data.title}</div>
                 `;
                 el.onclick = () => window.openPhotoModal(d.id);
                 feed.appendChild(el);
-                postsRendered++;
             });
-            if(postsRendered === 0) feed.innerHTML = `<p class="text-gray-600 col-span-3 text-center py-10">No photos in this feed.</p>`;
+            if(feed.children.length === 0) feed.innerHTML = `<p class="text-gray-600 col-span-3 text-center py-10">No photos in this feed.</p>`;
         }
-        
-        // --- UPDATED setupFeed with robust filtering and query logic ---
+
         function setupFeed(mode, user) {
             UNSUBSCRIBE_POSTS();
             document.getElementById('feed-toggle-friends').classList.toggle('active', mode === 'friends');
@@ -810,49 +896,39 @@
             
             let q;
             if(mode === 'friends') {
-                // Combine self and friends, filter out blocked users for the query list
-                const friends_or_self = [user.uid, ...CURRENT_FRIENDS].filter(uid => !BLOCKED_USERS.includes(uid)); 
-                
-                if (friends_or_self.length === 0) {
-                     document.getElementById('photo-feed').innerHTML = '<p class="text-gray-500 text-center col-span-3 mt-10">No posts from you or your friends today. Add friends to see their photos!</p>';
-                     UNSUBSCRIBE_POSTS = () => {}; 
+                if(CURRENT_FRIENDS.length === 0) {
+                     document.getElementById('photo-feed').innerHTML = '<p class="text-gray-500 text-center col-span-3 mt-10">Add friends to see photos!</p>';
                      return;
                 }
+                const uids = [user.uid, ...CURRENT_FRIENDS].filter(uid => !BLOCKED_USERS.includes(uid)); // Filter out blocked
                 
-                // Firestore 'in' clause is limited to 10 UIDs.
-                const uids_to_query = friends_or_self.slice(0, 10);
+                // NEW LOGIC: Only show friends' posts, not all public posts.
+                // NOTE: Firestore 'in' clause is limited to 10 UIDs. We slice to handle this limit.
+                const friends_or_self = uids.slice(0, 10);
                 
-                // Friends Feed: show posts from self + friends (regardless of isPublic).
+                if (friends_or_self.length === 0) {
+                    document.getElementById('photo-feed').innerHTML = '<p class="text-gray-500 text-center col-span-3 mt-10">No posts from you or your friends today.</p>';
+                    return;
+                }
+                
                 q = query(DAILY_COLLECTION, 
-                    where('creatorUid', 'in', uids_to_query), 
+                    where('creatorUid', 'in', friends_or_self), 
                     where('createdAt', '>=', today), 
-                    where('status', '==', 'active'), // Only show active posts
                     orderBy('createdAt', 'desc')
                 );
                 
             } else { // Public Mode
-                // Public Feed: show only public posts, excluding blocked users (up to 10).
-                
-                const blocked_uids_to_exclude = BLOCKED_USERS.slice(0, 10);
-                
-                let base_q = query(DAILY_COLLECTION, 
+                q = query(DAILY_COLLECTION, 
                     where('isPublic', '==', true), 
-                    where('status', '==', 'active'), 
-                    where('createdAt', '>=', today)
+                    where('status', '!=', 'hidden'), 
+                    where('creatorUid', 'not-in', BLOCKED_USERS.slice(0, 10)), // Attempt to filter blocked users (limited to 10)
+                    where('createdAt', '>=', today), 
+                    orderBy('createdAt', 'desc'), 
+                    limit(50)
                 );
-                
-                if (blocked_uids_to_exclude.length > 0) {
-                     // Use 'not-in' filter for the first 10 blocked users
-                     base_q = query(base_q, where('creatorUid', 'not-in', blocked_uids_to_exclude));
-                }
-
-                // Final Query with ordering and limit
-                q = query(base_q, orderBy('createdAt', 'desc'), limit(50));
             }
-            
             UNSUBSCRIBE_POSTS = onSnapshot(q, renderFeed);
         }
-
 
         document.getElementById('feed-toggle-friends').onclick = () => { CURRENT_FEED_MODE = 'friends'; setupFeed('friends', auth.currentUser); };
         document.getElementById('feed-toggle-public').onclick = () => {
@@ -894,21 +970,18 @@
                 CURRENT_USERNAME = d.username || 'User';
                 const friends = d.friends || [];
                 const pending = d.pending_requests || [];
-                
-                // Track changes for feed refresh
-                const prevBlocked = BLOCKED_USERS;
                 BLOCKED_USERS = d.blocked_users || [];
                 
+                // Update Global Friends var for Feed
+                // If friends changed, refresh feed
                 let friendsChanged = false;
                 if (friends.length !== CURRENT_FRIENDS.length || !friends.every((val, i) => val === CURRENT_FRIENDS[i])) {
                     CURRENT_FRIENDS = friends;
                     friendsChanged = true;
                 }
                 
-                let blockedChanged = BLOCKED_USERS.length !== prevBlocked.length || !BLOCKED_USERS.every((val, i) => val === prevBlocked[i]);
-                
-                // Refresh feed if friends or blocked list changes
-                if (friendsChanged || blockedChanged) { 
+                // Check if blocked users changed or if the feed needs to be set up initially
+                if (friendsChanged || CURRENT_FEED_MODE === 'friends' || BLOCKED_USERS.length !== (d.blocked_users || []).length) { 
                     setupFeed(CURRENT_FEED_MODE, user);
                 }
 
@@ -924,6 +997,7 @@
                      fList.appendChild(pTitle);
 
                      // Fetch profiles for pending
+                     // Optimization: In a real app, cache profiles. Here we fetch.
                      for (const uid of pending) {
                          const pDoc = await getDoc(doc(db, USERS_COLLECTION, uid));
                          const pName = pDoc.data()?.username || 'Unknown';
@@ -963,23 +1037,28 @@
                     });
                 }
                 
-                // Render Slots (existing logic)
+                // MODIFIED: Render Slots (including 'DELETED' status)
                 const slots = document.getElementById('daily-posts-container');
                 const used = d.dailySlotsUsed || [];
                 slots.innerHTML = '';
+                
                 for(let i=0; i<5; i++) {
                     const postId = used[i];
                     const div = document.createElement('div');
                     div.className = 'compact-list-item flex justify-between items-center border border-[#1a1a1a] mb-1 p-2 rounded bg-[#0a0a0a]';
-                    if(postId) {
-                        div.innerHTML = `<span class="text-indigo-400 text-sm">Slot ${i+1}</span> <button class="text-gray-400 hover:text-white" onclick="window.openPhotoModal('${postId}')"><i class="fas fa-eye"></i></button>`;
+
+                    if(postId === 'DELETED') { // NEW: Slot used but deleted
+                        div.innerHTML = `<span class="text-gray-500 text-sm italic">Slot ${i+1}: Used then deleted</span> <i class="fas fa-history text-gray-700" title="Slot Used"></i>`;
+                    } else if(postId) {
+                        div.innerHTML = `<span class="text-indigo-400 text-sm">Slot ${i+1}</span> <button class="text-gray-400 hover:text-white" onclick="window.openPhotoModal('${postId}')" title="View Post"><i class="fas fa-eye"></i></button>`;
                     } else if(i === used.length) {
-                        div.innerHTML = `<span class="text-gray-400 text-sm">Slot ${i+1}</span> <button class="text-green-500 hover:text-green-400" onclick="openUpload(${i})"><i class="fas fa-plus"></i></button>`;
+                        div.innerHTML = `<span class="text-gray-400 text-sm">Slot ${i+1}</span> <button class="text-green-500 hover:text-green-400" onclick="openUpload(${i})" title="Upload Photo"><i class="fas fa-plus"></i></button>`;
                     } else {
                         div.innerHTML = `<span class="text-gray-600 text-sm">Slot ${i+1}</span> <i class="fas fa-lock text-gray-700"></i>`;
                     }
                     slots.appendChild(div);
                 }
+                // END MODIFIED: Render Slots
                 
                 // Ensure blocked list updates if the tab is open
                 if (document.getElementById('blocked-section').classList.contains('hidden') === false) {
@@ -995,7 +1074,7 @@
             });
         });
         
-        // --- NEW/UPDATED: Friend Logic Handlers ---
+        // --- NEW: Friend Logic Handlers ---
         
         async function sendFriendRequest(code) {
             const msgEl = document.getElementById('add-friend-message');
@@ -1004,6 +1083,7 @@
             
             try {
                 // 1. Find the user with this code
+                // Note: Codes are document IDs in 'friend_codes' collection
                 const codeDoc = await getDoc(doc(db, 'friend_codes', code));
                 
                 if (!codeDoc.exists()) {
@@ -1032,6 +1112,7 @@
                 }
 
                 // 2. Add to their pending_requests
+                // Use arrayUnion to avoid duplicates
                 await updateDoc(doc(db, USERS_COLLECTION, targetUid), {
                     pending_requests: arrayUnion(auth.currentUser.uid)
                 });
@@ -1047,91 +1128,6 @@
             }
         }
         
-        // --- NEW: Search by Username Functionality ---
-        async function searchByUsername(username) {
-            const msgEl = document.getElementById('search-username-results');
-            msgEl.textContent = "Searching...";
-            msgEl.className = "text-xs mt-2 min-h-[16px] text-gray-500";
-            
-            try {
-                // 1. Query for users with this username (case-sensitive due to Firestore limitations on '==' query)
-                const q = query(collection(db, USERS_COLLECTION), where('username', '==', username));
-                const snap = await getDocs(q);
-                
-                let foundUser = null;
-                
-                // 2. Client-side Case-insensitive check
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    if (data.username && data.username.toLowerCase() === username.toLowerCase()) {
-                        foundUser = { uid: doc.id, username: data.username };
-                    }
-                });
-
-                if (!foundUser) {
-                    msgEl.textContent = "No user found with that username.";
-                    msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
-                    return;
-                }
-                
-                const targetUid = foundUser.uid;
-                
-                if (targetUid === auth.currentUser.uid) {
-                     msgEl.textContent = "That's you!";
-                     msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
-                     return;
-                }
-
-                if (CURRENT_FRIENDS.includes(targetUid)) {
-                     msgEl.textContent = `${foundUser.username} is already your friend.`;
-                     msgEl.className = "text-xs mt-2 min-h-[16px] text-yellow-500";
-                     return;
-                }
-                
-                if (BLOCKED_USERS.includes(targetUid)) {
-                     msgEl.textContent = "Cannot send request to a blocked user.";
-                     msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
-                     return;
-                }
-                
-                // Check if request is already pending (need to fetch my profile)
-                const myDoc = await getDoc(doc(db, USERS_COLLECTION, auth.currentUser.uid));
-                const myPending = myDoc.data().pending_requests || [];
-                if (myPending.includes(targetUid)) {
-                    msgEl.textContent = `Pending request already sent to ${foundUser.username}.`;
-                    msgEl.className = "text-xs mt-2 min-h-[16px] text-yellow-500";
-                    return;
-                }
-
-                // 3. Render request button
-                msgEl.innerHTML = `<span class="text-green-500">User Found: ${foundUser.username}</span> <button id="send-request-btn" class="text-xs border border-green-900 px-2 py-0.5 ml-2 rounded bg-green-900/50 hover:bg-green-900" data-uid="${targetUid}" data-name="${foundUser.username}">Send Friend Request</button>`;
-                
-                document.getElementById('send-request-btn').onclick = async () => {
-                     // Add to their pending_requests
-                     await updateDoc(doc(db, USERS_COLLECTION, targetUid), {
-                         pending_requests: arrayUnion(auth.currentUser.uid)
-                     });
-                     
-                     msgEl.textContent = `Request sent to ${foundUser.username}!`;
-                     msgEl.className = "text-xs mt-2 min-h-[16px] text-green-500";
-                     document.getElementById('username-input').value = '';
-                };
-
-            } catch (e) {
-                console.error(e);
-                msgEl.textContent = "Error searching for user.";
-                msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
-            }
-        }
-        
-        document.getElementById('search-username-form').onsubmit = (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username-input').value.trim();
-            if(username) searchByUsername(username);
-        };
-        // --- END NEW: Search by Username Functionality ---
-
-
         window.handleRequest = async (targetUid, action) => {
              const myUid = auth.currentUser.uid;
              const batch = writeBatch(db);
@@ -1198,6 +1194,8 @@
              // Unblock from my side
              await updateDoc(doc(db, USERS_COLLECTION, auth.currentUser.uid), { blocked_users: arrayRemove(uid) });
              // The onSnapshot listener on the user profile will handle the re-rendering of the blocked list and the feed.
+             // We call it here only as a fallback, but the onSnapshot makes it instant.
+             // renderBlockedList(); 
         };
     </script>
 </body>
