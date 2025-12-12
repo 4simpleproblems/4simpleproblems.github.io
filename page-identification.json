@@ -59,6 +59,12 @@
         "name": "Settings",
         "icon": "fa-solid fa-gear",
         "url": "../logged-in/settings.html"
+    },
+    "analytics": {
+        "name": "Analytics",
+        "icon": "fa-solid fa-chart-line",
+        "url": "../logged-in/analytics.html",
+        "adminOnly": true
     }
 }
 
