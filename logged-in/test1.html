@@ -330,22 +330,29 @@
 
     <div id="custom-tooltip"></div>
 
-    <div id="disclaimer-modal" class="modal-backdrop hidden opacity-0">
-        <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl w-full max-w-md p-6">
-            <h3 class="text-xl mb-4 text-white">Public Feed Warning</h3>
-            <p class="mb-4 text-gray-400 text-sm">By entering the Public Feed, you acknowledge that:</p>
-            <ul class="list-disc list-inside text-gray-500 mb-6 space-y-2 text-sm">
-                <li>You may encounter explicit media.</li>
-                <li>You agree to report violations.</li>
-                <li>Your posts in Public Feed are visible to everyone.</li>
-            </ul>
-            <div class="flex items-center gap-3 mb-6 p-3 bg-black rounded-md border border-[#1a1a1a]">
-                <input type="checkbox" id="disclaimer-agree-checkbox" class="w-4 h-4 rounded bg-gray-800 border-gray-600">
-                <label for="disclaimer-agree-checkbox" class="text-sm text-gray-300 cursor-pointer">I agree to these terms.</label>
-            </div>
-            <div class="flex gap-4">
-                <button id="disclaimer-cancel-btn" class="btn-toolbar-style w-full">Cancel</button>
-                <button id="disclaimer-confirm-btn" class="btn-toolbar-style btn-primary-override w-full opacity-50 cursor-not-allowed" disabled>Enter</button>
+    <div id="disclaimer-modal" class="fixed inset-0 bg-black/70 z-[9999] transition-opacity duration-300 opacity-0 hidden">
+        <div id="disclaimer-banner" class="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-7xl px-4">
+            <div class="bg-black/95 text-white p-4 sm:p-6 rounded-3xl border border-gray-700 shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 md:space-x-6">
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-xl font-normal mb-1">Safe Browsing Notice</h3>
+                    <p class="text-sm text-gray-300 mb-2 font-light">
+                        The Public Feed may contain media that does not comply with school rules. You must report any content that violates policies immediately. False reporting may result in a temporary ban. Please browse responsibly.
+                    </p>
+                    <div class="space-x-3 text-xs">
+                        <a href="https://www.justice.gov/criminal/criminal-ceos/keeping-children-safe-online" target="_blank" class="text-indigo-400 hover:text-indigo-300 underline transition">
+                            Internet Safety Resources
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex-shrink-0 flex gap-2">
+                    <button id="disclaimer-cancel-btn" class="w-full md:w-auto inline-flex items-center justify-center px-6 py-3 border border-gray-700 text-base font-normal rounded-xl text-gray-300 bg-transparent hover:bg-gray-800 transition duration-150 transform hover:scale-[1.02]">
+                        Go Back
+                    </button>
+                    <button id="disclaimer-confirm-btn" class="w-full md:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-normal rounded-xl text-white bg-indigo-500/10 ring-1 ring-indigo-500/50 hover:bg-indigo-500/20 transition duration-150 transform hover:scale-[1.02]">
+                        Continue
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -545,19 +552,13 @@
         async function cleanText(text) {
             if(!text) return "";
             try {
-                // Use the specified profanity.dev API endpoint for censoring
-                const res = await fetch('https://vector.profanity.dev', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text }),
-                });
+                // Switched to profanity.dev API
+                const res = await fetch(`https://api.profanity.dev/api/v1/json?text=${encodeURIComponent(text)}`);
                 const data = await res.json();
-                // The API should return an object with a 'clean' field containing the censored text.
-                // We ensure it returns the clean text, or the original text on failure.
-                return data.clean || text; 
-            } catch (error) {
-                console.error("Profanity check failed:", error);
-                return text; // Return original text on API failure
+                // Assuming 'cleanText' is the key for the cleaned string
+                return data.cleanText || text; 
+            } catch {
+                return text;
             }
         }
         
@@ -607,13 +608,11 @@
 
                 // Ensure profile exists with basic fields if it's new-ish or incomplete
                 const profileData = userProfileSnap.exists() ? userProfileSnap.data() : {};
-                
-                // IMPORTANT: Clean the username before setting CURRENT_USERNAME
-                CURRENT_USERNAME = await cleanText(profileData.username || 'User');
+                CURRENT_USERNAME = profileData.username || 'User';
 
                 if (!userProfileSnap.exists() || profileData.friends === undefined || profileData.dailySlotsUsed === undefined || profileData.lastPostReset === undefined || profileData.pending_requests === undefined) {
                     await setDoc(userProfileRef, {
-                        username: CURRENT_USERNAME, // Use cleaned username
+                        username: profileData.username || 'User',
                         friends: profileData.friends || [],
                         dailySlotsUsed: profileData.dailySlotsUsed || [],
                         lastPostReset: profileData.lastPostReset || serverTimestamp(),
@@ -779,27 +778,17 @@
             UNSUBSCRIBE_MODAL(); 
             document.removeEventListener('click', closeMenuHandler); // Clean up any lingering emoji menu handler
             
-            UNSUBSCRIBE_MODAL = onSnapshot(doc(DAILY_COLLECTION, photoId), async (snap) => {
+            UNSUBSCRIBE_MODAL = onSnapshot(doc(DAILY_COLLECTION, photoId), (snap) => {
                 if (!snap.exists()) { modal.classList.add('hidden'); return; }
                 const data = snap.data();
                 if (data.status === 'hidden') { modal.classList.add('hidden'); return; }
 
                 const currentUser = auth.currentUser;
                 const hearts = data.hearts || [];
-                // Censor comments before rendering
-                const comments = await Promise.all((data.comments || []).map(async c => ({
-                    ...c,
-                    username: await cleanText(c.username), // Censor usernames in comments
-                    text: await cleanText(c.text), // Censor comment text
-                }))).then(censoredComments => censoredComments.sort((a,b) => (a.timestamp?.toDate() || 0) - (b.timestamp?.toDate() || 0)));
-                
+                const comments = (data.comments || []).sort((a,b) => (a.timestamp?.toDate() || 0) - (b.timestamp?.toDate() || 0));
                 const isHearted = hearts.includes(currentUser.uid);
                 const isOwner = data.creatorUid === currentUser.uid;
 
-                // Censor title and creatorUsername before rendering
-                const censoredTitle = await cleanText(data.title || 'Untitled');
-                const censoredCreatorUsername = await cleanText(data.creatorUsername);
-                
                 // Render Modal Content
                 container.innerHTML = `
                     <div id="photo-display-area">
@@ -810,8 +799,8 @@
                         
                         <div class="modal-header mt-6">
                             <div class="modal-title-box">
-                                <h2 class="text-xl text-white font-normal truncate" title="${censoredTitle}">${censoredTitle}</h2>
-                                <p class="text-sm text-indigo-400 font-bold">${censoredCreatorUsername}</p>
+                                <h2 class="text-xl text-white font-normal truncate" title="${data.title}">${data.title || 'Untitled'}</h2>
+                                <p class="text-sm text-indigo-400 font-bold">${data.creatorUsername}</p>
                             </div>
                             <div class="modal-actions-box">
                                 <button id="heart-btn" class="text-2xl transition-colors ${isHearted ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}" title="${isHearted ? 'Unlike' : 'Like'}">
@@ -866,16 +855,16 @@
                 // Setup Emoji Picker for Comments (using new unique IDs)
                 setupEmojiPicker('comment-emoji-trigger', 'comment-input', 'comment-emoji-picker-menu', 'comment-close-emoji-menu', 'comment-emoji-list', 'comment-emoji-search');
                 
-                // Image Size Toggle Logic (Updated mode order)
+                // Image Size Toggle Logic (Updated mode order - Removed Width-Limit Mode)
                 const photoImg = container.querySelector('.photo-modal-img');
                 const photoArea = document.getElementById('photo-display-area');
                 PHOTO_DISPLAY_MODE = 0; 
                 photoArea.onclick = () => {
                     PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 2;
-                    if (PHOTO_DISPLAY_MODE === 1) {
+                    if (PHOTO_DISPLAY_MODE === 0) {
                         // Default: Limited by both (cover)
                         photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
-                    } else if (PHOTO_DISPLAY_MODE === 0) {
+                    } else if (PHOTO_DISPLAY_MODE === 1) {
                         // 1st Click: Limited only by height (contain, fills height)
                         photoImg.style.width = 'auto'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'contain';
                     }
@@ -1030,9 +1019,6 @@
                     } else if (PHOTO_DISPLAY_MODE === 1) {
                         // 1st Click: Limited only by height (contain, fills height)
                         photoImg.style.width = 'auto'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'contain';
-                    } else if (PHOTO_DISPLAY_MODE === 2) {
-                        // 2nd Click: Limited only by width (contain, fills width)
-                        photoImg.style.width = '100%'; photoImg.style.height = 'auto'; photoImg.style.objectFit = 'contain';
                     }
                 };
                 
@@ -1072,17 +1058,12 @@
                     if (!PENDING_FILE || !auth.currentUser) return;
 
                     const ref = doc(DAILY_COLLECTION);
-                    
-                    // Censor fields before posting to the database
-                    const censoredUsername = await cleanText(username);
-                    const censoredTitle = await cleanText(desc) || "Daily Photo";
-
                     await setDoc(ref, {
                         creatorUid: auth.currentUser.uid,
-                        creatorUsername: censoredUsername, // Use censored username
+                        creatorUsername: await cleanText(username),
                         createdAt: serverTimestamp(),
                         imageBase64: imgData,
-                        title: censoredTitle, // Use censored title
+                        title: await cleanText(desc) || "Daily Photo",
                         hearts: [],
                         comments: [],
                         isPublic: isPublic,
@@ -1122,14 +1103,10 @@
                 if(BLOCKED_USERS.includes(data.creatorUid)) return; 
                 
                 // Directly use data from the snapshot, no separate fetch needed for comments/hearts
-                postDataPromises.push(new Promise(async (resolve) => {
-                    // Censor the title before rendering to the thumbnail
-                    const censoredTitle = await cleanText(data.title || 'Untitled');
-                    
+                postDataPromises.push(new Promise(resolve => {
                     resolve({
                         id: d.id,
                         ...data,
-                        title: censoredTitle, // Use the censored title
                         commentCount: data.comments?.length || 0,
                         heartCount: data.hearts?.length || 0
                     });
@@ -1236,10 +1213,9 @@
 
                  const pendingSnaps = await Promise.all(pending.map(uid => getDoc(doc(db, USERS_COLLECTION, uid))));
 
-                 pendingSnaps.forEach(async s => {
+                 pendingSnaps.forEach(s => {
                      const uid = s.id;
-                     // Censor username before rendering
-                     const pName = await cleanText(s.data()?.username || 'Unknown');
+                     const pName = s.data()?.username || 'Unknown';
                      const el = document.createElement('div');
                      el.className = "compact-list-item flex justify-between items-center bg-indigo-900/10 border border-indigo-900/30 mb-1";
                      el.innerHTML = `
@@ -1265,9 +1241,8 @@
                     fList.appendChild(fTitle);
                 }
 
-                ALL_FRIEND_PROFILES.forEach(async p => {
-                     // Censor username before rendering
-                     const name = await cleanText(p.username || 'Unknown');
+                ALL_FRIEND_PROFILES.forEach(p => {
+                     const name = p.username || 'Unknown';
                      const div = document.createElement('div');
                      div.className = "compact-list-item friend-item flex justify-between";
                      div.dataset.username = name.toLowerCase();
@@ -1300,35 +1275,54 @@
              if (title) title.style.display = foundCount > 0 ? 'block' : 'none';
         };
 
-        // --- FEED TOGGLE HANDLERS ---
+        // --- FEED TOGGLE HANDLERS (UPDATED for NEW MODAL) ---
+        const disclaimerModal = document.getElementById('disclaimer-modal');
+        
+        // Fade In helper
+        const showDisclaimer = () => {
+            disclaimerModal.classList.remove('hidden');
+            setTimeout(() => {
+                disclaimerModal.classList.remove('opacity-0');
+                disclaimerModal.classList.add('opacity-100');
+            }, 10);
+        };
+        
+        // Fade Out helper
+        const hideDisclaimer = () => {
+            disclaimerModal.classList.remove('opacity-100');
+            disclaimerModal.classList.add('opacity-0');
+            setTimeout(() => {
+                disclaimerModal.classList.add('hidden');
+            }, 300);
+        };
+
         document.getElementById('feed-toggle-friends').onclick = () => {
             CURRENT_FEED_MODE = 'friends';
             setupFeed('friends', auth.currentUser);
         };
+
         document.getElementById('feed-toggle-public').onclick = () => {
             if(localStorage.getItem('public_agreed')) {
                 CURRENT_FEED_MODE = 'public';
                 setupFeed('public', auth.currentUser);
             } else {
-                document.getElementById('disclaimer-modal').classList.remove('hidden', 'opacity-0');
+                showDisclaimer();
             }
         };
 
-        // Disclaimer
-        document.getElementById('disclaimer-agree-checkbox').onchange = (e) => {
-            const btn = document.getElementById('disclaimer-confirm-btn');
-            btn.disabled = !e.target.checked;
-            btn.classList.toggle('opacity-50', !e.target.checked);
-            btn.classList.toggle('cursor-not-allowed', !e.target.checked);
-        };
+        // Disclaimer Actions
         document.getElementById('disclaimer-confirm-btn').onclick = () => {
             localStorage.setItem('public_agreed', 'true');
-            document.getElementById('disclaimer-modal').classList.add('hidden');
+            hideDisclaimer();
             CURRENT_FEED_MODE = 'public';
             setupFeed('public', auth.currentUser);
         };
-        document.getElementById('disclaimer-cancel-btn').onclick = () => document.getElementById('disclaimer-modal').classList.add('hidden');
 
+        document.getElementById('disclaimer-cancel-btn').onclick = () => {
+            hideDisclaimer();
+            // Ensure UI toggles back to friends if they cancel
+            document.getElementById('feed-toggle-friends').click(); 
+        };
 
         // --- AUTH & INIT ---
         onAuthStateChanged(auth, async (user) => {
@@ -1354,8 +1348,7 @@
             
             onSnapshot(userRef, async (snap) => {
                 const d = snap.data() || {};
-                // Censor username before assigning
-                CURRENT_USERNAME = await cleanText(d.username || 'User');
+                CURRENT_USERNAME = d.username || 'User';
                 const friends = d.friends || [];
                 const pending = d.pending_requests || [];
                 BLOCKED_USERS = d.blocked_users || [];
@@ -1371,13 +1364,7 @@
                 }
 
                 const friendSnaps = await Promise.all(friends.map(uid => getDoc(doc(db, USERS_COLLECTION, uid))));
-                
-                // Censor all friend usernames for display
-                ALL_FRIEND_PROFILES = await Promise.all(friendSnaps.map(async s => ({ 
-                    id: s.id, 
-                    ...s.data(), 
-                    username: await cleanText(s.data()?.username || 'Unknown') 
-                })));
+                ALL_FRIEND_PROFILES = friendSnaps.map(s => ({ id: s.id, ...s.data() }));
 
                 if (!document.getElementById('friends-section-wrapper').classList.contains('hidden')) {
                     await renderFriendsList(); 
@@ -1406,8 +1393,7 @@
                             `;
                         } else {
                             // AVAILABLE
-                            // Censor the title before rendering
-                            const title = await cleanText(postDoc.data()?.title || `Photo ${i+1}`);
+                            const title = postDoc.data()?.title || `Photo ${i+1}`;
                             div.innerHTML = `
                                 <span class="text-gray-300 text-sm truncate max-w-[150px] cursor-pointer hover:text-indigo-400" onclick="openPhotoModal('${postId}')" title="${title}">${title}</span>
                                 <div class="flex gap-1">
@@ -1588,9 +1574,8 @@
             
             const blockedUserSnaps = await Promise.all(BLOCKED_USERS.map(uid => getDoc(doc(db, USERS_COLLECTION, uid))));
             
-            blockedUserSnaps.forEach(async s => {
-                // Censor username before rendering
-                const name = await cleanText(s.data()?.username || `User ${s.id.substr(0,5)}...`);
+            blockedUserSnaps.forEach(s => {
+                const name = s.data()?.username || `User ${s.id.substr(0,5)}...`;
                 const uid = s.id;
                 
                 const div = document.createElement('div');
