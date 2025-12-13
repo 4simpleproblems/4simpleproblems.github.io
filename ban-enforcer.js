@@ -100,7 +100,7 @@ function renderBanVisuals(banData) {
     if (banData.link) {
          // IMPORTANT: The policy button link is now hardcoded to 'legal.html#terms-of-service'
          actionButton = `
-            <a id="ban-enforcer-policy-btn" href="legal.html#terms-of-service" target="_blank" style="
+            <a id="ban-enforcer-policy-btn" href="../legal.html#terms-of-service" target="_blank" style="
                 display: inline-flex !important;
                 align-items: center !important;
                 gap: 10px !important;
@@ -183,7 +183,7 @@ function renderBanVisuals(banData) {
         display: inline-flex !important; align-items: center !important; justify-content: center !important;
         padding: 0.5rem 1rem !important; background-color: transparent !important;
         border: 1px solid #333 !important; border-radius: 14px !important; color: #d1d5db !important;
-        font-size: 28px !important; text-decoration: none !important; cursor: pointer !important;
+        font-size: 24px !important; text-decoration: none !important; cursor: pointer !important;
         transition: all 0.2s !important; width: ${homeBtnSize} !important; height: ${homeBtnSize} !important; pointer-events: auto !important;
         font-weight: 400 !important; 
     `;
