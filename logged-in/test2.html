@@ -299,6 +299,7 @@
         
         .comment-input-area {
             display: flex; gap: 0.5rem; align-items: center;
+            position: relative; /* Added for emoji menu */
         }
 
         /* Helpers */
@@ -330,25 +331,29 @@
     <div id="custom-tooltip"></div>
 
     <div id="disclaimer-modal" class="modal-backdrop hidden opacity-0">
-        <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl w-full max-w-md p-6">
-            <h3 class="text-xl mb-4 text-white">Public Feed Warning</h3>
-            <p class="mb-4 text-gray-400 text-sm">By entering the Public Feed, you acknowledge that:</p>
-            <ul class="list-disc list-inside text-gray-500 mb-6 space-y-2 text-sm">
-                <li>You may encounter explicit media.</li>
-                <li>You agree to report violations.</li>
-                <li>Your posts in Public Feed are visible to everyone.</li>
-            </ul>
-            <div class="flex items-center gap-3 mb-6 p-3 bg-black rounded-md border border-[#1a1a1a]">
-                <input type="checkbox" id="disclaimer-agree-checkbox" class="w-4 h-4 rounded bg-gray-800 border-gray-600">
-                <label for="disclaimer-agree-checkbox" class="text-sm text-gray-300 cursor-pointer">I agree to these terms.</label>
+        <div class="fixed bottom-0 md:relative md:bottom-auto bg-[#0d0d0d] border border-[#1a1a1a] rounded-t-xl md:rounded-xl w-full max-w-md p-6 shadow-2xl popIn">
+            <h3 class="text-xl mb-4 text-white font-bold">Internet Safety Warning</h3>
+            <p class="mb-6 text-gray-300 text-sm leading-relaxed">
+                The Public Feed may contain media that does not comply with school rules. You should report any post that violates policies as soon as possible. <strong class="text-red-400">Falsely reporting a post may result in a temporary ban.</strong>
+            </p>
+            
+            <div class="mb-6">
+                <a href="https://www.justice.gov/criminal/criminal-ceos/keeping-children-safe-online" target="_blank" class="text-blue-400 hover:text-blue-300 underline transition text-sm">
+                    Online Safety Resources (justice.gov)
+                </a>
             </div>
-            <div class="flex gap-4">
-                <button id="disclaimer-cancel-btn" class="btn-toolbar-style w-full">Cancel</button>
-                <button id="disclaimer-confirm-btn" class="btn-toolbar-style btn-primary-override w-full opacity-50 cursor-not-allowed" disabled>Enter</button>
+
+            <div class="flex gap-3">
+                <button id="disclaimer-cancel-btn" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-normal rounded-xl text-white bg-white/10 ring-1 ring-white/20 hover:bg-white/20 transition duration-150 transform hover:scale-[1.02]">
+                    Go back to Friends Feed
+                </button>
+                
+                <button id="disclaimer-confirm-btn" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-normal rounded-xl text-white bg-purple-500/10 ring-1 ring-purple-500/50 hover:bg-purple-500/20 transition duration-150 transform hover:scale-[1.02]">
+                    Continue to Public Feed
+                </button>
             </div>
         </div>
     </div>
-
     <div id="photo-modal" class="modal-backdrop hidden">
         <div id="modal-content-container" class="modal-content"></div>
     </div>
@@ -464,11 +469,13 @@
         let PENDING_SLOT = 0;
         let PHOTO_DISPLAY_MODE = 0; 
         let ALL_FRIEND_PROFILES = [];
-
         
         const DAILY_COLLECTION = collection(db, 'daily_photos');
         const USERS_COLLECTION = 'users';
 
+        // EMOJI CONSTANT (Moved up for reuse in modal and post creation)
+        const EMOJIS = ["😀","😃","😄","😁","😆","😅","😂","🤣","🥲","🥹","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","😵‍💫","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸","😹","😻","😼","😽","🙀","😿","😾","👋","🤚","🖐","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🧠","🫀","🫁","🦷","🦴","👀","👁","👅","👄","💋","🩸","❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉","☸️","✡️","🔯","🕎","☯️","☦️","🛐","⛎","♈️","♉️","♊️","♋️","♌️","♍️","♎️","♏️","♐️","♑️","♒️","♓️","🆔","⚛️"];
+        
         // --- INTELLIGENT TOOLTIPS ---
         const tooltipEl = document.getElementById('custom-tooltip');
         
@@ -539,12 +546,15 @@
             return num.toString();
         }
 
+
         async function cleanText(text) {
             if(!text) return "";
             try {
-                const res = await fetch(`https://www.purgomalum.com/service/json?text=${encodeURIComponent(text)}`);
+                // Switched to profanity.dev API
+                const res = await fetch(`https://api.profanity.dev/api/v1/json?text=${encodeURIComponent(text)}`);
                 const data = await res.json();
-                return data.result || text;
+                // Assuming 'cleanText' is the key for the cleaned string
+                return data.cleanText || text; 
             } catch {
                 return text;
             }
@@ -594,12 +604,7 @@
                 const userProfileRef = getUserProfileDocRef(user.uid);
                 let userProfileSnap = await getDoc(userProfileRef);
 
-                if (!userProfileSnap.exists() || !userProfileSnap.data()?.username) {
-                    // Profile might not exist, but we should handle it gracefully or rely on other parts to create it?
-                    // actually dailyphoto logic creates default fields if missing.
-                }
-                
-                // Ensure profile exists with basic fields if it's new-ish
+                // Ensure profile exists with basic fields if it's new-ish or incomplete
                 const profileData = userProfileSnap.exists() ? userProfileSnap.data() : {};
                 CURRENT_USERNAME = profileData.username || 'User';
 
@@ -609,9 +614,12 @@
                         friends: profileData.friends || [],
                         dailySlotsUsed: profileData.dailySlotsUsed || [],
                         lastPostReset: profileData.lastPostReset || serverTimestamp(),
-                        pending_requests: profileData.pending_requests || []
+                        pending_requests: profileData.pending_requests || [],
+                        blocked_users: profileData.blocked_users || [] // Ensure this is also present
                     }, { merge: true });
+                    userProfileSnap = await getDoc(userProfileRef); // Re-fetch after creation
                 }
+
 
                 const codeQuery = query(collection(db, 'friend_codes'), where('userId', '==', user.uid), limit(1));
                 const codeQuerySnap = await getDocs(codeQuery);
@@ -692,6 +700,73 @@
             }
         };
 
+        // Reusable Emoji Picker Logic (For Post Title and Comments)
+        let closeMenuHandler = () => {};
+        
+        // Updated to accept all unique IDs
+        function setupEmojiPicker(triggerId, inputId, menuId, closeBtnId, listId, searchId) {
+            const menu = document.getElementById(menuId);
+            const list = document.getElementById(listId);
+            const input = document.getElementById(inputId);
+            const trigger = document.getElementById(triggerId);
+            const search = document.getElementById(searchId);
+            const closeBtn = document.getElementById(closeBtnId);
+            
+            if(!menu || !list || !input || !trigger || !search || !closeBtn) return;
+
+            const renderEmojis = (filter = '') => {
+                list.innerHTML = '';
+                const lowerFilter = filter.toLowerCase().trim();
+                EMOJIS.forEach(emoji => {
+                    // Simple filter based on the character itself
+                    if (lowerFilter && !emoji.includes(lowerFilter)) return;
+
+                    const btn = document.createElement('button');
+                    btn.className = 'text-xl hover:bg-white/10 rounded p-1 transition flex justify-center items-center h-8 w-8';
+                    btn.textContent = emoji;
+                    btn.type = 'button'; // Prevent form submission
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        // Insert the emoji at the end of the input's current value
+                        input.value += emoji; 
+                        // Focus the input after adding emoji
+                        input.focus(); 
+                    };
+                    list.appendChild(btn);
+                });
+            };
+            
+            // Initial render
+            renderEmojis(search.value || '');
+            
+            search.oninput = (e) => renderEmojis(e.target.value);
+            
+            trigger.onclick = (e) => {
+                e.stopPropagation();
+                menu.classList.toggle('hidden');
+                search.value = '';
+                renderEmojis(); // Reset search on open
+            };
+            
+            closeBtn.onclick = (e) => {
+                 e.stopPropagation();
+                 menu.classList.add('hidden');
+            };
+            
+            menu.onclick = (e) => e.stopPropagation();
+            
+            // Clean up old handler before creating a new one
+            document.removeEventListener('click', closeMenuHandler);
+
+            // Global click handler to close menu when clicking outside
+            closeMenuHandler = (e) => {
+                if (!menu.classList.contains('hidden') && !menu.contains(e.target) && !trigger.contains(e.target)) {
+                    menu.classList.add('hidden');
+                }
+            };
+            document.addEventListener('click', closeMenuHandler);
+        }
+
         window.openPhotoModal = (photoId) => {
             const container = document.getElementById('modal-content-container');
             const modal = document.getElementById('photo-modal');
@@ -699,6 +774,7 @@
             container.innerHTML = `<div class="w-full h-full flex items-center justify-center"><i class="fas fa-spinner fa-spin text-white text-2xl"></i></div>`;
             
             UNSUBSCRIBE_MODAL(); 
+            document.removeEventListener('click', closeMenuHandler); // Clean up any lingering emoji menu handler
             
             UNSUBSCRIBE_MODAL = onSnapshot(doc(DAILY_COLLECTION, photoId), (snap) => {
                 if (!snap.exists()) { modal.classList.add('hidden'); return; }
@@ -753,31 +829,47 @@
                         </div>
 
                         <form id="comment-form" class="comment-input-area mt-auto">
-                            <input type="text" id="comment-input" placeholder="Add a comment..." class="flex-grow p-3 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-white thin-font text-sm" maxlength="140">
+                            <div class="flex-grow relative">
+                                <input type="text" id="comment-input" placeholder="Add a comment..." class="w-full p-3 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-white thin-font text-sm pr-10" maxlength="140">
+                                <button type="button" id="comment-emoji-trigger" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-400" title="Add Emoji">
+                                    <i class="fa-solid fa-face-kiss-wink-heart"></i>
+                                </button>
+                                <div id="comment-emoji-picker-menu" class="hidden absolute right-0 bottom-full mb-2 w-64 bg-black border border-[#333] rounded-xl z-50 shadow-xl flex flex-col h-64">
+                                    <div class="flex justify-between items-center p-3 border-b border-[#333]">
+                                        <input type="text" id="comment-emoji-search" placeholder="Search..." class="bg-[#1a1a1a] border-none rounded text-xs p-1.5 text-white w-full mr-2 outline-none">
+                                        <button id="comment-close-emoji-menu" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div id="comment-emoji-list" class="flex-grow overflow-y-auto p-2 grid grid-cols-6 gap-1">
+                                        </div>
+                                </div>
+                            </div>
                             <button type="submit" class="btn-icon" style="border-color: #333; width: 44px; height: 44px;" title="Post Comment">
                                 <i class="fas fa-paper-plane text-indigo-400"></i>
                             </button>
                         </form>
                     </div>
                 `;
+
+                // Setup Emoji Picker for Comments (using new unique IDs)
+                setupEmojiPicker('comment-emoji-trigger', 'comment-input', 'comment-emoji-picker-menu', 'comment-close-emoji-menu', 'comment-emoji-list', 'comment-emoji-search');
                 
-                // Image Size Toggle Logic
+                // Image Size Toggle Logic (Updated mode order)
                 const photoImg = container.querySelector('.photo-modal-img');
                 const photoArea = document.getElementById('photo-display-area');
                 PHOTO_DISPLAY_MODE = 0; 
                 photoArea.onclick = () => {
                     PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 3;
                     if (PHOTO_DISPLAY_MODE === 0) {
+                        // Default: Limited by both (cover)
                         photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
                     } else if (PHOTO_DISPLAY_MODE === 1) {
-                        photoImg.style.width = '100%'; photoImg.style.height = 'auto'; photoImg.style.objectFit = 'contain';
-                    } else if (PHOTO_DISPLAY_MODE === 2) {
+                        // 1st Click: Limited only by height (contain, fills height)
                         photoImg.style.width = 'auto'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'contain';
                     }
                 };
 
                 // Events
-                document.getElementById('close-modal-btn').onclick = () => { modal.classList.add('hidden'); UNSUBSCRIBE_MODAL(); };
+                document.getElementById('close-modal-btn').onclick = () => { modal.classList.add('hidden'); UNSUBSCRIBE_MODAL(); document.removeEventListener('click', closeMenuHandler); };
                 document.getElementById('heart-btn').onclick = () => updateDoc(doc(DAILY_COLLECTION, photoId), { hearts: isHearted ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid) });
                 document.getElementById('comment-form').onsubmit = async (e) => {
                     e.preventDefault();
@@ -855,6 +947,9 @@
             const container = document.getElementById('modal-content-container');
             const modal = document.getElementById('photo-modal');
             modal.classList.remove('hidden');
+            
+            // Clean up any lingering emoji menu handler
+            document.removeEventListener('click', closeMenuHandler);
 
             compressImage(file).then(imgData => {
                 container.innerHTML = `
@@ -877,19 +972,17 @@
                             <label class="text-xs text-gray-500 mb-1 block">Title</label>
                             <div class="relative">
                                 <input type="text" id="create-description" class="w-full bg-black border border-[#333] rounded p-2 pr-10 text-white outline-none" maxlength="28" placeholder="Write a title...">
-                                <button id="emoji-trigger-btn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-400">
+                                <button type="button" id="emoji-trigger-btn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-400" title="Add Emoji">
                                     <i class="fa-solid fa-face-kiss-wink-heart"></i>
                                 </button>
                             </div>
-                            <!-- Emoji Menu -->
                             <div id="emoji-picker-menu" class="hidden absolute right-0 top-full mt-2 w-64 bg-black border border-[#333] rounded-xl z-50 shadow-xl flex flex-col h-64">
                                 <div class="flex justify-between items-center p-3 border-b border-[#333]">
                                     <input type="text" id="emoji-search" placeholder="Search..." class="bg-[#1a1a1a] border-none rounded text-xs p-1.5 text-white w-full mr-2 outline-none">
                                     <button id="close-emoji-menu" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
                                 </div>
                                 <div id="emoji-list" class="flex-grow overflow-y-auto p-2 grid grid-cols-6 gap-1">
-                                    <!-- Emojis generated here -->
-                                </div>
+                                    </div>
                             </div>
                         </div>
                         
@@ -917,62 +1010,21 @@
                 const photoArea = document.getElementById('photo-display-area');
                 PHOTO_DISPLAY_MODE = 0; 
                 photoArea.onclick = () => {
-                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 3;
+                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 2;
                     if (PHOTO_DISPLAY_MODE === 0) {
+                        // Default: Limited by both (cover)
                         photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
                     } else if (PHOTO_DISPLAY_MODE === 1) {
-                        photoImg.style.width = '100%'; photoImg.style.height = 'auto'; photoImg.style.objectFit = 'contain';
-                    } else if (PHOTO_DISPLAY_MODE === 2) {
+                        // 1st Click: Limited only by height (contain, fills height)
                         photoImg.style.width = 'auto'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'contain';
+                    } else if (PHOTO_DISPLAY_MODE === 2) {
+                        // 2nd Click: Limited only by width (contain, fills width)
+                        photoImg.style.width = '100%'; photoImg.style.height = 'auto'; photoImg.style.objectFit = 'contain';
                     }
                 };
                 
-                // Emoji Logic
-                const EMOJIS = ["😀","😃","😄","😁","😆","😅","😂","🤣","🥲","🥹","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","😵‍💫","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸","😹","😻","😼","😽","🙀","😿","😾","👋","🤚","🖐","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🧠","🫀","🫁","🦷","🦴","👀","👁","👅","👄","💋","🩸","❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉","☸️","✡️","🔯","🕎","☯️","☦️","🛐","⛎","♈️","♉️","♊️","♋️","♌️","♍️","♎️","♏️","♐️","♑️","♒️","♓️","🆔","⚛️"];
-                const emojiMenu = document.getElementById('emoji-picker-menu');
-                const emojiList = document.getElementById('emoji-list');
-                const titleInput = document.getElementById('create-description');
-                const emojiSearch = document.getElementById('emoji-search'); 
-                
-                const renderEmojis = (filter = '') => {
-                    emojiList.innerHTML = '';
-                    EMOJIS.forEach(emoji => {
-                        // Simple filter: if filter exists, only show if emoji char is in filter 
-                        // (Without names, this is limited, but satisfies the requirement for a search bar functionality)
-                        if (filter && !emoji.includes(filter)) return;
-
-                        const btn = document.createElement('button');
-                        btn.className = 'text-xl hover:bg-white/10 rounded p-1 transition flex justify-center items-center h-8 w-8';
-                        btn.textContent = emoji;
-                        btn.onclick = () => {
-                            titleInput.value += emoji;
-                            emojiMenu.classList.add('hidden');
-                        };
-                        emojiList.appendChild(btn);
-                    });
-                };
-                renderEmojis();
-                
-                emojiSearch.addEventListener('input', (e) => {
-                    renderEmojis(e.target.value.trim());
-                });
-                
-                document.getElementById('emoji-trigger-btn').onclick = (e) => {
-                    e.stopPropagation();
-                    emojiMenu.classList.toggle('hidden');
-                };
-                document.getElementById('close-emoji-menu').onclick = (e) => {
-                     e.stopPropagation();
-                     emojiMenu.classList.add('hidden');
-                }
-                document.getElementById('emoji-picker-menu').onclick = (e) => e.stopPropagation();
-                
-                const closeMenuHandler = (e) => {
-                    if (!emojiMenu.classList.contains('hidden') && !emojiMenu.contains(e.target) && !document.getElementById('emoji-trigger-btn').contains(e.target)) {
-                        emojiMenu.classList.add('hidden');
-                    }
-                };
-                document.addEventListener('click', closeMenuHandler);
+                // Emoji Logic for Post Title
+                setupEmojiPicker('emoji-trigger-btn', 'create-description', 'emoji-picker-menu', 'close-emoji-menu', 'emoji-list', 'emoji-search');
                 
                 // Public Toggle Logic
                 const toggleBtn = document.getElementById('public-toggle-btn');
@@ -992,7 +1044,7 @@
                 document.getElementById('cancel-create-btn').onclick = () => { 
                     modal.classList.add('hidden'); 
                     PENDING_FILE = null;
-                    document.removeEventListener('click', closeMenuHandler);
+                    document.removeEventListener('click', closeMenuHandler); // Clean up emoji handler
                 };
 
                 document.getElementById('confirm-post-btn').onclick = async () => {
@@ -1032,7 +1084,7 @@
                     await updateDoc(userRef, { dailySlotsUsed: slots });
                     modal.classList.add('hidden');
                     PENDING_FILE = null;
-                    document.removeEventListener('click', closeMenuHandler);
+                    document.removeEventListener('click', closeMenuHandler); // Clean up emoji handler
                 };
             }).catch(err => {
                 console.error("Compression failed", err);
@@ -1041,26 +1093,45 @@
         };
 
         // --- FEED LOGIC ---
-        function renderFeed(snap) {
+        async function renderFeed(snap) {
             const feed = document.getElementById('photo-feed');
             feed.innerHTML = '';
+            
+            // Collect post IDs and fetch necessary data (like comments count for the thumbnail)
+            const postDataPromises = [];
             snap.forEach(d => {
                 const data = d.data();
                 if(BLOCKED_USERS.includes(data.creatorUid)) return; 
                 
+                // Directly use data from the snapshot, no separate fetch needed for comments/hearts
+                postDataPromises.push(new Promise(resolve => {
+                    resolve({
+                        id: d.id,
+                        ...data,
+                        commentCount: data.comments?.length || 0,
+                        heartCount: data.hearts?.length || 0
+                    });
+                }));
+            });
+
+            const posts = await Promise.all(postDataPromises);
+
+            posts.forEach(data => {
                 const el = document.createElement('div');
                 el.className = 'photo-thumbnail';
                 el.innerHTML = `
                     <img src="${data.imageBase64}" loading="lazy">
                     <div class="overlay"></div>
                     <div class="absolute top-2 right-2 flex gap-2">
-                        <span class="text-white text-xs bg-black/50 px-2 py-1 rounded-lg backdrop-blur-sm"><i class="fas fa-heart text-red-400"></i> ${formatCount(data.hearts?.length)}</span>
+                        <span class="text-white text-xs bg-black/50 px-2 py-1 rounded-lg backdrop-blur-sm" title="Likes"><i class="fas fa-heart text-red-400"></i> ${formatCount(data.heartCount)}</span>
+                        <span class="text-white text-xs bg-black/50 px-2 py-1 rounded-lg backdrop-blur-sm" title="Comments"><i class="fas fa-comment text-indigo-400"></i> ${formatCount(data.commentCount)}</span>
                     </div>
                     <div class="title-overlay">${data.title}</div>
                 `;
-                el.onclick = () => window.openPhotoModal(d.id);
+                el.onclick = () => window.openPhotoModal(data.id);
                 feed.appendChild(el);
             });
+
             if(feed.children.length === 0) feed.innerHTML = `<p class="text-gray-600 col-span-3 text-center py-10">No photos in this feed.</p>`;
         }
 
@@ -1351,21 +1422,7 @@
             const slots = data.dailySlotsUsed || [];
             
             if(slots[index]) {
-                // We actually remove it from the array to free the slot? 
-                // The prompt says "delete the documents manually related to them... so they can use the slot again."
-                // "Use again" implies emptying it.
-                slots.splice(index, 1); // Remove from array completely so index shifts? 
-                // OR set to null?
-                // The code logic uses push for new posts. If we splice, indices shift. 
-                // Better to set to null or splice if it's the last one.
-                // Let's just splice it out to be clean.
-                
-                // Wait, if we splice, "Slot 2" becomes "Slot 1".
-                // If the user wants specific 5 slots, we should perhaps just remove the ID.
-                // The rendering loop checks for `postId`. If we remove it from array, it becomes empty.
-                // But the array length matters. 
-                // If I have [id1, broken, id3]. If I splice, I get [id1, id3]. Next upload becomes index 2.
-                // That seems fine.
+                // If the post ID is at this index, remove it, freeing up the slot in the flow.
                 slots.splice(index, 1); 
                 
                 await updateDoc(userRef, { dailySlotsUsed: slots });
@@ -1397,7 +1454,8 @@
             msgEl.className = "text-xs mt-2 min-h-[16px] text-gray-500";
             
             try {
-                const codeDoc = await getDoc(doc(db, 'friend_codes', code));
+                // 1. Check for the target user's code in 'friend_codes'
+                const codeDoc = await getDoc(getFriendCodeDocRef(code));
                 
                 if (!codeDoc.exists()) {
                      msgEl.textContent = "Code not found.";
@@ -1406,6 +1464,15 @@
                 }
                 
                 const targetUid = codeDoc.data().userId;
+                
+                // 2. Crucial: Double check if the target user profile exists/is valid
+                const targetProfileSnap = await getDoc(getUserProfileDocRef(targetUid));
+                if (!targetProfileSnap.exists()) {
+                    msgEl.textContent = "Target user profile corrupted or missing.";
+                    msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                    return;
+                }
+
                 if (targetUid === auth.currentUser.uid) {
                      msgEl.textContent = "You can't add yourself.";
                      msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
@@ -1423,6 +1490,15 @@
                      msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
                      return;
                 }
+                
+                const targetData = targetProfileSnap.data();
+                if ((targetData.pending_requests || []).includes(auth.currentUser.uid)) {
+                     msgEl.textContent = "Request already sent.";
+                     msgEl.className = "text-xs mt-2 min-h-[16px] text-yellow-500";
+                     return;
+                }
+                
+                // Ensure target hasn't blocked us (if we had a way to know, but we don't need a direct check on client)
 
                 await updateDoc(doc(db, USERS_COLLECTION, targetUid), {
                     pending_requests: arrayUnion(auth.currentUser.uid)
@@ -1441,7 +1517,7 @@
 
         document.getElementById('add-friend-form').onsubmit = (e) => {
             e.preventDefault();
-            const code = document.getElementById('friend-code-input').value.trim();
+            const code = document.getElementById('friend-code-input').value.trim().toUpperCase(); // Ensure uppercase for consistency
             if(code) sendFriendRequest(code);
         };
 
