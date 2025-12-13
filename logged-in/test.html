@@ -692,6 +692,9 @@
         }
 
         function getUsernameFromUid(uid) {
+            // Check if auth.currentUser is null (before login), use provided uid if possible, fallback to placeholder
+            if (!auth.currentUser) return uid ? `User ${uid.substr(0,5)}...` : 'Unknown User'; 
+            
             if (uid === auth.currentUser.uid) return CURRENT_USERNAME;
             const profile = ALL_FRIEND_PROFILES.find(p => p.uid === uid);
             return profile ? profile.username : `User ${uid ? uid.substr(0,5) : 'XXXXX'}...`;
@@ -1011,6 +1014,9 @@
             if (modal.classList.contains('hidden')) { modal.classList.add('hidden'); return; }
 
             const currentUser = auth.currentUser;
+            // Guard against currentUser being null (though the state change handler should prevent this)
+            if (!currentUser) return; 
+            
             const hearts = data.hearts || [];
             const comments = (data.comments || []).sort((a,b) => (a.timestamp?.toDate() || 0) - (b.timestamp?.toDate() || 0));
             const isHearted = hearts.includes(currentUser.uid);
@@ -1084,7 +1090,7 @@
                 PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 2; // MODIFIED: Cycle only between 0 and 1
                 
                 if (PHOTO_DISPLAY_MODE === 0) { 
-                    // Default: Limited by both (cover)
+                    // Default: Limited by both width and height (cover)
                     photoImg.style.width = '100%';
                     photoImg.style.height = '100%';
                     photoImg.style.objectFit = 'cover';
@@ -1094,7 +1100,6 @@
                     photoImg.style.height = '100%';
                     photoImg.style.objectFit = 'contain';
                 } 
-                // Removed: else if (PHOTO_DISPLAY_MODE === 2) { ... }
             };
 
             // Events
@@ -1208,14 +1213,16 @@
                                 <label class="text-xs text-gray-500 mb-1 block">Username</label>
                                 <input type="text" id="create-username" class="w-full bg-black border border-[#333] rounded p-2 text-white outline-none thin-font" maxlength="20" value="${CURRENT_USERNAME}">
                                 <div class="flex items-center justify-between mt-2">
-                                    <div class="flex items-center gap-2">
-                                        <input type="checkbox" id="public-toggle-btn" data-public="false" class="hidden" checked>
-                                        <label for="public-toggle-btn" class="flex items-center cursor-pointer">
-                                            <div id="public-toggle-switch" class="relative w-10 h-6 bg-gray-600 rounded-full shadow-inner transition-colors duration-200 ease-in-out">
-                                                <div class="absolute w-4 h-4 bg-white rounded-full shadow transform top-1 left-1 transition-transform duration-200 ease-in-out" id="public-toggle-circle"></div>
-                                            </div>
-                                            <span id="public-toggle-text" class="ml-3 text-sm text-gray-400">Friends Only</span>
-                                        </label>
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" id="public-toggle-btn" data-public="false" class="hidden" checked>
+                                            <label for="public-toggle-btn" class="flex items-center cursor-pointer">
+                                                <div id="public-toggle-switch" class="relative w-10 h-6 bg-gray-600 rounded-full shadow-inner transition-colors duration-200 ease-in-out">
+                                                    <div class="absolute w-4 h-4 bg-white rounded-full shadow transform top-1 left-1 transition-transform duration-200 ease-in-out" id="public-toggle-circle"></div>
+                                                </div>
+                                                <span id="public-toggle-text" class="ml-3 text-sm text-gray-400">Friends Only</span>
+                                            </label>
+                                        </div>
                                     </div>
                                     <div class="flex items-center text-red-500 text-sm font-semibold cursor-not-allowed">
                                          <i class="fas fa-heart text-gray-600 text-2xl"></i> 
@@ -1562,12 +1569,21 @@
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 // If user is not signed in, sign in anonymously
-                await signInAnonymously(auth);
+                // This is where the initial sign in happens if the user is unauthenticated.
+                // handleFriendCodeLogic will only run after this is complete.
+                try {
+                    await signInAnonymously(auth);
+                } catch (e) {
+                    console.error("Anonymous Sign-In Failed:", e);
+                    document.getElementById('loading-screen').innerHTML = `<p class="text-red-500">Authentication failed. Please refresh.</p>`;
+                }
                 return;
             }
 
+            // User is authenticated (either signed in or anonymously signed in)
             try {
-                await handleFriendCodeLogic(user);
+                // This call relies on a non-null 'user' object, which is now guaranteed.
+                await handleFriendCodeLogic(user); 
                 await cleanupOldPosts(user);
             } catch (e) {
                 console.error("Critical Auth/Init Error:", e);
@@ -1601,6 +1617,9 @@
             const slotsContainer = document.getElementById('daily-posts-container');
             slotsContainer.innerHTML = '';
             
+            // Safety check for user ID, though onAuthStateChanged handles this
+            if (!auth.currentUser) return;
+
             const userRef = doc(db, USERS_COLLECTION, auth.currentUser.uid);
             const userData = (await getDoc(userRef)).data();
             const slots = userData?.dailySlotsUsed || [];
@@ -1653,8 +1672,11 @@
         }
         
         // Listen for changes to the user's dailySlotsUsed for real-time sidebar updates
+        // This is where another potential race condition exists if run too early.
+        // It should ideally be set up only once the user is confirmed.
         onSnapshot(doc(db, USERS_COLLECTION, auth.currentUser.uid), (docSnap) => {
-            // Only re-render if the user is logged in and the daily posts section is visible
+            // Note: auth.currentUser.uid is now safely accessible inside the onAuthStateChanged scope, 
+            // and this onSnapshot is established inside that scope.
             if (docSnap.exists() && auth.currentUser) {
                 const latestData = docSnap.data();
                 CURRENT_FRIENDS = latestData.friends || [];
