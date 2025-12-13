@@ -472,7 +472,7 @@
         let CURRENT_FEED_MODE = 'friends';
         let PENDING_FILE = null;
         let PENDING_SLOT = 0;
-        let PHOTO_DISPLAY_MODE = 0; 
+        let PHOTO_DISPLAY_MODE = 0; // 0: cover (limit by both), 1: contain (limit by height)
         let ALL_FRIEND_PROFILES = [];
         
         const DAILY_COLLECTION = collection(db, 'daily_photos');
@@ -568,7 +568,7 @@
             }
         }
         
-        function generateUniqueFriendCode() {
+        async function generateUniqueFriendCode() {
             let code = '';
             let isUnique = false;
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -1003,8 +1003,8 @@
         });
         
         async function handleFileSelect(file) {
-            if (!file.type.match('image.*')) {
-                alert("Please select an image file.");
+            if (!file || !file.type.match('image.*')) {
+                if (file) alert("Please select an image file.");
                 return;
             }
 
@@ -1065,7 +1065,7 @@
                      `;
                      document.getElementById('upload-file-input').value = null; // Clear file input
                      document.removeEventListener('click', closeMenuHandler);
-                     handleFileSelect(null); // Clear pending file
+                     PENDING_FILE = null; // Clear pending file
                 };
 
                 // Public Toggle
@@ -1635,28 +1635,30 @@
         // Disclaimer
         document.getElementById('disclaimer-agree-checkbox').onchange = (e) => {
             const btn = document.getElementById('disclaimer-confirm-btn');
-            btn.disabled = !e.target.checked;
-            btn.classList.toggle('opacity-50', !e.target.checked);
-            btn.classList.toggle('cursor-not-allowed', !e.target.checked);
+            const isChecked = e.target.checked;
+            btn.disabled = !isChecked;
+            btn.classList.toggle('opacity-50', !isChecked);
+            btn.classList.toggle('cursor-not-allowed', !isChecked);
             
-            // Re-apply primary style when enabled (since we used the index.html style)
-            if (e.target.checked) {
-                btn.classList.remove('bg-purple-500/10');
-                btn.classList.add('bg-purple-500'); 
-            } else {
-                btn.classList.add('bg-purple-500/10');
-                btn.classList.remove('bg-purple-500'); 
-            }
+            // Toggle purple background color based on index.html design
+            btn.classList.toggle('bg-purple-500', isChecked); 
+            btn.classList.toggle('bg-purple-500/10', !isChecked);
         };
         
         document.getElementById('disclaimer-confirm-btn').onclick = () => {
             localStorage.setItem('public_agreed', 'true');
-            document.getElementById('disclaimer-modal').classList.add('hidden', 'opacity-0');
+            document.getElementById('disclaimer-modal').classList.add('opacity-0');
+            // Wait for fade out to hide
+            setTimeout(() => { document.getElementById('disclaimer-modal').classList.add('hidden'); }, 300);
             CURRENT_FEED_MODE = 'public';
             setupFeed('public', auth.currentUser);
         };
         
-        document.getElementById('disclaimer-cancel-btn').onclick = () => document.getElementById('disclaimer-modal').classList.add('hidden', 'opacity-0');
+        document.getElementById('disclaimer-cancel-btn').onclick = () => {
+            document.getElementById('disclaimer-modal').classList.add('opacity-0');
+             // Wait for fade out to hide
+            setTimeout(() => { document.getElementById('disclaimer-modal').classList.add('hidden'); }, 300);
+        }
 
         // --- AUTH & INIT ---
         onAuthStateChanged(auth, async (user) => {
