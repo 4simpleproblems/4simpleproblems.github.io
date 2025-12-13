@@ -331,26 +331,31 @@
     <div id="custom-tooltip"></div>
 
     <div id="disclaimer-modal" class="modal-backdrop hidden opacity-0">
-        <div class="fixed bottom-0 md:relative md:bottom-auto bg-[#0d0d0d] border border-[#1a1a1a] rounded-t-xl md:rounded-xl w-full max-w-md p-6 shadow-2xl popIn">
-            <h3 class="text-xl mb-4 text-white font-bold">Internet Safety Warning</h3>
-            <p class="mb-6 text-gray-300 text-sm leading-relaxed">
-                The Public Feed may contain media that does not comply with school rules. You should report any post that violates policies as soon as possible. <strong class="text-red-400">Falsely reporting a post may result in a temporary ban.</strong>
-            </p>
+        <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl w-full max-w-md p-6">
+            <h3 class="text-xl mb-4 text-white">Internet Safety Warning</h3>
             
-            <div class="mb-6">
-                <a href="https://www.justice.gov/criminal/criminal-ceos/keeping-children-safe-online" target="_blank" class="text-blue-400 hover:text-blue-300 underline transition text-sm">
-                    Online Safety Resources (justice.gov)
-                </a>
-            </div>
+            <p class="mb-4 text-gray-400 text-sm">By continuing to the Public Feed, you acknowledge and agree to the following:</p>
 
-            <div class="flex gap-3">
-                <button id="disclaimer-cancel-btn" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-normal rounded-xl text-white bg-white/10 ring-1 ring-white/20 hover:bg-white/20 transition duration-150 transform hover:scale-[1.02]">
-                    Go back to Friends Feed
-                </button>
-                
-                <button id="disclaimer-confirm-btn" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-normal rounded-xl text-white bg-purple-500/10 ring-1 ring-purple-500/50 hover:bg-purple-500/20 transition duration-150 transform hover:scale-[1.02]">
-                    Continue to Public Feed
-                </button>
+            <ul class="list-disc list-inside text-gray-400 mb-6 space-y-2 text-sm pl-4">
+                <li>You may see media that does not comply with school rules or general community standards.</li>
+                <li>You should report any post that violates school or community policies as soon as possible.</li>
+                <li>Falsely reporting a post may result in a temporary ban from the platform.</li>
+            </ul>
+
+            <div class="flex items-center gap-3 mb-6 p-3 bg-black rounded-md border border-[#1a1a1a]">
+                <input type="checkbox" id="disclaimer-agree-checkbox" class="w-4 h-4 rounded bg-gray-800 border-gray-600">
+                <label for="disclaimer-agree-checkbox" class="text-sm text-gray-300 cursor-pointer">I understand and agree to this warning.</label>
+            </div>
+            
+            <p class="text-xs text-gray-500 mb-6 font-light text-center">
+                <a href="https://www.justice.gov/criminal/criminal-ceos/keeping-children-safe-online" target="_blank" class="text-indigo-400 hover:text-indigo-300 underline transition">
+                    Learn more about Keeping Children Safe Online
+                </a>
+            </p>
+
+            <div class="flex gap-4">
+                <button id="disclaimer-cancel-btn" class="btn-toolbar-style w-full">Go back to Friends Feed</button>
+                <button id="disclaimer-confirm-btn" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-normal rounded-xl text-white bg-purple-500/10 ring-1 ring-purple-500/50 hover:bg-purple-500/20 transition opacity-50 cursor-not-allowed" disabled>Continue to Public Feed</button>
             </div>
         </div>
     </div>
@@ -546,50 +551,33 @@
             return num.toString();
         }
 
-
         async function cleanText(text) {
             if(!text) return "";
             try {
                 // Switched to profanity.dev API
                 const res = await fetch(`https://api.profanity.dev/api/v1/json?text=${encodeURIComponent(text)}`);
-                const data = await res.json();
-                // Assuming 'cleanText' is the key for the cleaned string
-                return data.cleanText || text; 
-            } catch {
+                const data = await res.json()
+                // If there's profanity, replace it with spaces
+                if(data.has_profanity) {
+                   return data.original_text.replace(/./g, ' '); 
+                }
+                return data.clean_text;
+            } catch (e) {
+                console.warn("Profanity filter failed, returning original text:", e);
                 return text;
             }
         }
         
-        function compressImage(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = event => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 800; 
-                        const scaleSize = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleSize;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(ctx.canvas.toDataURL('image/jpeg', 0.8));
-                    };
-                    img.onerror = reject;
-                };
-                reader.onerror = reject;
-            });
-        }
-
-        async function generateUniqueFriendCode() {
-            let code, isUnique = false;
+        function generateUniqueFriendCode() {
+            let code = '';
+            let isUnique = false;
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             try {
                 while (!isUnique) {
                     code = Array.from({ length: 8 }, () => characters.charAt(Math.floor(Math.random() * characters.length))).join('');
-                    const codeDoc = await getDoc(getFriendCodeDocRef(code));
+                    // Note: This relies on fetching the doc, which might be slow. 
+                    // In a real application, this should be done with a transaction/index.
+                    const codeDoc = await getDoc(getFriendCodeDocRef(code)); 
                     if (!codeDoc.exists()) isUnique = true;
                 }
                 return code;
@@ -603,7 +591,7 @@
             try {
                 const userProfileRef = getUserProfileDocRef(user.uid);
                 let userProfileSnap = await getDoc(userProfileRef);
-
+                
                 // Ensure profile exists with basic fields if it's new-ish or incomplete
                 const profileData = userProfileSnap.exists() ? userProfileSnap.data() : {};
                 CURRENT_USERNAME = profileData.username || 'User';
@@ -619,72 +607,82 @@
                     }, { merge: true });
                     userProfileSnap = await getDoc(userProfileRef); // Re-fetch after creation
                 }
-
-
+                
+                CURRENT_FRIENDS = userProfileSnap.data().friends || [];
+                BLOCKED_USERS = userProfileSnap.data().blocked_users || [];
+                
+                // Find existing friend code
                 const codeQuery = query(collection(db, 'friend_codes'), where('userId', '==', user.uid), limit(1));
                 const codeQuerySnap = await getDocs(codeQuery);
-                
                 let existingCode = codeQuerySnap.empty ? null : codeQuerySnap.docs[0].id;
+                
                 if (!existingCode) {
                     document.getElementById('friend-code-display').textContent = 'Generating...';
                     existingCode = await generateUniqueFriendCode();
-                    await setDoc(getFriendCodeDocRef(existingCode), { userId: user.uid, createdAt: serverTimestamp() });
+                    await setDoc(getFriendCodeDocRef(existingCode), { userId: user.uid });
                 }
-                document.getElementById('friend-code-display').textContent = existingCode;
-            } catch (error) {
-                console.error("Profile/Friend Code Setup Failed:", error);
-            }
-        }
-
-        async function cleanupOldPosts(user) {
-            try {
-                const now = new Date();
-                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const userProfileRef = getUserProfileDocRef(user.uid);
-                const userProfileSnap = await getDoc(userProfileRef);
-                const lastReset = userProfileSnap.data()?.lastPostReset?.toDate() || new Date(0);
                 
-                if (lastReset < startOfToday) {
-                    await updateDoc(userProfileRef, { dailySlotsUsed: [], lastPostReset: serverTimestamp() });
-                    console.log("Daily post slots reset for new day.");
+                document.getElementById('friend-code-display').textContent = existingCode;
+                
+                // Fetch all friend usernames
+                ALL_FRIEND_PROFILES = [];
+                if (CURRENT_FRIENDS.length > 0) {
+                     const friendsQuery = query(collection(db, USERS_COLLECTION), where('uid', 'in', CURRENT_FRIENDS));
+                     const friendsSnap = await getDocs(friendsQuery);
+                     friendsSnap.forEach(doc => ALL_FRIEND_PROFILES.push(doc.data()));
                 }
+                
+                // Initial feed setup
+                setupFeed(CURRENT_FEED_MODE, user);
+                renderDailyPosts(userProfileSnap.data().dailySlotsUsed || []);
+                renderFriendsList();
+                renderBlockedList(); // Call after setting BLOCKED_USERS
 
-                // Also clean up any actual documents that are old (optional but good for DB hygiene)
-                // dailyphoto does this, so we will too.
-                const oldPostsQuery = query(DAILY_COLLECTION, where('createdAt', '<', startOfToday), limit(50));
-                const snapshot = await getDocs(oldPostsQuery);
-                if (snapshot.empty) return;
-
-                const batch = writeBatch(db);
-                snapshot.forEach(doc => batch.delete(doc.ref));
-                await batch.commit();
             } catch (error) {
-                console.warn("Post cleanup failed:", error);
+                console.error("Initialization error in friend code logic:", error);
             }
         }
-
-        function switchSidebar(view) {
-             document.querySelectorAll('.sidebar-control-btn').forEach(b => b.classList.remove('active'));
-             document.getElementById('daily-posts-section').classList.add('hidden');
-             document.getElementById('friends-section-wrapper').classList.add('hidden');
-             document.getElementById('blocked-section').classList.add('hidden');
-
-             const searchInput = document.getElementById('friend-search-input');
-             if(searchInput) searchInput.value = '';
+        
+        async function cleanupOldPosts(user) {
+             const userRef = doc(db, USERS_COLLECTION, user.uid);
+             const userData = (await getDoc(userRef)).data();
+             const lastReset = userData.lastPostReset?.toDate() || new Date(0);
+             const now = new Date();
              
-             if (view === 'posts') {
-                 document.getElementById('sidebar-nav-posts').classList.add('active');
-                 document.getElementById('daily-posts-section').classList.remove('hidden');
-             } else if (view === 'friends') {
-                 document.getElementById('sidebar-nav-friends').classList.add('active');
-                 document.getElementById('friends-section-wrapper').classList.remove('hidden');
-                 renderFriendsList();
-             } else if (view === 'blocked') {
-                 document.getElementById('sidebar-nav-blocked').classList.add('active');
-                 document.getElementById('blocked-section').classList.remove('hidden');
-                 renderBlockedList();
+             // Check if 24 hours have passed since lastPostReset
+             const timeDifference = now.getTime() - lastReset.getTime();
+             if (timeDifference >= 24 * 60 * 60 * 1000) {
+                 // Reset posts
+                 await updateDoc(userRef, {
+                     dailySlotsUsed: [],
+                     lastPostReset: serverTimestamp()
+                 });
+                 // Re-render
+                 renderDailyPosts([]);
              }
         }
+
+        // --- SIDEBAR & NAVIGATION ---
+        function switchSidebar(view) {
+            document.querySelectorAll('.sidebar-control-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('daily-posts-section').classList.add('hidden');
+            document.getElementById('friends-section-wrapper').classList.add('hidden');
+            document.getElementById('blocked-section').classList.add('hidden');
+
+            if (view === 'posts') {
+                document.getElementById('sidebar-nav-posts').classList.add('active');
+                document.getElementById('daily-posts-section').classList.remove('hidden');
+            } else if (view === 'friends') {
+                document.getElementById('sidebar-nav-friends').classList.add('active');
+                document.getElementById('friends-section-wrapper').classList.remove('hidden');
+                renderFriendsList();
+            } else if (view === 'blocked') {
+                document.getElementById('sidebar-nav-blocked').classList.add('active');
+                document.getElementById('blocked-section').classList.remove('hidden');
+                renderBlockedList();
+            }
+        }
+        
         document.getElementById('sidebar-nav-posts').onclick = () => switchSidebar('posts');
         document.getElementById('sidebar-nav-friends').onclick = () => switchSidebar('friends');
         document.getElementById('sidebar-nav-blocked').onclick = () => switchSidebar('blocked');
@@ -698,12 +696,11 @@
                 document.getElementById('photo-modal').classList.add('hidden');
                 UNSUBSCRIBE_MODAL();
             }
-        };
+        }; 
 
         // Reusable Emoji Picker Logic (For Post Title and Comments)
-        let closeMenuHandler = () => {};
+        let closeMenuHandler = () => {}; // Updated to accept all unique IDs
         
-        // Updated to accept all unique IDs
         function setupEmojiPicker(triggerId, inputId, menuId, closeBtnId, listId, searchId) {
             const menu = document.getElementById(menuId);
             const list = document.getElementById(listId);
@@ -713,73 +710,79 @@
             const closeBtn = document.getElementById(closeBtnId);
             
             if(!menu || !list || !input || !trigger || !search || !closeBtn) return;
-
+            
             const renderEmojis = (filter = '') => {
                 list.innerHTML = '';
                 const lowerFilter = filter.toLowerCase().trim();
                 EMOJIS.forEach(emoji => {
                     // Simple filter based on the character itself
                     if (lowerFilter && !emoji.includes(lowerFilter)) return;
-
+                    
                     const btn = document.createElement('button');
                     btn.className = 'text-xl hover:bg-white/10 rounded p-1 transition flex justify-center items-center h-8 w-8';
                     btn.textContent = emoji;
                     btn.type = 'button'; // Prevent form submission
                     btn.onclick = (e) => {
-                        e.stopPropagation();
-                        // Insert the emoji at the end of the input's current value
-                        input.value += emoji; 
-                        // Focus the input after adding emoji
-                        input.focus(); 
+                        e.stopPropagation(); 
+                        // Insert the emoji at the cursor position
+                        const start = input.selectionStart;
+                        const end = input.selectionEnd;
+                        input.value = input.value.substring(0, start) + emoji + input.value.substring(end);
+                        input.focus();
+                        input.selectionStart = input.selectionEnd = start + emoji.length;
                     };
                     list.appendChild(btn);
                 });
             };
-            
+
             // Initial render
-            renderEmojis(search.value || '');
-            
-            search.oninput = (e) => renderEmojis(e.target.value);
+            renderEmojis();
+            search.oninput = () => renderEmojis(search.value);
             
             trigger.onclick = (e) => {
                 e.stopPropagation();
                 menu.classList.toggle('hidden');
-                search.value = '';
-                renderEmojis(); // Reset search on open
-            };
-            
-            closeBtn.onclick = (e) => {
-                 e.stopPropagation();
-                 menu.classList.add('hidden');
-            };
-            
-            menu.onclick = (e) => e.stopPropagation();
-            
-            // Clean up old handler before creating a new one
-            document.removeEventListener('click', closeMenuHandler);
-
-            // Global click handler to close menu when clicking outside
-            closeMenuHandler = (e) => {
-                if (!menu.classList.contains('hidden') && !menu.contains(e.target) && !trigger.contains(e.target)) {
-                    menu.classList.add('hidden');
+                
+                if (!menu.classList.contains('hidden')) {
+                    // Set up global click listener to close menu if clicking outside
+                    closeMenuHandler = (event) => {
+                        if (!menu.contains(event.target) && event.target !== trigger) {
+                            menu.classList.add('hidden');
+                            document.removeEventListener('click', closeMenuHandler);
+                        }
+                    };
+                    document.addEventListener('click', closeMenuHandler);
+                } else {
+                    document.removeEventListener('click', closeMenuHandler);
                 }
             };
-            document.addEventListener('click', closeMenuHandler);
+
+            closeBtn.onclick = (e) => {
+                e.stopPropagation();
+                menu.classList.add('hidden');
+                document.removeEventListener('click', closeMenuHandler);
+            };
         }
 
         window.openPhotoModal = (photoId) => {
-            const container = document.getElementById('modal-content-container');
             const modal = document.getElementById('photo-modal');
+            const container = document.getElementById('modal-content-container');
+            
             modal.classList.remove('hidden');
-            container.innerHTML = `<div class="w-full h-full flex items-center justify-center"><i class="fas fa-spinner fa-spin text-white text-2xl"></i></div>`;
+            container.innerHTML = `<i class="fas fa-circle-notch fa-spin text-4xl text-indigo-600"></i>`;
             
-            UNSUBSCRIBE_MODAL(); 
-            document.removeEventListener('click', closeMenuHandler); // Clean up any lingering emoji menu handler
-            
-            UNSUBSCRIBE_MODAL = onSnapshot(doc(DAILY_COLLECTION, photoId), (snap) => {
-                if (!snap.exists()) { modal.classList.add('hidden'); return; }
-                const data = snap.data();
-                if (data.status === 'hidden') { modal.classList.add('hidden'); return; }
+            UNSUBSCRIBE_MODAL = onSnapshot(doc(DAILY_COLLECTION, photoId), (docSnap) => {
+                const data = docSnap.data();
+                
+                if (!docSnap.exists() || !data || data.status !== 'active') {
+                    container.innerHTML = '<p class="text-white text-lg p-10">This post has been deleted or is unavailable.</p>';
+                    return;
+                }
+                
+                if (modal.classList.contains('hidden')) {
+                    modal.classList.add('hidden');
+                    return;
+                }
 
                 const currentUser = auth.currentUser;
                 const hearts = data.hearts || [];
@@ -787,14 +790,42 @@
                 const isHearted = hearts.includes(currentUser.uid);
                 const isOwner = data.creatorUid === currentUser.uid;
 
+                // Function to render the comment section
+                const renderComments = (currentComments) => {
+                    const commentsSection = document.getElementById('comments-section');
+                    if (!commentsSection) return;
+
+                    commentsSection.innerHTML = '';
+                    if (currentComments.length === 0) {
+                        commentsSection.innerHTML = '<p class="text-gray-600 text-sm text-center italic mt-2">No comments yet. Be the first!</p>';
+                        return;
+                    }
+                    
+                    currentComments.forEach(comment => {
+                        const time = comment.timestamp?.toDate() ? comment.timestamp.toDate().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+                        const commentEl = document.createElement('div');
+                        commentEl.className = 'mb-3 pb-3 border-b border-[#1a1a1a] last:border-b-0 last:mb-0 last:pb-0';
+                        commentEl.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <span class="text-sm font-semibold text-indigo-400">${comment.username}</span>
+                                <span class="text-xs text-gray-500">${time}</span>
+                            </div>
+                            <p class="text-sm text-gray-300 mt-1 break-words">${comment.text}</p>
+                        `;
+                        commentsSection.appendChild(commentEl);
+                    });
+                    
+                    // Scroll to bottom of comments
+                    commentsSection.scrollTop = commentsSection.scrollHeight;
+                };
+
                 // Render Modal Content
                 container.innerHTML = `
                     <div id="photo-display-area">
-                         <img src="${data.imageBase64}" class="photo-modal-img">
+                        <img src="${data.imageBase64}" class="photo-modal-img">
                     </div>
                     <div id="photo-info-panel">
                         <button id="close-modal-btn" class="absolute top-2 right-2 btn-icon" style="z-index: 50; border: none; background: transparent;" title="Close"><i class="fas fa-times text-xl text-gray-400 hover:text-white"></i></button>
-                        
                         <div class="modal-header mt-6">
                             <div class="modal-title-box">
                                 <h2 class="text-xl text-white font-normal truncate" title="${data.title}">${data.title || 'Untitled'}</h2>
@@ -805,85 +836,81 @@
                                     <i class="fas fa-heart"></i>
                                 </button>
                                 <span class="text-gray-400 text-sm font-mono">${formatCount(hearts.length)}</span>
-
                                 <span class="text-gray-400 text-sm font-mono ml-4" title="Comments">
                                     <i class="fas fa-comment text-indigo-400 mr-1"></i> ${formatCount(comments.length)}
                                 </span>
-                                ${!isOwner ? `<button id="report-btn" class="text-gray-600 hover:text-red-400 text-lg ml-2" title="Report Post"><i class="fas fa-flag"></i></button>` : ''}
-                                ${isOwner ? `<button id="delete-btn" class="text-gray-600 hover:text-red-400 text-lg ml-2" title="Delete Post"><i class="fas fa-trash"></i></button>` : ''}
-                                ${!isOwner && !BLOCKED_USERS.includes(data.creatorUid) ? `<button id="block-btn" class="text-gray-600 hover:text-red-400 text-lg ml-2" title="Block User"><i class="fas fa-ban"></i></button>` : ''}
+                                ${!isOwner ? `<button id="report-btn" class="text-gray-600 hover:text-red-400 ml-4" title="Report Post"><i class="fas fa-flag"></i></button>` : `<button id="delete-btn" class="text-gray-600 hover:text-red-400 ml-4" title="Delete Post"><i class="fas fa-trash"></i></button>`}
                             </div>
                         </div>
 
-                        <div class="mb-4 pb-2 border-b border-[#1a1a1a]">
-                             <span class="text-xs text-gray-600">${new Date(data.createdAt?.toDate()).toLocaleString()}</span>
-                        </div>
-
-                        <div id="comments-section">
-                            ${comments.map(c => `
-                                <div class="mb-2 text-sm break-words">
-                                    <span class="text-indigo-300 font-bold">${c.username}</span>
-                                    <span class="text-gray-400">: ${c.text}</span>
-                                </div>
-                            `).join('') || '<p class="text-gray-600 text-sm italic">No comments yet.</p>'}
-                        </div>
-
-                        <form id="comment-form" class="comment-input-area mt-auto">
-                            <div class="flex-grow relative">
-                                <input type="text" id="comment-input" placeholder="Add a comment..." class="w-full p-3 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-white thin-font text-sm pr-10" maxlength="140">
-                                <button type="button" id="comment-emoji-trigger" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-400" title="Add Emoji">
-                                    <i class="fa-solid fa-face-kiss-wink-heart"></i>
-                                </button>
-                                <div id="comment-emoji-picker-menu" class="hidden absolute right-0 bottom-full mb-2 w-64 bg-black border border-[#333] rounded-xl z-50 shadow-xl flex flex-col h-64">
-                                    <div class="flex justify-between items-center p-3 border-b border-[#333]">
-                                        <input type="text" id="comment-emoji-search" placeholder="Search..." class="bg-[#1a1a1a] border-none rounded text-xs p-1.5 text-white w-full mr-2 outline-none">
-                                        <button id="comment-close-emoji-menu" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-                                    </div>
-                                    <div id="comment-emoji-list" class="flex-grow overflow-y-auto p-2 grid grid-cols-6 gap-1">
-                                        </div>
-                                </div>
+                        <div id="comments-section" class="mt-4">
                             </div>
-                            <button type="submit" class="btn-icon" style="border-color: #333; width: 44px; height: 44px;" title="Post Comment">
-                                <i class="fas fa-paper-plane text-indigo-400"></i>
+
+                        <form id="comment-form" class="comment-input-area mt-auto pt-3">
+                            <input type="text" id="comment-input" placeholder="Add a comment..." class="flex-grow p-2 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-white thin-font" maxlength="128">
+                            
+                            <button type="button" id="comment-emoji-trigger" class="btn-icon w-8 h-8 flex-shrink-0" title="Add Emoji">
+                                <i class="fa-solid fa-face-kiss-wink-heart"></i>
                             </button>
+
+                            <div id="comment-emoji-menu" class="hidden absolute right-0 bottom-full mb-2 w-64 bg-black border border-[#333] rounded-xl z-50 shadow-xl flex flex-col h-64">
+                                <div class="flex justify-between items-center p-3 border-b border-[#333]">
+                                    <input type="text" id="comment-emoji-search" placeholder="Search..." class="bg-[#1a1a1a] border-none rounded text-xs p-1.5 text-white w-full mr-2 outline-none">
+                                    <button id="comment-close-emoji-menu" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+                                </div>
+                                <div id="comment-emoji-list" class="flex-grow overflow-y-auto p-2 grid grid-cols-6 gap-1"> </div>
+                            </div>
+
+                            <button type="submit" class="btn-icon w-8 h-8 flex-shrink-0" title="Send Comment"><i class="fas fa-paper-plane"></i></button>
                         </form>
                     </div>
                 `;
 
-                // Setup Emoji Picker for Comments (using new unique IDs)
-                setupEmojiPicker('comment-emoji-trigger', 'comment-input', 'comment-emoji-picker-menu', 'comment-close-emoji-menu', 'comment-emoji-list', 'comment-emoji-search');
-                
-                // Image Size Toggle Logic (Updated mode order)
-                const photoImg = container.querySelector('.photo-modal-img');
+                renderComments(comments);
+                setupEmojiPicker('comment-emoji-trigger', 'comment-input', 'comment-emoji-menu', 'comment-close-emoji-menu', 'comment-emoji-list', 'comment-emoji-search');
+
+                // Photo Zoom Logic (UPDATED: Modulo 2 for two modes)
                 const photoArea = document.getElementById('photo-display-area');
-                PHOTO_DISPLAY_MODE = 0; 
-                photoArea.onclick = () => {
-                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 3;
-                    if (PHOTO_DISPLAY_MODE === 0) {
-                        // Default: Limited by both (cover)
-                        photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
-                    } else if (PHOTO_DISPLAY_MODE === 1) {
-                        // 1st Click: Limited only by height (contain, fills height)
-                        photoImg.style.width = 'auto'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'contain';
-                    }
+                const photoImg = photoArea.querySelector('.photo-modal-img');
+
+                PHOTO_DISPLAY_MODE = 0; // Reset mode on open
+                photoArea.onclick = () => { 
+                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 2; // MODIFIED from % 3 to % 2
+                    if (PHOTO_DISPLAY_MODE === 0) { // Default: Limited by both (cover) 
+                        photoImg.style.width = '100%'; 
+                        photoImg.style.height = '100%'; 
+                        photoImg.style.objectFit = 'cover'; 
+                    } else if (PHOTO_DISPLAY_MODE === 1) { // 1st Click: Limited only by height (contain, fills height) 
+                        photoImg.style.width = 'auto'; 
+                        photoImg.style.height = '100%'; 
+                        photoImg.style.objectFit = 'contain'; 
+                    } 
                 };
 
                 // Events
-                document.getElementById('close-modal-btn').onclick = () => { modal.classList.add('hidden'); UNSUBSCRIBE_MODAL(); document.removeEventListener('click', closeMenuHandler); };
-                document.getElementById('heart-btn').onclick = () => updateDoc(doc(DAILY_COLLECTION, photoId), { hearts: isHearted ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid) });
+                document.getElementById('close-modal-btn').onclick = () => { 
+                    modal.classList.add('hidden'); 
+                    UNSUBSCRIBE_MODAL(); 
+                    document.removeEventListener('click', closeMenuHandler);
+                };
+                
+                document.getElementById('heart-btn').onclick = () => updateDoc(doc(DAILY_COLLECTION, photoId), { 
+                    hearts: isHearted ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid) 
+                });
+                
                 document.getElementById('comment-form').onsubmit = async (e) => {
                     e.preventDefault();
                     const input = document.getElementById('comment-input');
                     const text = input.value.trim();
                     if(!text) return;
 
-                    await updateDoc(doc(DAILY_COLLECTION, photoId), {
-                        comments: arrayUnion({
-                            uid: currentUser.uid,
-                            username: CURRENT_USERNAME,
-                            text: await cleanText(text),
-                            timestamp: new Date()
-                        })
+                    await updateDoc(doc(DAILY_COLLECTION, photoId), { 
+                        comments: arrayUnion({ 
+                            uid: currentUser.uid, 
+                            username: CURRENT_USERNAME, 
+                            text: await cleanText(text), 
+                            timestamp: new Date() 
+                        }) 
                     });
                     input.value = '';
                 };
@@ -907,68 +934,103 @@
                             }
                             
                             await batch.commit();
+
                             modal.classList.add('hidden');
+                            UNSUBSCRIBE_MODAL();
                         }
                     };
                 } else {
-                    const blockBtn = document.getElementById('block-btn');
-                    if(blockBtn) {
-                         blockBtn.onclick = async () => {
-                             if(confirm(`Block ${data.creatorUsername}?`)) {
-                                 await updateDoc(doc(db, USERS_COLLECTION, currentUser.uid), { 
-                                     blocked_users: arrayUnion(data.creatorUid),
-                                     friends: arrayRemove(data.creatorUid) 
-                                 });
-                                 modal.classList.add('hidden');
-                             }
-                         };
-                    }
+                     document.getElementById('report-btn').onclick = async () => {
+                        if (confirm(`Are you sure you want to report this post by ${data.creatorUsername}? Reports are reviewed manually.`)) {
+                            await updateDoc(doc(DAILY_COLLECTION, photoId), { 
+                                reports: arrayUnion(currentUser.uid) 
+                            });
+                            document.getElementById('report-btn').title = "Reported";
+                            document.getElementById('report-btn').classList.remove('hover:text-red-400');
+                            document.getElementById('report-btn').classList.add('text-red-500');
+                            alert("Post reported successfully. Thank you for keeping the community safe.");
+                        }
+                     };
                 }
+                
+                
             });
         };
 
-        // --- UPLOAD FLOW (NEW DESIGN) ---
-        window.openUpload = (idx) => {
-            PENDING_SLOT = idx;
-            document.getElementById('upload-menu-modal').classList.remove('hidden', 'opacity-0');
-            document.getElementById('upload-select-options').classList.remove('hidden');
-            document.getElementById('upload-file-input').value = '';
+        // --- DAILY POSTS LIST ---
+        window.openUpload = (slotIndex) => {
+            PENDING_SLOT = slotIndex;
+            document.getElementById('upload-menu-title').textContent = `Post Photo (Slot ${slotIndex + 1})`;
+            document.getElementById('upload-file-input').dataset.slotIndex = slotIndex;
+            
+            // Show the modal with transition
+            const modal = document.getElementById('upload-menu-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); }, 10); // Start fade-in
+            
+            // Set up drag/drop functionality
+            const dropArea = document.getElementById('upload-drop-area');
+            const fileInput = document.getElementById('upload-file-input');
+
+            dropArea.ondragover = (e) => { e.preventDefault(); dropArea.classList.add('border-indigo-500', 'bg-black/50'); };
+            dropArea.ondragleave = () => { dropArea.classList.remove('border-indigo-500', 'bg-black/50'); };
+            dropArea.ondrop = (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('border-indigo-500', 'bg-black/50');
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFileSelect(fileInput.files[0]);
+                }
+            };
+            fileInput.onchange = (e) => { 
+                if (e.target.files && e.target.files[0]) {
+                    handleFileSelect(e.target.files[0]);
+                }
+            };
         };
-
-        document.getElementById('upload-menu-close-btn').onclick = () => document.getElementById('upload-menu-modal').classList.add('hidden');
-
-        document.getElementById('upload-file-input').onchange = (e) => {
-            const file = e.target.files[0];
-            if(!file) return;
+        
+        document.getElementById('upload-menu-close-btn').onclick = () => {
+            const modal = document.getElementById('upload-menu-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            PENDING_FILE = null;
+            document.removeEventListener('click', closeMenuHandler);
+        };
+        
+        document.getElementById('create-post-btn-cancel')?.addEventListener('click', () => {
+             // Simply close the menu, re-enabling file select
+             document.getElementById('upload-menu-close-btn').click();
+        });
+        
+        async function handleFileSelect(file) {
+            if (!file.type.match('image.*')) {
+                alert("Please select an image file.");
+                return;
+            }
 
             PENDING_FILE = file;
-            document.getElementById('upload-menu-modal').classList.add('hidden');
-
-            const container = document.getElementById('modal-content-container');
-            const modal = document.getElementById('photo-modal');
-            modal.classList.remove('hidden');
             
-            // Clean up any lingering emoji menu handler
-            document.removeEventListener('click', closeMenuHandler);
+            // Read file to display preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imgData = e.target.result;
+                
+                // Switch to confirmation view
+                const options = document.getElementById('upload-select-options');
+                options.innerHTML = `
+                    <div id="post-creation-view" class="flex flex-col gap-3">
+                         <div id="post-preview-container" class="relative w-full aspect-square overflow-hidden rounded-lg border border-[#1a1a1a] flex justify-center items-center">
+                            <img id="post-preview-img" src="${imgData}" alt="Preview" class="w-full h-full object-cover">
+                         </div>
 
-            compressImage(file).then(imgData => {
-                container.innerHTML = `
-                    <div id="photo-display-area">
-                         <img src="${imgData}" class="photo-modal-img">
-                         <button id="cancel-create-btn" class="absolute top-4 right-4 btn-icon" style="width: 48px; height: 48px; border-color: #333; background: black; border-radius: 8px;" title="Cancel"><i class="fas fa-times text-xl text-gray-400"></i></button>
-                    </div>
-                    <div id="photo-info-panel">
-                        <div class="modal-header">
-                            <div class="modal-title-box">
-                                <label class="text-xs text-gray-500 mb-1 block">Username</label>
-                                <input type="text" id="create-username" class="w-full bg-transparent border-b border-[#333] text-gray-500 font-bold outline-none mb-2 cursor-not-allowed" value="${CURRENT_USERNAME}" disabled readonly>
-                            </div>
-                            <div class="modal-actions-box opacity-50 cursor-not-allowed">
-                                <i class="fas fa-heart text-gray-600 text-2xl"></i>
-                            </div>
-                        </div>
-
-                        <div class="mb-4 relative">
+                         <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-500">Public:</span>
+                            <button id="public-toggle-btn" data-public="false" class="btn-toolbar-style !px-3 !py-1" title="Toggle Public Visibility">
+                                <i class="fas fa-lock"></i> Friends Only
+                            </button>
+                         </div>
+                         
+                         <div class="mb-4 relative">
                             <label class="text-xs text-gray-500 mb-1 block">Title</label>
                             <div class="relative">
                                 <input type="text" id="create-description" class="w-full bg-black border border-[#333] rounded p-2 pr-10 text-white outline-none" maxlength="28" placeholder="Write a title...">
@@ -981,568 +1043,545 @@
                                     <input type="text" id="emoji-search" placeholder="Search..." class="bg-[#1a1a1a] border-none rounded text-xs p-1.5 text-white w-full mr-2 outline-none">
                                     <button id="close-emoji-menu" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
                                 </div>
-                                <div id="emoji-list" class="flex-grow overflow-y-auto p-2 grid grid-cols-6 gap-1">
-                                    </div>
+                                <div id="emoji-list" class="flex-grow overflow-y-auto p-2 grid grid-cols-6 gap-1"> </div>
                             </div>
                         </div>
-                        
-                        <div class="mb-4 flex-grow border border-[#1a1a1a] rounded p-3 bg-black/50 overflow-hidden relative min-h-[100px]">
-                             <div class="absolute inset-0 flex items-center justify-center text-gray-700 text-xs uppercase tracking-widest pointer-events-none select-none">Comments Section</div>
-                             <div class="opacity-20 blur-[1px] select-none pointer-events-none">
-                                 <div class="mb-2 text-sm"><span class="text-indigo-400 font-bold">Friend</span> <span class="text-gray-400">Nice photo!</span></div>
-                                 <div class="mb-2 text-sm"><span class="text-indigo-400 font-bold">User</span> <span class="text-gray-400">Cool!</span></div>
-                             </div>
-                        </div>
 
-                        <div class="mt-auto mb-3">
-                             <button id="public-toggle-btn" class="btn-toolbar-style w-full justify-center" style="height: 50px;" data-public="false">
-                                <i class="fas fa-user-friends"></i> <span>Friends Only</span>
-                            </button>
-                        </div>
-
-                        <button id="confirm-post-btn" class="btn-toolbar-style btn-primary-override w-full" style="height: 50px;">
-                            <i class="fas fa-paper-plane"></i> Post
-                        </button>
+                         <button id="confirm-post-btn" class="btn-toolbar-style btn-primary-override w-full">Post Photo</button>
+                         <button id="create-post-btn-cancel" class="btn-toolbar-style w-full">Cancel</button>
                     </div>
                 `;
-
-                const photoImg = container.querySelector('.photo-modal-img');
-                const photoArea = document.getElementById('photo-display-area');
-                PHOTO_DISPLAY_MODE = 0; 
-                photoArea.onclick = () => {
-                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 2;
-                    if (PHOTO_DISPLAY_MODE === 0) {
-                        // Default: Limited by both (cover)
-                        photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
-                    } else if (PHOTO_DISPLAY_MODE === 1) {
-                        // 1st Click: Limited only by height (contain, fills height)
-                        photoImg.style.width = 'auto'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'contain';
-                    } else if (PHOTO_DISPLAY_MODE === 2) {
-                        // 2nd Click: Limited only by width (contain, fills width)
-                        photoImg.style.width = '100%'; photoImg.style.height = 'auto'; photoImg.style.objectFit = 'contain';
-                    }
-                };
                 
-                // Emoji Logic for Post Title
+                // Setup new elements
                 setupEmojiPicker('emoji-trigger-btn', 'create-description', 'emoji-picker-menu', 'close-emoji-menu', 'emoji-list', 'emoji-search');
                 
-                // Public Toggle Logic
-                const toggleBtn = document.getElementById('public-toggle-btn');
-                toggleBtn.onclick = () => {
-                    const isPublic = toggleBtn.dataset.public === 'true';
-                    if (isPublic) {
-                        toggleBtn.dataset.public = 'false';
-                        toggleBtn.innerHTML = '<i class="fas fa-user-friends"></i> <span>Friends Only</span>';
-                        toggleBtn.classList.remove('btn-primary-override');
-                    } else {
-                        toggleBtn.dataset.public = 'true';
-                        toggleBtn.innerHTML = '<i class="fas fa-globe"></i> <span>Public</span>';
-                        toggleBtn.classList.add('btn-primary-override');
-                    }
-                };
-                
-                document.getElementById('cancel-create-btn').onclick = () => { 
-                    modal.classList.add('hidden'); 
-                    PENDING_FILE = null;
-                    document.removeEventListener('click', closeMenuHandler); // Clean up emoji handler
+                document.getElementById('create-post-btn-cancel').onclick = () => {
+                     // Revert back to the initial upload select state
+                     options.innerHTML = `
+                         <label for="upload-file-input" id="upload-drop-area" class="bg-black border-2 border-dashed border-[#333] rounded-lg p-8 text-center cursor-pointer hover:border-indigo-500 transition-colors">
+                            <i class="fas fa-cloud-upload-alt text-4xl mb-3 text-gray-500"></i>
+                            <span class="block font-semibold text-gray-400">Select Image</span>
+                         </label>
+                     `;
+                     document.getElementById('upload-file-input').value = null; // Clear file input
+                     document.removeEventListener('click', closeMenuHandler);
+                     handleFileSelect(null); // Clear pending file
                 };
 
+                // Public Toggle
+                document.getElementById('public-toggle-btn').onclick = (e) => {
+                    const btn = e.currentTarget;
+                    const isPublic = btn.dataset.public === 'true';
+                    btn.dataset.public = !isPublic;
+                    btn.innerHTML = !isPublic ? '<i class="fas fa-globe"></i> Public' : '<i class="fas fa-lock"></i> Friends Only';
+                    btn.classList.toggle('btn-primary-override', !isPublic);
+                    btn.classList.toggle('bg-black', isPublic);
+                    btn.classList.toggle('border', isPublic);
+                    btn.classList.toggle('border-[#333]', isPublic);
+                    btn.classList.toggle('text-[#d1d5db]', isPublic);
+                    btn.classList.toggle('hover:border-white', isPublic);
+                    btn.classList.toggle('hover:text-white', isPublic);
+                };
+
+                // Post Confirmation
                 document.getElementById('confirm-post-btn').onclick = async () => {
                     const btn = document.getElementById('confirm-post-btn');
                     btn.disabled = true;
                     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Posting...`;
 
-                    const desc = document.getElementById('create-description').value.trim();
-                    const username = document.getElementById('create-username').value;
-                    const isPublic = document.getElementById('public-toggle-btn').dataset.public === 'true';
-                    
-                    if (!PENDING_FILE || !auth.currentUser) return;
+                    // Simple image compression to limit size
+                    const MAX_WIDTH = 1024;
+                    const img = new Image();
+                    img.src = imgData;
+                    img.onload = async () => {
+                        const canvas = document.createElement('canvas');
+                        const scaleFactor = Math.min(1, MAX_WIDTH / img.width);
+                        canvas.width = img.width * scaleFactor;
+                        canvas.height = img.height * scaleFactor;
 
-                    const ref = doc(DAILY_COLLECTION);
-                    await setDoc(ref, {
-                        creatorUid: auth.currentUser.uid,
-                        creatorUsername: await cleanText(username),
-                        createdAt: serverTimestamp(),
-                        imageBase64: imgData,
-                        title: await cleanText(desc) || "Daily Photo",
-                        hearts: [],
-                        comments: [],
-                        isPublic: isPublic,
-                        status: 'active'
-                    });
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        // Use a lower quality JPEG for base64 storage
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                        
+                        const desc = document.getElementById('create-description').value.trim();
+                        const username = CURRENT_USERNAME; 
+                        const isPublic = document.getElementById('public-toggle-btn').dataset.public === 'true';
 
-                    const userRef = doc(db, USERS_COLLECTION, auth.currentUser.uid);
-                    const userData = (await getDoc(userRef)).data();
-                    const slots = userData.dailySlotsUsed || [];
-                    
-                    if (PENDING_SLOT < slots.length) {
-                        slots[PENDING_SLOT] = ref.id;
-                    } else if (PENDING_SLOT === slots.length) {
-                        slots.push(ref.id);
-                    }
-                    
-                    await updateDoc(userRef, { dailySlotsUsed: slots });
-                    modal.classList.add('hidden');
-                    PENDING_FILE = null;
-                    document.removeEventListener('click', closeMenuHandler); // Clean up emoji handler
+                        if (!PENDING_FILE || !auth.currentUser) return;
+
+                        const ref = doc(DAILY_COLLECTION);
+                        await setDoc(ref, {
+                            creatorUid: auth.currentUser.uid,
+                            creatorUsername: await cleanText(username),
+                            createdAt: serverTimestamp(),
+                            imageBase64: compressedDataUrl,
+                            title: await cleanText(desc) || "Daily Photo",
+                            hearts: [],
+                            comments: [],
+                            isPublic: isPublic,
+                            status: 'active'
+                        });
+
+                        const userRef = doc(db, USERS_COLLECTION, auth.currentUser.uid);
+                        const userData = (await getDoc(userRef)).data();
+                        const slots = userData.dailySlotsUsed || [];
+                        
+                        if (PENDING_SLOT < slots.length) {
+                            slots[PENDING_SLOT] = ref.id;
+                        } else if (PENDING_SLOT === slots.length) {
+                            slots.push(ref.id);
+                        }
+
+                        await updateDoc(userRef, { dailySlotsUsed: slots });
+
+                        // Close and clean up
+                        const modal = document.getElementById('upload-menu-modal');
+                        modal.classList.add('opacity-0');
+                        setTimeout(() => { modal.classList.add('hidden'); }, 300);
+                        PENDING_FILE = null;
+                        document.removeEventListener('click', closeMenuHandler); // Clean up emoji handler
+
+                        // Revert back to the initial upload select state for next time
+                        document.getElementById('upload-select-options').innerHTML = `
+                             <label for="upload-file-input" id="upload-drop-area" class="bg-black border-2 border-dashed border-[#333] rounded-lg p-8 text-center cursor-pointer hover:border-indigo-500 transition-colors">
+                                <i class="fas fa-cloud-upload-alt text-4xl mb-3 text-gray-500"></i>
+                                <span class="block font-semibold text-gray-400">Select Image</span>
+                             </label>
+                        `;
+
+                    };
                 };
+
             }).catch(err => {
                 console.error("Compression failed", err);
                 alert("Failed to process image.");
             });
-        };
-
-        // --- FEED LOGIC ---
-        async function renderFeed(snap) {
-            const feed = document.getElementById('photo-feed');
-            feed.innerHTML = '';
-            
-            // Collect post IDs and fetch necessary data (like comments count for the thumbnail)
-            const postDataPromises = [];
-            snap.forEach(d => {
-                const data = d.data();
-                if(BLOCKED_USERS.includes(data.creatorUid)) return; 
-                
-                // Directly use data from the snapshot, no separate fetch needed for comments/hearts
-                postDataPromises.push(new Promise(resolve => {
-                    resolve({
-                        id: d.id,
-                        ...data,
-                        commentCount: data.comments?.length || 0,
-                        heartCount: data.hearts?.length || 0
-                    });
-                }));
-            });
-
-            const posts = await Promise.all(postDataPromises);
-
-            posts.forEach(data => {
-                const el = document.createElement('div');
-                el.className = 'photo-thumbnail';
-                el.innerHTML = `
-                    <img src="${data.imageBase64}" loading="lazy">
-                    <div class="overlay"></div>
-                    <div class="absolute top-2 right-2 flex gap-2">
-                        <span class="text-white text-xs bg-black/50 px-2 py-1 rounded-lg backdrop-blur-sm" title="Likes"><i class="fas fa-heart text-red-400"></i> ${formatCount(data.heartCount)}</span>
-                        <span class="text-white text-xs bg-black/50 px-2 py-1 rounded-lg backdrop-blur-sm" title="Comments"><i class="fas fa-comment text-indigo-400"></i> ${formatCount(data.commentCount)}</span>
-                    </div>
-                    <div class="title-overlay">${data.title}</div>
-                `;
-                el.onclick = () => window.openPhotoModal(data.id);
-                feed.appendChild(el);
-            });
-
-            if(feed.children.length === 0) feed.innerHTML = `<p class="text-gray-600 col-span-3 text-center py-10">No photos in this feed.</p>`;
-        }
-
-        function setupFeed(mode, user) {
-            UNSUBSCRIBE_POSTS();
-            
-            // PREVENT GLITCH: Clear all active classes first
-            const btnFriends = document.getElementById('feed-toggle-friends');
-            const btnPublic = document.getElementById('feed-toggle-public');
-            
-            btnFriends.classList.remove('active', 'btn-primary-override');
-            btnPublic.classList.remove('active', 'btn-primary-override');
-
-            // Apply to current
-            if(mode === 'friends') {
-                btnFriends.classList.add('active', 'btn-primary-override');
-            } else {
-                btnPublic.classList.add('active', 'btn-primary-override');
-            }
-            
-            const today = new Date(); today.setHours(0,0,0,0);
-            
-            let q;
-            if (mode === 'friends') {
-                const uids = [user.uid, ...CURRENT_FRIENDS].filter(uid => !BLOCKED_USERS.includes(uid));
-                const friends_or_self = uids.slice(0, 10);
-                
-                if (friends_or_self.length === 0) {
-                     renderFeed({ forEach: () => {} });
-                     return;
-                }
-
-                q = query(DAILY_COLLECTION, 
-                    where('status', '==', 'active'),
-                    where('creatorUid', 'in', friends_or_self), 
-                    where('createdAt', '>=', today), 
-                    orderBy('createdAt', 'desc')
-                );
-            } else if (mode === 'public') {
-                q = query(DAILY_COLLECTION, 
-                    where('status', '==', 'active'),
-                    where('isPublic', '==', true),
-                    where('createdAt', '>=', today),
-                    orderBy('createdAt', 'desc'), 
-                    limit(100)
-                );
-            } else {
-                 return setupFeed('friends', user);
-            }
-
-            UNSUBSCRIBE_POSTS = onSnapshot(q, renderFeed);
         }
         
-        // --- FRIENDS LIST ---
-        async function renderFriendsList() {
-            const fList = document.getElementById('friends-list-items');
-            fList.innerHTML = '';
-            const searchContainer = document.getElementById('friends-section-wrapper');
+        window.deletePost = async (postId) => {
+            if(confirm('Are you sure you want to delete this post? This cannot be undone.')) {
+                const currentUser = auth.currentUser;
+                const userRef = doc(db, USERS_COLLECTION, currentUser.uid);
+                const slots = (await getDoc(userRef)).data()?.dailySlotsUsed || [];
+                const slotIndex = slots.indexOf(postId);
 
-            if (!document.getElementById('friend-search-input')) {
-                const searchDiv = document.createElement('div');
-                searchDiv.id = "friend-search-container";
-                searchDiv.className = "mb-4";
-                searchDiv.innerHTML = `
-                    <input type="text" id="friend-search-input" placeholder="Search by Username..." 
-                           class="w-full p-2 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-white thin-font"
-                           oninput="filterFriends(this.value)">
-                `;
-                searchContainer.insertBefore(searchDiv, searchContainer.querySelector('.compact-list-wrapper'));
-            }
+                const batch = writeBatch(db);
+                
+                // Delete document
+                batch.delete(doc(DAILY_COLLECTION, postId));
+                
+                // Mark slot as DELETED (used but empty)
+                if (slotIndex > -1) {
+                    slots[slotIndex] = 'DELETED'; 
+                    batch.update(userRef, { dailySlotsUsed: slots });
+                }
+                
+                await batch.commit();
 
-            const friends = CURRENT_FRIENDS;
-            const pending = (await getDoc(doc(db, USERS_COLLECTION, auth.currentUser.uid))).data()?.pending_requests || [];
-
-            if (pending.length > 0) {
-                 const pTitle = document.createElement('div');
-                 pTitle.className = "p-2 text-xs font-bold text-indigo-400 uppercase tracking-widest border-b border-[#1a1a1a] mb-2";
-                 pTitle.textContent = "REQUESTS";
-                 fList.appendChild(pTitle);
-
-                 const pendingSnaps = await Promise.all(pending.map(uid => getDoc(doc(db, USERS_COLLECTION, uid))));
-
-                 pendingSnaps.forEach(s => {
-                     const uid = s.id;
-                     const pName = s.data()?.username || 'Unknown';
-                     const el = document.createElement('div');
-                     el.className = "compact-list-item flex justify-between items-center bg-indigo-900/10 border border-indigo-900/30 mb-1";
-                     el.innerHTML = `
-                        <span class="text-indigo-200 text-sm truncate max-w-[100px]">${pName}</span>
-                        <div class="flex gap-1">
-                            <button class="w-6 h-6 flex items-center justify-center bg-green-900/50 text-green-400 rounded hover:bg-green-900" onclick="handleRequest('${uid}', 'accept')" title="Accept Request"><i class="fas fa-check text-xs"></i></button>
-                            <button class="w-6 h-6 flex items-center justify-center bg-red-900/50 text-red-400 rounded hover:bg-red-900" onclick="handleRequest('${uid}', 'deny')" title="Deny Request"><i class="fas fa-times text-xs"></i></button>
-                        </div>
-                     `;
-                     fList.appendChild(el);
-                 });
-            }
-            
-            if (friends.length === 0 && pending.length === 0) {
-                 fList.innerHTML = '<p class="text-gray-600 text-sm p-2">No friends yet.</p>';
-                 return;
-            } else if (friends.length > 0) {
-                if (pending.length > 0) {
-                    const fTitle = document.createElement('div');
-                    fTitle.id = "friends-list-title";
-                    fTitle.className = "p-2 text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-[#1a1a1a] mt-4 mb-2";
-                    fTitle.textContent = "FRIENDS";
-                    fList.appendChild(fTitle);
+                // Check if the modal for this post is open and close it
+                const modal = document.getElementById('photo-modal');
+                const titleEl = document.querySelector('#modal-content-container h2[title]');
+                if (titleEl && titleEl.title.includes(postId)) { // Simplified check based on post ID if available
+                   modal.classList.add('hidden');
+                   UNSUBSCRIBE_MODAL();
                 }
 
-                ALL_FRIEND_PROFILES.forEach(p => {
-                     const name = p.username || 'Unknown';
-                     const div = document.createElement('div');
-                     div.className = "compact-list-item friend-item flex justify-between";
-                     div.dataset.username = name.toLowerCase();
-                     div.innerHTML = `<span class="text-gray-300 truncate max-w-[150px]">${name}</span><button class="text-red-400 hover:text-red-500" onclick="removeFriend('${p.id}')" title="Unfriend"><i class="fas fa-minus-circle"></i></button>`;
-                     fList.appendChild(div);
-                });
-                
-                const existingQuery = document.getElementById('friend-search-input')?.value || '';
-                window.filterFriends(existingQuery);
+                alert("Post deleted successfully.");
             }
         }
         
-        window.filterFriends = (query) => {
-             const fList = document.getElementById('friends-list-items');
-             const friendItems = fList.querySelectorAll('.friend-item');
-             const lowerQuery = query.toLowerCase().trim();
-             let foundCount = 0;
-
-             friendItems.forEach(item => {
-                 const name = item.dataset.username || '';
-                 if (name.includes(lowerQuery)) {
-                     item.style.display = 'flex';
-                     foundCount++;
-                 } else {
-                     item.style.display = 'none';
-                 }
-             });
-
-             const title = document.getElementById('friends-list-title');
-             if (title) title.style.display = foundCount > 0 ? 'block' : 'none';
-        };
-
-        // --- FEED TOGGLE HANDLERS ---
-        document.getElementById('feed-toggle-friends').onclick = () => {
-            CURRENT_FEED_MODE = 'friends';
-            setupFeed('friends', auth.currentUser);
-        };
-        document.getElementById('feed-toggle-public').onclick = () => {
-            if(localStorage.getItem('public_agreed')) {
-                CURRENT_FEED_MODE = 'public';
-                setupFeed('public', auth.currentUser);
-            } else {
-                document.getElementById('disclaimer-modal').classList.remove('hidden', 'opacity-0');
-            }
-        };
-
-        // Disclaimer
-        document.getElementById('disclaimer-agree-checkbox').onchange = (e) => {
-            const btn = document.getElementById('disclaimer-confirm-btn');
-            btn.disabled = !e.target.checked;
-            btn.classList.toggle('opacity-50', !e.target.checked);
-            btn.classList.toggle('cursor-not-allowed', !e.target.checked);
-        };
-        document.getElementById('disclaimer-confirm-btn').onclick = () => {
-            localStorage.setItem('public_agreed', 'true');
-            document.getElementById('disclaimer-modal').classList.add('hidden');
-            CURRENT_FEED_MODE = 'public';
-            setupFeed('public', auth.currentUser);
-        };
-        document.getElementById('disclaimer-cancel-btn').onclick = () => document.getElementById('disclaimer-modal').classList.add('hidden');
-
-
-        // --- AUTH & INIT ---
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                await signInAnonymously(auth);
-                return;
-            }
-
-            try {
-                await handleFriendCodeLogic(user);
-                await cleanupOldPosts(user);
-            } catch (e) {
-                console.error("Initialization error:", e);
-            }
-
-            document.getElementById('loading-screen').style.display = 'none';
-            document.getElementById('messenger-ui').style.display = 'block';
-
-            switchSidebar('posts');
-
-            // Load Profile
-            const userRef = doc(db, USERS_COLLECTION, user.uid);
+        // Listener for changes to the user's daily posts
+        function renderDailyPosts(dailySlots) {
+            const slotsContainer = document.getElementById('daily-posts-container');
+            if (!slotsContainer) return;
+            slotsContainer.innerHTML = '';
             
-            onSnapshot(userRef, async (snap) => {
-                const d = snap.data() || {};
-                CURRENT_USERNAME = d.username || 'User';
-                const friends = d.friends || [];
-                const pending = d.pending_requests || [];
-                BLOCKED_USERS = d.blocked_users || [];
+            const numSlots = 5; 
+            for (let i = 0; i < numSlots; i++) {
+                const postId = dailySlots[i];
+                const div = document.createElement('div');
+                div.className = "compact-list-item flex justify-between items-center";
                 
-                let friendsChanged = false;
-                if (friends.length !== CURRENT_FRIENDS.length || !friends.every((val, i) => val === CURRENT_FRIENDS[i])) { 
-                    CURRENT_FRIENDS = friends;
-                    friendsChanged = true;
-                }
-
-                if (friendsChanged || CURRENT_FEED_MODE === 'friends' || BLOCKED_USERS.length !== (d.blocked_users || []).length) { 
-                    setupFeed(CURRENT_FEED_MODE, user);
-                }
-
-                const friendSnaps = await Promise.all(friends.map(uid => getDoc(doc(db, USERS_COLLECTION, uid))));
-                ALL_FRIEND_PROFILES = friendSnaps.map(s => ({ id: s.id, ...s.data() }));
-
-                if (!document.getElementById('friends-section-wrapper').classList.contains('hidden')) {
-                    await renderFriendsList(); 
-                }
-                
-                // --- DAILY SLOTS ---
-                const slotsContainer = document.getElementById('daily-posts-container');
-                const used = d.dailySlotsUsed || [];
-                slotsContainer.innerHTML = '';
-
-                // 2. Render Slots
-                for(let i=0; i<5; i++) {
-                    const postId = used[i];
-                    const div = document.createElement('div');
-                    div.className = 'compact-list-item flex justify-between items-center border border-[#1a1a1a] mb-1 p-2 rounded bg-[#0a0a0a]';
-                    
-                    if(postId && postId !== 'DELETED') {
-                        // Check availability
-                        const postDoc = await getDoc(doc(DAILY_COLLECTION, postId));
-                        
-                        if(!postDoc.exists()) {
-                            // UNAVAILABLE (Broken)
-                            div.innerHTML = `
-                                <span class="text-gray-600 text-sm italic">Post Unavailable</span>
-                                <button class="text-xs bg-red-900/30 text-red-400 px-2 py-1 rounded border border-red-900/50 hover:bg-red-900/50" onclick="fixBrokenSlot(${i})" title="Clear broken slot">Fix</button>
-                            `;
-                        } else {
-                            // AVAILABLE
-                            const title = postDoc.data()?.title || `Photo ${i+1}`;
-                            div.innerHTML = `
+                if (postId && postId !== 'DELETED') {
+                    // Fetch title/status for display - use an onSnapshot to keep it live
+                    const postRef = doc(DAILY_COLLECTION, postId);
+                    onSnapshot(postRef, (snap) => {
+                        const data = snap.data();
+                        const title = data?.title || 'Untitled';
+                        if (snap.exists() && data.status === 'active') {
+                             div.innerHTML = `
                                 <span class="text-gray-300 text-sm truncate max-w-[150px] cursor-pointer hover:text-indigo-400" onclick="openPhotoModal('${postId}')" title="${title}">${title}</span>
                                 <div class="flex gap-1">
                                     <button class="w-6 h-6 flex items-center justify-center text-indigo-400 rounded hover:text-indigo-600" onclick="window.openPhotoModal('${postId}')" title="View"><i class="fas fa-eye text-xs"></i></button>
                                     <button class="w-6 h-6 flex items-center justify-center text-red-400 rounded hover:text-red-600" onclick="deletePost('${postId}')" title="Delete"><i class="fas fa-trash text-xs"></i></button>
                                 </div>
                             `;
+                        } else {
+                            // If post is deleted in the background, mark the slot as DELETED
+                            if (dailySlots[i] !== 'DELETED') {
+                                // This is an asynchronous state correction
+                                updateDoc(doc(db, USERS_COLLECTION, auth.currentUser.uid), {
+                                    dailySlotsUsed: dailySlots.map((id, index) => index === i ? 'DELETED' : id)
+                                });
+                            }
                         }
-                    } else if (postId === 'DELETED') { 
-                        div.innerHTML = `<span class="text-gray-500 text-sm italic">Slot ${i+1}: Used</span>`;
-                    } else {
-                         div.innerHTML = `<span class="text-gray-500 text-sm italic">Slot ${i+1}: Empty</span> <button class="w-6 h-6 flex items-center justify-center bg-indigo-900/50 text-indigo-400 rounded hover:bg-indigo-900" onclick="window.openUpload(${i})" title="Post Photo"><i class="fas fa-plus text-xs"></i></button>`;
-                    }
-                    slotsContainer.appendChild(div);
+                    });
+                } else if (postId === 'DELETED') {
+                    div.innerHTML = `<span class="text-gray-500 text-sm italic">Slot ${i+1}: Used</span>`;
+                } else {
+                    div.innerHTML = `<span class="text-gray-500 text-sm italic">Slot ${i+1}: Empty</span>
+                        <button class="w-6 h-6 flex items-center justify-center bg-indigo-900/50 text-indigo-400 rounded hover:bg-indigo-900" onclick="window.openUpload(${i})" title="Post Photo"><i class="fas fa-plus text-xs"></i></button>`;
                 }
-                
-                if (!document.getElementById('blocked-section').classList.contains('hidden')) {
-                    renderBlockedList();
-                }
-            });
-            
-            // Friend Code Display
-            // Logic handled in handleFriendCodeLogic now, but we need to ensure the element is updated if already loaded.
-            const codeQ = query(collection(db, 'friend_codes'), where('userId', '==', user.uid), limit(1));
-            const codeSnap = await getDocs(codeQ);
-             if(!codeSnap.empty) document.getElementById('friend-code-display').textContent = codeSnap.docs[0].id;
-             else if (document.getElementById('friend-code-display').textContent === 'LOADING') document.getElementById('friend-code-display').textContent = "GEN-ERR";
-            
-            document.getElementById('friend-code-display').onclick = () => {
-                 const code = document.getElementById('friend-code-display').textContent;
-                 if(code !== 'LOADING' && code !== 'GEN-ERR' && code !== 'Generating...') {
-                     navigator.clipboard.writeText(code);
-                     alert('Friend Code copied!');
-                 }
-            };
-        });
-
-        // --- SLOT MANAGEMENT HANDLERS ---
-        
-        // "Fix" Button for unavailable/broken slots
-        window.fixBrokenSlot = async (index) => {
-            const userRef = doc(db, USERS_COLLECTION, auth.currentUser.uid);
-            const data = (await getDoc(userRef)).data();
-            const slots = data.dailySlotsUsed || [];
-            
-            if(slots[index]) {
-                // If the post ID is at this index, remove it, freeing up the slot in the flow.
-                slots.splice(index, 1); 
-                
-                await updateDoc(userRef, { dailySlotsUsed: slots });
-            }
-        };
-
-        // Shortcut Delete Button
-        window.deletePost = async (postId) => {
-            if(!confirm("Delete this post?")) return;
-            const userRef = doc(db, USERS_COLLECTION, auth.currentUser.uid);
-            const slots = (await getDoc(userRef)).data()?.dailySlotsUsed || [];
-            const index = slots.indexOf(postId);
-            
-            const batch = writeBatch(db);
-            batch.delete(doc(DAILY_COLLECTION, postId));
-            
-            if(index > -1) {
-                slots[index] = 'DELETED'; // Mark as burned slot
-                batch.update(userRef, { dailySlotsUsed: slots });
-            }
-            await batch.commit();
-        };
-        
-        // --- Friend Logic Handlers ---
-        
-        async function sendFriendRequest(code) {
-            const msgEl = document.getElementById('add-friend-message');
-            msgEl.textContent = "Searching...";
-            msgEl.className = "text-xs mt-2 min-h-[16px] text-gray-500";
-            
-            try {
-                // 1. Check for the target user's code in 'friend_codes'
-                const codeDoc = await getDoc(getFriendCodeDocRef(code));
-                
-                if (!codeDoc.exists()) {
-                     msgEl.textContent = "Code not found.";
-                     msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
-                     return;
-                }
-                
-                const targetUid = codeDoc.data().userId;
-                
-                // 2. Crucial: Double check if the target user profile exists/is valid
-                const targetProfileSnap = await getDoc(getUserProfileDocRef(targetUid));
-                if (!targetProfileSnap.exists()) {
-                    msgEl.textContent = "Target user profile corrupted or missing.";
-                    msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
-                    return;
-                }
-
-                if (targetUid === auth.currentUser.uid) {
-                     msgEl.textContent = "You can't add yourself.";
-                     msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
-                     return;
-                }
-
-                if (CURRENT_FRIENDS.includes(targetUid)) {
-                     msgEl.textContent = "Already friends.";
-                     msgEl.className = "text-xs mt-2 min-h-[16px] text-yellow-500";
-                     return;
-                }
-                
-                if (BLOCKED_USERS.includes(targetUid)) {
-                     msgEl.textContent = "Cannot send request to a blocked user.";
-                     msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
-                     return;
-                }
-                
-                const targetData = targetProfileSnap.data();
-                if ((targetData.pending_requests || []).includes(auth.currentUser.uid)) {
-                     msgEl.textContent = "Request already sent.";
-                     msgEl.className = "text-xs mt-2 min-h-[16px] text-yellow-500";
-                     return;
-                }
-                
-                // Ensure target hasn't blocked us (if we had a way to know, but we don't need a direct check on client)
-
-                await updateDoc(doc(db, USERS_COLLECTION, targetUid), {
-                    pending_requests: arrayUnion(auth.currentUser.uid)
-                });
-                
-                msgEl.textContent = "Request sent!";
-                msgEl.className = "text-xs mt-2 min-h-[16px] text-green-500";
-                document.getElementById('friend-code-input').value = '';
-
-            } catch (e) {
-                console.error(e);
-                msgEl.textContent = "Error sending request.";
-                msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                slotsContainer.appendChild(div);
             }
         }
+        
+        // --- FEED LOGIC ---
+        async function renderFeed(snap) {
+            const feed = document.getElementById('photo-feed');
+            feed.innerHTML = '';
 
-        document.getElementById('add-friend-form').onsubmit = (e) => {
-            e.preventDefault();
-            const code = document.getElementById('friend-code-input').value.trim().toUpperCase(); // Ensure uppercase for consistency
-            if(code) sendFriendRequest(code);
+            // Collect post IDs and fetch necessary data (like comments count for the thumbnail)
+            const postDataPromises = [];
+            snap.forEach(d => {
+                const data = d.data();
+                if(BLOCKED_USERS.includes(data.creatorUid)) return; // Filter out blocked users
+                
+                // Directly use data from the snapshot, no separate fetch needed for comments/hearts
+                postDataPromises.push(new Promise(resolve => {
+                    resolve({
+                        id: d.id,
+                        title: data.title || "Daily Photo",
+                        imageBase64: data.imageBase64,
+                        creatorUsername: data.creatorUsername,
+                        heartsCount: data.hearts?.length || 0,
+                        commentsCount: data.comments?.length || 0
+                    });
+                }));
+            });
+
+            const posts = await Promise.all(postDataPromises);
+
+            if (posts.length === 0) {
+                 feed.innerHTML = `<p class="text-gray-500 text-lg text-center mt-10">${CURRENT_FEED_MODE === 'friends' ? 'No posts from your friends yet.' : 'The public feed is empty.'}</p>`;
+                 return;
+            }
+
+            posts.forEach(post => {
+                const photoEl = document.createElement('div');
+                photoEl.className = 'photo-thumbnail';
+                photoEl.setAttribute('onclick', `openPhotoModal('${post.id}')`);
+                photoEl.innerHTML = `
+                    <img src="${post.imageBase64}" alt="${post.title}" loading="lazy">
+                    <div class="overlay"></div>
+                    <div class="title-overlay flex justify-between items-center">
+                        <span class="truncate pr-2">${post.title}</span>
+                        <div class="flex gap-2 text-xs">
+                             <div class="flex items-center gap-1">
+                                <i class="fas fa-heart text-red-400"></i>
+                                <span class="font-mono">${formatCount(post.heartsCount)}</span>
+                             </div>
+                             <div class="flex items-center gap-1">
+                                <i class="fas fa-comment text-indigo-400"></i>
+                                <span class="font-mono">${formatCount(post.commentsCount)}</span>
+                             </div>
+                        </div>
+                    </div>
+                `;
+                feed.appendChild(photoEl);
+            });
+        }
+        
+        // Sets up the appropriate Firestore query listener for the feed
+        function setupFeed(mode, user) {
+            // Unsubscribe from previous listener if it exists
+            UNSUBSCRIBE_POSTS(); 
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Start of today
+            
+            let q;
+            if (mode === 'friends') {
+                const friends_or_self = [user.uid, ...CURRENT_FRIENDS];
+                
+                if (friends_or_self.length === 0) {
+                    document.getElementById('photo-feed').innerHTML = '<p class="text-gray-500 text-lg text-center mt-10">Add friends with a friend code to see their posts here!</p>';
+                     UNSUBSCRIBE_POSTS = () => {}; // No-op
+                     return; 
+                }
+                
+                q = query(
+                    DAILY_COLLECTION,
+                    where('status', '==', 'active'),
+                    where('creatorUid', 'in', friends_or_self),
+                    where('createdAt', '>=', today),
+                    orderBy('createdAt', 'desc')
+                );
+            } else if (mode === 'public') {
+                q = query(
+                    DAILY_COLLECTION,
+                    where('status', '==', 'active'),
+                    where('isPublic', '==', true),
+                    where('createdAt', '>=', today),
+                    orderBy('createdAt', 'desc'),
+                    limit(100)
+                );
+            } else {
+                // Default to friends feed if mode is unknown
+                return setupFeed('friends', user);
+            }
+
+            // Update feed toggle buttons
+            document.getElementById('feed-toggle-friends').classList.toggle('active', mode === 'friends');
+            document.getElementById('feed-toggle-friends').classList.toggle('btn-primary-override', mode === 'friends');
+            document.getElementById('feed-toggle-public').classList.toggle('active', mode === 'public');
+            document.getElementById('feed-toggle-public').classList.toggle('btn-primary-override', mode === 'public');
+            
+            UNSUBSCRIBE_POSTS = onSnapshot(q, renderFeed);
+        }
+
+        // --- FRIENDS LIST ---
+        window.filterFriends = (query) => {
+            const lowerQuery = query.toLowerCase();
+            let foundCount = 0;
+            document.querySelectorAll('#friends-list-items .compact-list-item').forEach(item => {
+                const name = item.dataset.username || '';
+                if (name.includes(lowerQuery)) {
+                    item.style.display = 'flex';
+                    foundCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            const title = document.getElementById('friends-list-title');
+            if (title) title.style.display = foundCount > 0 ? 'block' : 'none';
         };
 
-        window.handleRequest = async (targetUid, action) => {
-            const myUid = auth.currentUser.uid;
+        async function renderFriendsList() {
+            const fList = document.getElementById('friends-list-items');
+            fList.innerHTML = '';
             
-            const batch = writeBatch(db);
-            batch.update(doc(db, USERS_COLLECTION, myUid), { pending_requests: arrayRemove(targetUid) });
+            const searchContainer = document.getElementById('friends-section-wrapper');
+             if (!document.getElementById('friend-search-input')) {
+                const searchDiv = document.createElement('div');
+                searchDiv.id = "friend-search-container";
+                searchDiv.className = "mb-4";
+                searchDiv.innerHTML = `
+                    <input type="text" id="friend-search-input" placeholder="Search by Username..." class="w-full p-2 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-white thin-font" oninput="filterFriends(this.value)">
+                `;
+                searchContainer.insertBefore(searchDiv, searchContainer.querySelector('.compact-list-wrapper'));
+            }
 
-            if (action === 'accept') {
-                batch.update(doc(db, USERS_COLLECTION, myUid), { friends: arrayUnion(targetUid) });
-                batch.update(doc(db, USERS_COLLECTION, targetUid), { friends: arrayUnion(myUid) });
-            } 
+            const friends = CURRENT_FRIENDS;
+            const pending = (await getDoc(doc(db, USERS_COLLECTION, auth.currentUser.uid))).data()?.pending_requests || [];
+            
+            if (pending.length > 0) {
+                const pTitle = document.createElement('div');
+                pTitle.id = "requests-list-title";
+                pTitle.className = "p-2 text-xs font-bold text-indigo-400 uppercase tracking-widest border-b border-[#1a1a1a] mb-2";
+                pTitle.textContent = "REQUESTS";
+                fList.appendChild(pTitle);
+
+                const pendingSnaps = await Promise.all(pending.map(uid => getDoc(getUserProfileDocRef(uid))));
+                
+                pendingSnaps.forEach(s => {
+                    const name = s.data()?.username || `User ${s.id.substr(0,5)}...`;
+                    const uid = s.id;
+                    
+                    const div = document.createElement('div');
+                    div.className = "compact-list-item flex justify-between items-center";
+                    div.dataset.username = name.toLowerCase();
+                    div.innerHTML = `
+                        <span class="text-gray-400 text-sm truncate max-w-[150px]" title="${name}">${name}</span>
+                        <div class="flex gap-1">
+                            <button onclick="acceptFriendRequest('${uid}')" class="text-green-400 text-xs border border-green-900 px-2 py-0.5 rounded" title="Accept Request"><i class="fas fa-check"></i></button>
+                            <button onclick="rejectFriendRequest('${uid}')" class="text-red-400 text-xs border border-red-900 px-2 py-0.5 rounded" title="Reject Request"><i class="fas fa-times"></i></button>
+                        </div>
+                    `;
+                    fList.appendChild(div);
+                });
+
+                // Separator
+                const sep = document.createElement('div');
+                sep.className = "h-px bg-[#1a1a1a] my-2";
+                fList.appendChild(sep);
+            }
+
+            if (friends.length > 0) {
+                const fTitle = document.createElement('div');
+                fTitle.id = "friends-list-title";
+                fTitle.className = "p-2 text-xs font-bold text-white uppercase tracking-widest border-b border-[#1a1a1a] mb-2";
+                fTitle.textContent = "FRIENDS";
+                fList.appendChild(fTitle);
+
+                const friendSnaps = await Promise.all(friends.map(uid => getDoc(getUserProfileDocRef(uid))));
+                
+                friendSnaps.forEach(s => {
+                    const name = s.data()?.username || `User ${s.id.substr(0,5)}...`;
+                    const uid = s.id;
+                    
+                    const div = document.createElement('div');
+                    div.className = "compact-list-item flex justify-between items-center";
+                    div.dataset.username = name.toLowerCase();
+                    div.innerHTML = `
+                        <span class="text-gray-400 text-sm truncate max-w-[150px]" title="${name}">${name}</span>
+                        <div class="flex gap-1">
+                            <button onclick="viewFriendProfile('${uid}')" class="text-indigo-400 text-xs border border-indigo-900 px-2 py-0.5 rounded" title="View Profile"><i class="fas fa-user"></i></button>
+                            <button onclick="removeFriend('${uid}')" class="text-red-400 text-xs border border-red-900 px-2 py-0.5 rounded" title="Remove Friend"><i class="fas fa-user-minus"></i></button>
+                        </div>
+                    `;
+                    fList.appendChild(div);
+                });
+            }
+
+            if (friends.length === 0 && pending.length === 0) {
+                 fList.innerHTML = '<p class="text-gray-600 text-sm p-2">No friends or pending requests.</p>';
+            }
+        }
+        
+        // Friend Request Submission
+        document.getElementById('add-friend-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('friend-code-input');
+            const code = input.value.trim().toUpperCase();
+            const msgEl = document.getElementById('add-friend-message');
+            msgEl.textContent = '';
+            msgEl.className = "text-xs mt-2 min-h-[16px]";
+            input.value = '';
+
+            if (code.length !== 8) {
+                msgEl.textContent = "Friend code must be 8 characters.";
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                return;
+            }
+
+            const codeDoc = await getDoc(getFriendCodeDocRef(code));
+            if (!codeDoc.exists()) {
+                msgEl.textContent = "Code not found.";
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                return;
+            }
+
+            const targetUid = codeDoc.data().userId;
+            const currentUser = auth.currentUser;
+            
+            // Check if target user profile exists/is valid
+            const targetProfileSnap = await getDoc(getUserProfileDocRef(targetUid));
+            if (!targetProfileSnap.exists()) {
+                msgEl.textContent = "Target user profile corrupted or missing.";
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                return;
+            }
+
+            if (targetUid === auth.currentUser.uid) {
+                msgEl.textContent = "You can't add yourself.";
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                return;
+            }
+
+            if (CURRENT_FRIENDS.includes(targetUid)) {
+                msgEl.textContent = "Already friends.";
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-yellow-500";
+                return;
+            }
+            
+            if (BLOCKED_USERS.includes(targetUid)) {
+                msgEl.textContent = "Cannot send request. User is blocked.";
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                return;
+            }
+
+            const targetProfile = targetProfileSnap.data();
+            const pendingRequests = targetProfile.pending_requests || [];
+
+            if (pendingRequests.includes(currentUser.uid)) {
+                msgEl.textContent = "Request already sent.";
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-yellow-500";
+                return;
+            }
+            
+            try {
+                // Add current user's UID to target user's pending_requests array
+                await updateDoc(getUserProfileDocRef(targetUid), {
+                    pending_requests: arrayUnion(currentUser.uid)
+                });
+
+                msgEl.textContent = `Request sent to ${targetProfile.username || 'User'}.`;
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-green-500";
+            } catch (error) {
+                console.error("Error sending friend request:", error);
+                msgEl.textContent = "Failed to send request.";
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+            }
+        };
+
+        window.acceptFriendRequest = async (targetUid) => {
+            const myUid = auth.currentUser.uid;
+            const myRef = getUserProfileDocRef(myUid);
+            const targetRef = getUserProfileDocRef(targetUid);
+
+            const batch = writeBatch(db);
+            
+            // 1. Add target to my friends list
+            batch.update(myRef, {
+                friends: arrayUnion(targetUid),
+                pending_requests: arrayRemove(targetUid) // Remove from my pending list
+            });
+
+            // 2. Add me to target's friends list
+            batch.update(targetRef, {
+                friends: arrayUnion(myUid)
+            });
             
             await batch.commit();
+            
+            // Update local state and UI
+            CURRENT_FRIENDS.push(targetUid);
+            renderFriendsList();
+            setupFeed(CURRENT_FEED_MODE, auth.currentUser); // Refresh feed
+        };
+
+        window.rejectFriendRequest = async (targetUid) => {
+            const myRef = getUserProfileDocRef(auth.currentUser.uid);
+            await updateDoc(myRef, {
+                pending_requests: arrayRemove(targetUid)
+            });
+            renderFriendsList();
         };
 
         window.removeFriend = async (targetUid) => {
-            if(!confirm("Are you sure you want to unfriend this user?")) return;
+            if (!confirm("Are you sure you want to remove this friend?")) return;
+            
             const myUid = auth.currentUser.uid;
+            const myRef = getUserProfileDocRef(myUid);
+            const targetRef = getUserProfileDocRef(targetUid);
+
             const batch = writeBatch(db);
-            batch.update(doc(db, USERS_COLLECTION, myUid), { friends: arrayRemove(targetUid) });
-            batch.update(doc(db, USERS_COLLECTION, targetUid), { friends: arrayRemove(myUid) });
+            
+            // 1. Remove target from my friends list
+            batch.update(myRef, {
+                friends: arrayRemove(targetUid)
+            });
+
+            // 2. Remove me from target's friends list
+            batch.update(targetRef, {
+                friends: arrayRemove(myUid)
+            });
+            
             await batch.commit();
+
+            // Update local state and UI
+            CURRENT_FRIENDS = CURRENT_FRIENDS.filter(uid => uid !== targetUid);
+            renderFriendsList();
+            setupFeed(CURRENT_FEED_MODE, auth.currentUser); // Refresh feed
         };
+        
+        window.viewFriendProfile = async (targetUid) => {
+            // Placeholder for viewing a friend's profile page/modal
+            alert("Viewing profile for: " + (ALL_FRIEND_PROFILES.find(p => p.uid === targetUid)?.username || targetUid));
+        }
 
         // --- Blocked List Logic ---
         async function renderBlockedList() {
@@ -1568,8 +1607,84 @@
         }
         
         window.unblock = async (uid) => {
-             await updateDoc(doc(db, USERS_COLLECTION, auth.currentUser.uid), { blocked_users: arrayRemove(uid) });
+             const userRef = doc(db, USERS_COLLECTION, auth.currentUser.uid);
+             await updateDoc(userRef, {
+                 blocked_users: arrayRemove(uid)
+             });
+             BLOCKED_USERS = BLOCKED_USERS.filter(buid => buid !== uid);
+             renderBlockedList();
+             setupFeed(CURRENT_FEED_MODE, auth.currentUser); // Refresh feed
+        }
+
+
+        // --- FEED TOGGLE HANDLERS ---
+        document.getElementById('feed-toggle-friends').onclick = () => {
+            CURRENT_FEED_MODE = 'friends';
+            setupFeed('friends', auth.currentUser);
         };
+        
+        document.getElementById('feed-toggle-public').onclick = () => {
+            if(localStorage.getItem('public_agreed')) {
+                CURRENT_FEED_MODE = 'public';
+                setupFeed('public', auth.currentUser);
+            } else {
+                document.getElementById('disclaimer-modal').classList.remove('hidden', 'opacity-0');
+            }
+        };
+
+        // Disclaimer
+        document.getElementById('disclaimer-agree-checkbox').onchange = (e) => {
+            const btn = document.getElementById('disclaimer-confirm-btn');
+            btn.disabled = !e.target.checked;
+            btn.classList.toggle('opacity-50', !e.target.checked);
+            btn.classList.toggle('cursor-not-allowed', !e.target.checked);
+            
+            // Re-apply primary style when enabled (since we used the index.html style)
+            if (e.target.checked) {
+                btn.classList.remove('bg-purple-500/10');
+                btn.classList.add('bg-purple-500'); 
+            } else {
+                btn.classList.add('bg-purple-500/10');
+                btn.classList.remove('bg-purple-500'); 
+            }
+        };
+        
+        document.getElementById('disclaimer-confirm-btn').onclick = () => {
+            localStorage.setItem('public_agreed', 'true');
+            document.getElementById('disclaimer-modal').classList.add('hidden', 'opacity-0');
+            CURRENT_FEED_MODE = 'public';
+            setupFeed('public', auth.currentUser);
+        };
+        
+        document.getElementById('disclaimer-cancel-btn').onclick = () => document.getElementById('disclaimer-modal').classList.add('hidden', 'opacity-0');
+
+        // --- AUTH & INIT ---
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                await signInAnonymously(auth);
+                return;
+            }
+            
+            try {
+                // Show UI now that we have a user
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('messenger-ui').style.display = 'block';
+
+                await handleFriendCodeLogic(user);
+                await cleanupOldPosts(user);
+            } catch (e) {
+                console.error("Initialization error:", e);
+                // Handle critical init failure
+                document.getElementById('loading-screen').innerHTML = `<p class="text-red-500 text-lg">Failed to load: ${e.message}</p>`;
+            }
+        });
+        
+        // Initial state check for loading screen
+        if (auth.currentUser) {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('messenger-ui').style.display = 'block';
+        }
+        
     </script>
 </body>
 </html>
