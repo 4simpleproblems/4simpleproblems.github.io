@@ -1,5 +1,5 @@
 /**
- * ban-enforcer.js (v6.1 - Updated CSS/Action Button)
+ * ban-enforcer.js (v6.2 - Custom Styles & Spacing)
  *
  * This script protects the website by blocking interaction ONLY 
  * when the user's ban status is verified as true.
@@ -11,10 +11,11 @@
  * 4. Aggressive Interval Guard to prevent element deletion.
  * 5. Excludes 'messenger-v2.html' from enforcement.
  * 6. Uses !important for robust styling.
- * 7. Updated 'Review Policy' button style.
+ * 7. Enforces max font-weight of 400.
+ * 8. Adjusted spacing, home button size, and policy button tint.
  */
 
-console.log("Debug: ban-enforcer.js v6.1 loaded.");
+console.log("Debug: ban-enforcer.js v6.2 loaded.");
 
 // --- Global State ---
 let banGuardInterval = null;
@@ -34,6 +35,15 @@ let currentBanData = null;
         link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css';
         document.head.appendChild(link);
     }
+    
+    // Injecting style to limit font weight to 400 (max)
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #ban-enforcer-message *, #ban-enforcer-home-button, #ban-enforcer-policy-btn {
+            font-weight: 400 !important;
+        }
+    `;
+    document.head.appendChild(style);
 })();
 
 /**
@@ -75,28 +85,27 @@ function renderBanVisuals(banData) {
         banTimestamp = `on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
     }
 
+    // --- SPACING ADJUSTMENTS ---
+    // Original Spacing: 60px. New Spacing (half): 30px.
+    const spacing = '30px'; 
+    // Home Button Size: Original 50x50px. New: 60x60px.
+    const homeBtnSize = '60px'; 
+
     // Optional Link Button (e.g., for TOS)
     let actionButton = '';
     if (banData.link) {
-        /* * MODIFIED: New style to match the `btn-primary-override` aesthetic from notes.html.
-         * - Rounded corners: 1rem (like notes.html dropdown)
-         * - Background: Dark translucent blur (like notes.html active tab background)
-         * - Border: Thin white/light gray
-         * - Text: White/light gray
-         * - Hover: Red text/red border (matching the red theme of a ban)
-         */
          actionButton = `
-            <a id="ban-enforcer-policy-btn" href="${banData.link}" target="_blank" style="
+            <a id="ban-enforcer-policy-btn" href="legal.html#terms-of-service" target="_blank" style="
                 display: inline-flex !important;
                 align-items: center !important;
                 gap: 10px !important;
                 padding: 12px 24px !important;
-                background-color: rgba(79, 70, 229, 0.1) !important; /* Base: Dark/Indigo Translucent */
-                border: 1px solid #d1d5db !important; /* Base: Light Gray Border */
-                color: #d1d5db !important; /* Base: Light Gray Text */
+                background-color: rgba(239, 68, 68, 0.1) !important; /* Changed to Reddish Tint (from Indigo) */
+                border: 1px solid #d1d5db !important; 
+                color: #d1d5db !important; 
                 text-decoration: none !important;
-                border-radius: 1rem !important; /* Rounded Corners */
-                font-weight: 500 !important; /* Medium Weight */
+                border-radius: 1rem !important; 
+                font-weight: 400 !important; /* Set max font weight */
                 transition: all 0.2s !important;
                 margin-right: 10px !important;
                 pointer-events: auto !important;
@@ -110,14 +119,13 @@ function renderBanVisuals(banData) {
 
     // --- Create Elements Individually (Overlay) ---
 
-    // 1. Shield
+    // 1. Shield (No change)
     let shield = document.getElementById('ban-enforcer-shield');
     if (!shield) {
         shield = document.createElement('div');
         shield.id = 'ban-enforcer-shield';
         document.documentElement.appendChild(shield); // Append to HTML to cover everything
     }
-    // ADDED: !important to all styles
     shield.style.cssText = `
         position: fixed !important; top: 0 !important; left: 0 !important; 
         width: 100vw !important; height: 100vh !important;
@@ -133,22 +141,22 @@ function renderBanVisuals(banData) {
         messageBox.id = 'ban-enforcer-message';
         document.documentElement.appendChild(messageBox);
     }
-    // ADDED: !important to all styles
+    // CHANGED: bottom and left values to '30px'
     messageBox.style.cssText = `
-        position: fixed !important; bottom: 60px !important; left: 60px !important; 
+        position: fixed !important; bottom: ${spacing} !important; left: ${spacing} !important; 
         color: #ffffff !important;
         font-family: 'Geist', sans-serif !important; z-index: 2147483647 !important;
         text-align: left !important; text-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
     `;
     messageBox.innerHTML = `
-        <h1 style="font-size: 4rem !important; color: #ffffff !important; margin: 0 0 20px 0 !important; font-weight: 800 !important; line-height: 1 !important; white-space: nowrap !important;">Access Denied</h1>
-        <p style="font-size: 1.25rem !important; margin: 0 0 10px 0 !important; color: #ef4444 !important; font-weight: 500 !important;">Account Suspended</p>
+        <h1 style="font-size: 4rem !important; color: #ffffff !important; margin: 0 0 20px 0 !important; font-weight: 400 !important; line-height: 1 !important; white-space: nowrap !important;">Access Denied</h1>
+        <p style="font-size: 1.25rem !important; margin: 0 0 10px 0 !important; color: #ef4444 !important; font-weight: 400 !important;">Account Suspended</p>
         <div style="width: 50px !important; height: 4px !important; background-color: #ef4444 !important; margin-bottom: 20px !important;"></div>
-        <p style="font-size: 1rem !important; margin: 0 0 10px 0 !important; color: #d1d5db !important; max-width: 500px !important; line-height: 1.6 !important;">
+        <p style="font-size: 1rem !important; margin: 0 0 10px 0 !important; color: #d1d5db !important; max-width: 500px !important; line-height: 1.6 !important; font-weight: 400 !important;">
             <strong>Reason:</strong> ${reason}
         </p>
         ${actionButton ? `<div style="margin-top: 20px !important;">${actionButton}</div>` : ''}
-        <p style="font-size: 0.85rem !important; color: #6b7280 !important; margin-top: 20px !important;">
+        <p style="font-size: 0.85rem !important; color: #6b7280 !important; margin-top: 20px !important; font-weight: 400 !important;">
             Banned by administrator ${banTimestamp}.<br>
             ID: ${banData.uid || 'UNKNOWN'}
         </p>
@@ -163,20 +171,20 @@ function renderBanVisuals(banData) {
         homeButton.innerHTML = `<i class="fa-solid fa-house"></i>`;
         document.documentElement.appendChild(homeButton);
     }
-    // ADDED: !important to all styles
+    // CHANGED: bottom and right values to '30px', width/height to '60px'
     homeButton.style.cssText = `
-        position: fixed !important; bottom: 60px !important; right: 60px !important; z-index: 2147483647 !important;
+        position: fixed !important; bottom: ${spacing} !important; right: ${spacing} !important; z-index: 2147483647 !important;
         display: inline-flex !important; align-items: center !important; justify-content: center !important;
         padding: 0.5rem 1rem !important; background-color: transparent !important;
         border: 1px solid #333 !important; border-radius: 0.75rem !important; color: #d1d5db !important;
         font-size: 20px !important; text-decoration: none !important; cursor: pointer !important;
-        transition: all 0.2s !important; width: 50px !important; height: 50px !important; pointer-events: auto !important;
+        transition: all 0.2s !important; width: ${homeBtnSize} !important; height: ${homeBtnSize} !important; pointer-events: auto !important;
+        font-weight: 400 !important; /* Set max font weight */
     `;
-    // ADDED: !important to hover styles
     homeButton.onmouseover = () => { homeButton.style.backgroundColor = '#000 !important'; homeButton.style.borderColor = '#fff !important'; homeButton.style.color = '#fff !important'; };
     homeButton.onmouseout = () => { homeButton.style.backgroundColor = 'transparent !important'; homeButton.style.borderColor = '#333 !important'; homeButton.style.color = '#d1d5db !important'; };
 
-    // 4. Lock Scrolling
+    // 4. Lock Scrolling (No change)
     document.documentElement.style.overflow = 'hidden !important';
     document.body.style.overflow = 'hidden !important';
     
@@ -225,7 +233,7 @@ function lockPageAsBanned(banData) {
     }, 200); // Check every 200ms
 }
 
-// --- 3. Auth & Firestore Listener ---
+// --- 3. Auth & Firestore Listener (No change) ---
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- EXCLUSION CHECK ---
