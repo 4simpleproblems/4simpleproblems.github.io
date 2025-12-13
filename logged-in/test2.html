@@ -545,13 +545,18 @@
         async function cleanText(text) {
             if(!text) return "";
             try {
-                // Switched to profanity.dev API
-                const res = await fetch(`https://api.profanity.dev/api/v1/json?text=${encodeURIComponent(text)}`);
+                // Use the specified profanity.dev API endpoint for censoring
+                const res = await fetch('https://vector.profanity.dev', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text }),
+                });
                 const data = await res.json();
-                // Assuming 'cleanText' is the key for the cleaned string
-                return data.cleanText || text; 
-            } catch {
-                return text;
+                // The API should return an object with a 'clean' field containing the censored text
+                return data.clean || text; 
+            } catch (error) {
+                console.error("Profanity check failed:", error);
+                return text; // Return original text on API failure
             }
         }
         
@@ -601,11 +606,13 @@
 
                 // Ensure profile exists with basic fields if it's new-ish or incomplete
                 const profileData = userProfileSnap.exists() ? userProfileSnap.data() : {};
-                CURRENT_USERNAME = profileData.username || 'User';
+                
+                // IMPORTANT: Clean the username before setting CURRENT_USERNAME
+                CURRENT_USERNAME = await cleanText(profileData.username || 'User');
 
                 if (!userProfileSnap.exists() || profileData.friends === undefined || profileData.dailySlotsUsed === undefined || profileData.lastPostReset === undefined || profileData.pending_requests === undefined) {
                     await setDoc(userProfileRef, {
-                        username: profileData.username || 'User',
+                        username: CURRENT_USERNAME, // Use cleaned username
                         friends: profileData.friends || [],
                         dailySlotsUsed: profileData.dailySlotsUsed || [],
                         lastPostReset: profileData.lastPostReset || serverTimestamp(),
@@ -771,17 +778,27 @@
             UNSUBSCRIBE_MODAL(); 
             document.removeEventListener('click', closeMenuHandler); // Clean up any lingering emoji menu handler
             
-            UNSUBSCRIBE_MODAL = onSnapshot(doc(DAILY_COLLECTION, photoId), (snap) => {
+            UNSUBSCRIBE_MODAL = onSnapshot(doc(DAILY_COLLECTION, photoId), async (snap) => {
                 if (!snap.exists()) { modal.classList.add('hidden'); return; }
                 const data = snap.data();
                 if (data.status === 'hidden') { modal.classList.add('hidden'); return; }
 
                 const currentUser = auth.currentUser;
                 const hearts = data.hearts || [];
-                const comments = (data.comments || []).sort((a,b) => (a.timestamp?.toDate() || 0) - (b.timestamp?.toDate() || 0));
+                // Censor comments before rendering
+                const comments = await Promise.all((data.comments || []).map(async c => ({
+                    ...c,
+                    username: await cleanText(c.username), // Censor usernames in comments
+                    text: await cleanText(c.text), // Censor comment text
+                }))).then(censoredComments => censoredComments.sort((a,b) => (a.timestamp?.toDate() || 0) - (b.timestamp?.toDate() || 0)));
+                
                 const isHearted = hearts.includes(currentUser.uid);
                 const isOwner = data.creatorUid === currentUser.uid;
 
+                // Censor title and creatorUsername before rendering
+                const censoredTitle = await cleanText(data.title || 'Untitled');
+                const censoredCreatorUsername = await cleanText(data.creatorUsername);
+                
                 // Render Modal Content
                 container.innerHTML = `
                     <div id="photo-display-area">
@@ -792,8 +809,8 @@
                         
                         <div class="modal-header mt-6">
                             <div class="modal-title-box">
-                                <h2 class="text-xl text-white font-normal truncate" title="${data.title}">${data.title || 'Untitled'}</h2>
-                                <p class="text-sm text-indigo-400 font-bold">${data.creatorUsername}</p>
+                                <h2 class="text-xl text-white font-normal truncate" title="${censoredTitle}">${censoredTitle}</h2>
+                                <p class="text-sm text-indigo-400 font-bold">${censoredCreatorUsername}</p>
                             </div>
                             <div class="modal-actions-box">
                                 <button id="heart-btn" class="text-2xl transition-colors ${isHearted ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}" title="${isHearted ? 'Unlike' : 'Like'}">
@@ -853,7 +870,7 @@
                 const photoArea = document.getElementById('photo-display-area');
                 PHOTO_DISPLAY_MODE = 0; 
                 photoArea.onclick = () => {
-                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 2;
+                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 3;
                     if (PHOTO_DISPLAY_MODE === 0) {
                         // Default: Limited by both (cover)
                         photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
@@ -1054,12 +1071,17 @@
                     if (!PENDING_FILE || !auth.currentUser) return;
 
                     const ref = doc(DAILY_COLLECTION);
+                    
+                    // Censor fields before posting to the database
+                    const censoredUsername = await cleanText(username);
+                    const censoredTitle = await cleanText(desc) || "Daily Photo";
+
                     await setDoc(ref, {
                         creatorUid: auth.currentUser.uid,
-                        creatorUsername: await cleanText(username),
+                        creatorUsername: censoredUsername, // Use censored username
                         createdAt: serverTimestamp(),
                         imageBase64: imgData,
-                        title: await cleanText(desc) || "Daily Photo",
+                        title: censoredTitle, // Use censored title
                         hearts: [],
                         comments: [],
                         isPublic: isPublic,
@@ -1099,10 +1121,14 @@
                 if(BLOCKED_USERS.includes(data.creatorUid)) return; 
                 
                 // Directly use data from the snapshot, no separate fetch needed for comments/hearts
-                postDataPromises.push(new Promise(resolve => {
+                postDataPromises.push(new Promise(async (resolve) => {
+                    // Censor the title before rendering to the thumbnail
+                    const censoredTitle = await cleanText(data.title || 'Untitled');
+                    
                     resolve({
                         id: d.id,
                         ...data,
+                        title: censoredTitle, // Use the censored title
                         commentCount: data.comments?.length || 0,
                         heartCount: data.hearts?.length || 0
                     });
@@ -1209,9 +1235,10 @@
 
                  const pendingSnaps = await Promise.all(pending.map(uid => getDoc(doc(db, USERS_COLLECTION, uid))));
 
-                 pendingSnaps.forEach(s => {
+                 pendingSnaps.forEach(async s => {
                      const uid = s.id;
-                     const pName = s.data()?.username || 'Unknown';
+                     // Censor username before rendering
+                     const pName = await cleanText(s.data()?.username || 'Unknown');
                      const el = document.createElement('div');
                      el.className = "compact-list-item flex justify-between items-center bg-indigo-900/10 border border-indigo-900/30 mb-1";
                      el.innerHTML = `
@@ -1237,8 +1264,9 @@
                     fList.appendChild(fTitle);
                 }
 
-                ALL_FRIEND_PROFILES.forEach(p => {
-                     const name = p.username || 'Unknown';
+                ALL_FRIEND_PROFILES.forEach(async p => {
+                     // Censor username before rendering
+                     const name = await cleanText(p.username || 'Unknown');
                      const div = document.createElement('div');
                      div.className = "compact-list-item friend-item flex justify-between";
                      div.dataset.username = name.toLowerCase();
@@ -1325,7 +1353,8 @@
             
             onSnapshot(userRef, async (snap) => {
                 const d = snap.data() || {};
-                CURRENT_USERNAME = d.username || 'User';
+                // Censor username before assigning
+                CURRENT_USERNAME = await cleanText(d.username || 'User');
                 const friends = d.friends || [];
                 const pending = d.pending_requests || [];
                 BLOCKED_USERS = d.blocked_users || [];
@@ -1341,7 +1370,13 @@
                 }
 
                 const friendSnaps = await Promise.all(friends.map(uid => getDoc(doc(db, USERS_COLLECTION, uid))));
-                ALL_FRIEND_PROFILES = friendSnaps.map(s => ({ id: s.id, ...s.data() }));
+                
+                // Censor all friend usernames for display
+                ALL_FRIEND_PROFILES = await Promise.all(friendSnaps.map(async s => ({ 
+                    id: s.id, 
+                    ...s.data(), 
+                    username: await cleanText(s.data()?.username || 'Unknown') 
+                })));
 
                 if (!document.getElementById('friends-section-wrapper').classList.contains('hidden')) {
                     await renderFriendsList(); 
@@ -1370,7 +1405,8 @@
                             `;
                         } else {
                             // AVAILABLE
-                            const title = postDoc.data()?.title || `Photo ${i+1}`;
+                            // Censor the title before rendering
+                            const title = await cleanText(postDoc.data()?.title || `Photo ${i+1}`);
                             div.innerHTML = `
                                 <span class="text-gray-300 text-sm truncate max-w-[150px] cursor-pointer hover:text-indigo-400" onclick="openPhotoModal('${postId}')" title="${title}">${title}</span>
                                 <div class="flex gap-1">
@@ -1551,8 +1587,9 @@
             
             const blockedUserSnaps = await Promise.all(BLOCKED_USERS.map(uid => getDoc(doc(db, USERS_COLLECTION, uid))));
             
-            blockedUserSnaps.forEach(s => {
-                const name = s.data()?.username || `User ${s.id.substr(0,5)}...`;
+            blockedUserSnaps.forEach(async s => {
+                // Censor username before rendering
+                const name = await cleanText(s.data()?.username || `User ${s.id.substr(0,5)}...`);
                 const uid = s.id;
                 
                 const div = document.createElement('div');
