@@ -866,7 +866,7 @@
                         <div class="modal-header">
                             <div class="modal-title-box">
                                 <label class="text-xs text-gray-500 mb-1 block">Username</label>
-                                <input type="text" id="create-username" class="w-full bg-transparent border-b border-[#333] text-indigo-400 font-bold outline-none mb-2" value="${CURRENT_USERNAME}" placeholder="Enter Username">
+                                <input type="text" id="create-username" class="w-full bg-transparent border-b border-[#333] text-gray-500 font-bold outline-none mb-2 cursor-not-allowed" value="${CURRENT_USERNAME}" disabled readonly>
                             </div>
                             <div class="modal-actions-box opacity-50 cursor-not-allowed">
                                 <i class="fas fa-heart text-gray-600 text-2xl"></i>
@@ -874,18 +874,25 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="text-xs text-gray-500 mb-1 block">Caption (Title)</label>
-                            <textarea id="create-description" class="w-full bg-black border border-[#333] rounded p-2 text-white outline-none h-20 resize-none" maxlength="150" placeholder="Write a caption..."></textarea>
+                            <label class="text-xs text-gray-500 mb-1 block">Title</label>
+                            <textarea id="create-description" class="w-full bg-black border border-[#333] rounded p-2 text-white outline-none h-20 resize-none" maxlength="150" placeholder="Write a title..."></textarea>
                         </div>
                         
-                        <div class="mt-4 flex gap-2 mb-4">
-                            <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-400">
-                                <input type="checkbox" id="create-public" class="rounded bg-black border-gray-700">
-                                Public Post?
-                            </label>
+                        <div class="mb-4 flex-grow border border-[#1a1a1a] rounded p-3 bg-black/50 overflow-hidden relative min-h-[100px]">
+                             <div class="absolute inset-0 flex items-center justify-center text-gray-700 text-xs uppercase tracking-widest pointer-events-none select-none">Comments Section</div>
+                             <div class="opacity-20 blur-[1px] select-none pointer-events-none">
+                                 <div class="mb-2 text-sm"><span class="text-indigo-400 font-bold">Friend</span> <span class="text-gray-400">Nice photo!</span></div>
+                                 <div class="mb-2 text-sm"><span class="text-indigo-400 font-bold">User</span> <span class="text-gray-400">Cool!</span></div>
+                             </div>
                         </div>
 
-                        <button id="confirm-post-btn" class="btn-toolbar-style btn-primary-override w-full mt-auto" style="height: 50px;">
+                        <div class="mt-auto mb-3">
+                             <button id="public-toggle-btn" class="btn-toolbar-style w-full justify-center" style="height: 50px;" data-public="false">
+                                <i class="fas fa-user-friends"></i> <span>Friends Only</span>
+                            </button>
+                        </div>
+
+                        <button id="confirm-post-btn" class="btn-toolbar-style btn-primary-override w-full" style="height: 50px;">
                             <i class="fas fa-paper-plane"></i> Post
                         </button>
                     </div>
@@ -905,6 +912,22 @@
                     }
                 };
                 
+                const toggleBtn = document.getElementById('public-toggle-btn');
+                toggleBtn.onclick = () => {
+                    const isPublic = toggleBtn.dataset.public === 'true';
+                    if (isPublic) {
+                        // Switch to Friends
+                        toggleBtn.dataset.public = 'false';
+                        toggleBtn.innerHTML = '<i class="fas fa-user-friends"></i> <span>Friends Only</span>';
+                        toggleBtn.classList.remove('btn-primary-override');
+                    } else {
+                        // Switch to Public
+                        toggleBtn.dataset.public = 'true';
+                        toggleBtn.innerHTML = '<i class="fas fa-globe"></i> <span>Public</span>';
+                        toggleBtn.classList.add('btn-primary-override');
+                    }
+                };
+                
                 document.getElementById('cancel-create-btn').onclick = () => { modal.classList.add('hidden'); PENDING_FILE = null; };
 
                 document.getElementById('confirm-post-btn').onclick = async () => {
@@ -914,7 +937,7 @@
 
                     const desc = document.getElementById('create-description').value.trim();
                     const username = document.getElementById('create-username').value;
-                    const isPublic = document.getElementById('create-public').checked;
+                    const isPublic = document.getElementById('public-toggle-btn').dataset.public === 'true';
                     
                     if (!PENDING_FILE || !auth.currentUser) return;
 
