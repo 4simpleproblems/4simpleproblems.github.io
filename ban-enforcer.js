@@ -1,5 +1,5 @@
 /**
- * ban-enforcer.js (v6.3 - Robust Logging & Ban Logic)
+ * ban-enforcer.js (v6.4 - Robust Firebase Auth Check)
  *
  * This script protects the website by blocking interaction ONLY 
  * when the user's ban status is verified as true.
@@ -12,10 +12,10 @@
  * 5. Excludes 'messenger-v2.html' from enforcement.
  * 6. Uses !important for robust styling.
  * 7. Enforces max font-weight of 400.
- * 8. ADJUSTED: Added extensive console logging for debugging.
+ * 8. FIX: Robust initialization checks for firebase.auth.
  */
 
-console.log("BanEnforcer (v6.3): Script loaded.");
+console.log("BanEnforcer (v6.4): Script loaded.");
 
 // --- Global State ---
 let banGuardInterval = null;
@@ -253,6 +253,10 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(`BanEnforcer: Current path (${path}) is not excluded. Proceeding.`);
 
 
+    /**
+     * Waits for the Firestore library to be available.
+     * @param {function} callback - Function to call with the Firestore instance.
+     */
     const waitForFirestore = (callback) => {
         console.log("BanEnforcer: Waiting for Firebase Firestore to be available...");
         const maxRetries = 100;
@@ -273,13 +277,13 @@ document.addEventListener('DOMContentLoaded', () => {
         check();
     };
 
+    /**
+     * Initializes the Firebase Authentication and Firestore listener.
+     */
     const initListener = () => {
-        if (typeof firebase === 'undefined' || !firebase.auth) {
-            console.error("BanEnforcer Error: Firebase or Firebase Auth is undefined. Cannot initialize listener.");
-            return;
-        }
-
+        // At this point, firebase.auth is guaranteed to exist by waitForAuth
         console.log("BanEnforcer: Initializing firebase.auth().onAuthStateChanged listener...");
+        
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 console.log(`BanEnforcer Auth: User logged in. UID: ${user.uid}. Starting Firestore check.`);
@@ -304,18 +308,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    /**
+     * Waits specifically for firebase.auth to be defined before calling initListener.
+     */
+    const waitForAuth = (callback) => {
+        console.log("BanEnforcer: Waiting for Firebase Auth to be available...");
+        const maxRetries = 100;
+        let attempts = 0;
+        const check = () => {
+            if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function') {
+                 console.log(`BanEnforcer Auth: Firebase Auth available after ${attempts} attempts. Proceeding to listener setup.`);
+                 callback();
+            } else {
+                attempts++;
+                if (attempts < maxRetries) {
+                    setTimeout(check, 50);
+                } else {
+                    console.error("BanEnforcer Error: Failed to find firebase.auth after max retries. Check library loading order.");
+                }
+            }
+        };
+        check();
+    };
+
+
     // Initialize
     const attemptInit = () => {
         if (typeof firebase !== 'undefined') {
-            console.log("BanEnforcer Init: Firebase object found immediately. Starting listener initialization.");
-            initListener();
+            console.log("BanEnforcer Init: Firebase object found immediately. Starting Auth check.");
+            waitForAuth(initListener);
         } else {
-            console.warn("BanEnforcer Init: Firebase object not found immediately. Starting retry loop.");
+            console.warn("BanEnforcer Init: Firebase object not found immediately. Starting core retry loop.");
             const checkFirebase = setInterval(() => {
                 if (typeof firebase !== 'undefined') {
                     clearInterval(checkFirebase);
-                    console.log("BanEnforcer Init: Firebase object found in retry loop. Starting listener initialization.");
-                    initListener();
+                    console.log("BanEnforcer Init: Firebase core object found in retry loop. Starting Auth check.");
+                    waitForAuth(initListener);
                 }
             }, 50);
         }
