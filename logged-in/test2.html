@@ -552,7 +552,8 @@
                     body: JSON.stringify({ message: text }),
                 });
                 const data = await res.json();
-                // The API should return an object with a 'clean' field containing the censored text
+                // The API should return an object with a 'clean' field containing the censored text.
+                // We ensure it returns the clean text, or the original text on failure.
                 return data.clean || text; 
             } catch (error) {
                 console.error("Profanity check failed:", error);
