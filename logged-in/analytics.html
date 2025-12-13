@@ -385,7 +385,7 @@
         const formatDate = (timestamp) => {
             if (!timestamp) return 'Unknown';
             const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            return date.toLocaleDateString();
+            return date.toLocaleString();
         };
 
         const renderTable = (users) => {
