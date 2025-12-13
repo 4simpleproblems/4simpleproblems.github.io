@@ -528,6 +528,9 @@
 
         // --- HELPER FUNCTIONS ---
 
+        const getUserProfileDocRef = (userId) => doc(db, 'users', userId);
+        const getFriendCodeDocRef = (code) => doc(db, 'friend_codes', code);
+
         function formatCount(num) {
             if (typeof num !== 'number') return '0';
             if (num >= 1000) {
@@ -544,6 +547,111 @@
                 return data.result || text;
             } catch {
                 return text;
+            }
+        }
+        
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800; 
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(ctx.canvas.toDataURL('image/jpeg', 0.8));
+                    };
+                    img.onerror = reject;
+                };
+                reader.onerror = reject;
+            });
+        }
+
+        async function generateUniqueFriendCode() {
+            let code, isUnique = false;
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            try {
+                while (!isUnique) {
+                    code = Array.from({ length: 8 }, () => characters.charAt(Math.floor(Math.random() * characters.length))).join('');
+                    const codeDoc = await getDoc(getFriendCodeDocRef(code));
+                    if (!codeDoc.exists()) isUnique = true;
+                }
+                return code;
+            } catch (error) {
+                console.error("Error generating friend code:", error);
+                throw new Error("Failed to generate unique friend code.");
+            }
+        }
+
+        async function handleFriendCodeLogic(user) {
+            try {
+                const userProfileRef = getUserProfileDocRef(user.uid);
+                let userProfileSnap = await getDoc(userProfileRef);
+
+                if (!userProfileSnap.exists() || !userProfileSnap.data()?.username) {
+                    // Profile might not exist, but we should handle it gracefully or rely on other parts to create it?
+                    // actually dailyphoto logic creates default fields if missing.
+                }
+                
+                // Ensure profile exists with basic fields if it's new-ish
+                const profileData = userProfileSnap.exists() ? userProfileSnap.data() : {};
+                CURRENT_USERNAME = profileData.username || 'User';
+
+                if (!userProfileSnap.exists() || profileData.friends === undefined || profileData.dailySlotsUsed === undefined || profileData.lastPostReset === undefined || profileData.pending_requests === undefined) {
+                    await setDoc(userProfileRef, {
+                        username: profileData.username || 'User',
+                        friends: profileData.friends || [],
+                        dailySlotsUsed: profileData.dailySlotsUsed || [],
+                        lastPostReset: profileData.lastPostReset || serverTimestamp(),
+                        pending_requests: profileData.pending_requests || []
+                    }, { merge: true });
+                }
+
+                const codeQuery = query(collection(db, 'friend_codes'), where('userId', '==', user.uid), limit(1));
+                const codeQuerySnap = await getDocs(codeQuery);
+                
+                let existingCode = codeQuerySnap.empty ? null : codeQuerySnap.docs[0].id;
+                if (!existingCode) {
+                    document.getElementById('friend-code-display').textContent = 'Generating...';
+                    existingCode = await generateUniqueFriendCode();
+                    await setDoc(getFriendCodeDocRef(existingCode), { userId: user.uid, createdAt: serverTimestamp() });
+                }
+                document.getElementById('friend-code-display').textContent = existingCode;
+            } catch (error) {
+                console.error("Profile/Friend Code Setup Failed:", error);
+            }
+        }
+
+        async function cleanupOldPosts(user) {
+            try {
+                const now = new Date();
+                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const userProfileRef = getUserProfileDocRef(user.uid);
+                const userProfileSnap = await getDoc(userProfileRef);
+                const lastReset = userProfileSnap.data()?.lastPostReset?.toDate() || new Date(0);
+                
+                if (lastReset < startOfToday) {
+                    await updateDoc(userProfileRef, { dailySlotsUsed: [], lastPostReset: serverTimestamp() });
+                    console.log("Daily post slots reset for new day.");
+                }
+
+                // Also clean up any actual documents that are old (optional but good for DB hygiene)
+                // dailyphoto does this, so we will too.
+                const oldPostsQuery = query(DAILY_COLLECTION, where('createdAt', '<', startOfToday), limit(50));
+                const snapshot = await getDocs(oldPostsQuery);
+                if (snapshot.empty) return;
+
+                const batch = writeBatch(db);
+                snapshot.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+            } catch (error) {
+                console.warn("Post cleanup failed:", error);
             }
         }
 
@@ -748,9 +856,7 @@
             const modal = document.getElementById('photo-modal');
             modal.classList.remove('hidden');
 
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const imgData = ev.target.result;
+            compressImage(file).then(imgData => {
                 container.innerHTML = `
                     <div id="photo-display-area">
                          <img src="${imgData}" class="photo-modal-img">
@@ -839,8 +945,10 @@
                     modal.classList.add('hidden');
                     PENDING_FILE = null;
                 };
-            };
-            reader.readAsDataURL(file);
+            }).catch(err => {
+                console.error("Compression failed", err);
+                alert("Failed to process image.");
+            });
         };
 
         // --- FEED LOGIC ---
@@ -1045,6 +1153,13 @@
                 return;
             }
 
+            try {
+                await handleFriendCodeLogic(user);
+                await cleanupOldPosts(user);
+            } catch (e) {
+                console.error("Initialization error:", e);
+            }
+
             document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('messenger-ui').style.display = 'block';
 
@@ -1077,41 +1192,10 @@
                     await renderFriendsList(); 
                 }
                 
-                // --- DAILY SLOTS & CLEANUP LOGIC ---
+                // --- DAILY SLOTS ---
                 const slotsContainer = document.getElementById('daily-posts-container');
                 const used = d.dailySlotsUsed || [];
                 slotsContainer.innerHTML = '';
-
-                // 1. Check for old posts and clean them up
-                const today = new Date(); today.setHours(0,0,0,0);
-                let needsReset = false;
-                
-                // We check the first valid post we find. If it's old, we assume the day changed.
-                for(let pid of used) {
-                    if(pid && pid !== 'DELETED') {
-                        const pDoc = await getDoc(doc(DAILY_COLLECTION, pid));
-                        if(pDoc.exists()) {
-                            const pDate = pDoc.data().createdAt.toDate();
-                            if(pDate < today) {
-                                needsReset = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if(needsReset) {
-                    // Delete all old posts from DB and reset slots
-                    const batch = writeBatch(db);
-                    for(let pid of used) {
-                        if(pid && pid !== 'DELETED') {
-                            batch.delete(doc(DAILY_COLLECTION, pid));
-                        }
-                    }
-                    batch.update(userRef, { dailySlotsUsed: [] }); // Clear slots
-                    await batch.commit();
-                    return; // The snapshot will trigger again with empty slots
-                }
 
                 // 2. Render Slots
                 for(let i=0; i<5; i++) {
@@ -1153,15 +1237,16 @@
                 }
             });
             
-            // Friend Code Display (New System)
+            // Friend Code Display
+            // Logic handled in handleFriendCodeLogic now, but we need to ensure the element is updated if already loaded.
             const codeQ = query(collection(db, 'friend_codes'), where('userId', '==', user.uid), limit(1));
-            getDocs(codeQ).then(s => {
-                if(!s.empty) document.getElementById('friend-code-display').textContent = s.docs[0].id;
-                else document.getElementById('friend-code-display').textContent = "GEN-ERR"; 
-            });
+            const codeSnap = await getDocs(codeQ);
+             if(!codeSnap.empty) document.getElementById('friend-code-display').textContent = codeSnap.docs[0].id;
+             else if (document.getElementById('friend-code-display').textContent === 'LOADING') document.getElementById('friend-code-display').textContent = "GEN-ERR";
+            
             document.getElementById('friend-code-display').onclick = () => {
                  const code = document.getElementById('friend-code-display').textContent;
-                 if(code !== 'LOADING' && code !== 'GEN-ERR') {
+                 if(code !== 'LOADING' && code !== 'GEN-ERR' && code !== 'Generating...') {
                      navigator.clipboard.writeText(code);
                      alert('Friend Code copied!');
                  }
