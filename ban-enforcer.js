@@ -117,7 +117,7 @@ function renderBanVisuals(banData) {
                 backdrop-filter: blur(5px) !important;
                 -webkit-backdrop-filter: blur(5px) !important;
             ">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> Review Policy
+                <i class="fa-solid fa-square-arrow-up-right"></i> Review Policy
             </a>
          `;
     }
