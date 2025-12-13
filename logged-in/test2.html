@@ -871,12 +871,12 @@
                 PHOTO_DISPLAY_MODE = 0; 
                 photoArea.onclick = () => {
                     PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 2;
-                    if (PHOTO_DISPLAY_MODE === 0) {
+                    if (PHOTO_DISPLAY_MODE === 1) {
                         // Default: Limited by both (cover)
-                        photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'contain';
-                    } else if (PHOTO_DISPLAY_MODE === 1) {
+                        photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
+                    } else if (PHOTO_DISPLAY_MODE === 0) {
                         // 1st Click: Limited only by height (contain, fills height)
-                        photoImg.style.width = 'auto'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
+                        photoImg.style.width = 'auto'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'contain';
                     }
                 };
 
