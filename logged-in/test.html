@@ -545,9 +545,11 @@
         async function cleanText(text) {
             if(!text) return "";
             try {
-                const res = await fetch(`https://www.purgomalum.com/service/json?text=${encodeURIComponent(text)}`);
+                // Switched to profanity.dev API
+                const res = await fetch(`https://api.profanity.dev/api/v1/json?text=${encodeURIComponent(text)}`);
                 const data = await res.json();
-                return data.result || text;
+                // Assuming 'cleanText' is the key for the cleaned string
+                return data.cleanText || text; 
             } catch {
                 return text;
             }
@@ -696,12 +698,13 @@
         // Reusable Emoji Picker Logic (For Post Title and Comments)
         let closeMenuHandler = () => {};
         
-        function setupEmojiPicker(triggerId, inputId, menuId, closeBtnId) {
+        // Updated to accept all unique IDs
+        function setupEmojiPicker(triggerId, inputId, menuId, closeBtnId, listId, searchId) {
             const menu = document.getElementById(menuId);
-            const list = menu.querySelector('#emoji-list');
+            const list = document.getElementById(listId);
             const input = document.getElementById(inputId);
             const trigger = document.getElementById(triggerId);
-            const search = menu.querySelector('#emoji-search');
+            const search = document.getElementById(searchId);
             const closeBtn = document.getElementById(closeBtnId);
             
             if(!menu || !list || !input || !trigger || !search || !closeBtn) return;
@@ -719,10 +722,10 @@
                     btn.type = 'button'; // Prevent form submission
                     btn.onclick = (e) => {
                         e.stopPropagation();
-                        input.value += emoji;
+                        // Insert the emoji at the end of the input's current value
+                        input.value += emoji; 
                         // Focus the input after adding emoji
                         input.focus(); 
-                        menu.classList.add('hidden');
                     };
                     list.appendChild(btn);
                 });
@@ -831,7 +834,7 @@
                                         <input type="text" id="comment-emoji-search" placeholder="Search..." class="bg-[#1a1a1a] border-none rounded text-xs p-1.5 text-white w-full mr-2 outline-none">
                                         <button id="comment-close-emoji-menu" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
                                     </div>
-                                    <div id="emoji-list" class="flex-grow overflow-y-auto p-2 grid grid-cols-6 gap-1">
+                                    <div id="comment-emoji-list" class="flex-grow overflow-y-auto p-2 grid grid-cols-6 gap-1">
                                         </div>
                                 </div>
                             </div>
@@ -842,20 +845,20 @@
                     </div>
                 `;
 
-                // Setup Emoji Picker for Comments
-                setupEmojiPicker('comment-emoji-trigger', 'comment-input', 'comment-emoji-picker-menu', 'comment-close-emoji-menu');
+                // Setup Emoji Picker for Comments (using new unique IDs)
+                setupEmojiPicker('comment-emoji-trigger', 'comment-input', 'comment-emoji-picker-menu', 'comment-close-emoji-menu', 'comment-emoji-list', 'comment-emoji-search');
                 
-                // Image Size Toggle Logic
+                // Image Size Toggle Logic (Updated mode order)
                 const photoImg = container.querySelector('.photo-modal-img');
                 const photoArea = document.getElementById('photo-display-area');
                 PHOTO_DISPLAY_MODE = 0; 
                 photoArea.onclick = () => {
                     PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 3;
                     if (PHOTO_DISPLAY_MODE === 0) {
+                        // Default: Limited by both (cover)
                         photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
                     } else if (PHOTO_DISPLAY_MODE === 1) {
-                        photoImg.style.width = '100%'; photoImg.style.height = 'auto'; photoImg.style.objectFit = 'contain';
-                    } else if (PHOTO_DISPLAY_MODE === 2) {
+                        // 1st Click: Limited only by height (contain, fills height)
                         photoImg.style.width = 'auto'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'contain';
                     }
                 };
@@ -1002,18 +1005,21 @@
                 const photoArea = document.getElementById('photo-display-area');
                 PHOTO_DISPLAY_MODE = 0; 
                 photoArea.onclick = () => {
-                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 3;
+                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 2;
                     if (PHOTO_DISPLAY_MODE === 0) {
+                        // Default: Limited by both (cover)
                         photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
                     } else if (PHOTO_DISPLAY_MODE === 1) {
-                        photoImg.style.width = '100%'; photoImg.style.height = 'auto'; photoImg.style.objectFit = 'contain';
-                    } else if (PHOTO_DISPLAY_MODE === 2) {
+                        // 1st Click: Limited only by height (contain, fills height)
                         photoImg.style.width = 'auto'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'contain';
+                    } else if (PHOTO_DISPLAY_MODE === 2) {
+                        // 2nd Click: Limited only by width (contain, fills width)
+                        photoImg.style.width = '100%'; photoImg.style.height = 'auto'; photoImg.style.objectFit = 'contain';
                     }
                 };
                 
                 // Emoji Logic for Post Title
-                setupEmojiPicker('emoji-trigger-btn', 'create-description', 'emoji-picker-menu', 'close-emoji-menu');
+                setupEmojiPicker('emoji-trigger-btn', 'create-description', 'emoji-picker-menu', 'close-emoji-menu', 'emoji-list', 'emoji-search');
                 
                 // Public Toggle Logic
                 const toggleBtn = document.getElementById('public-toggle-btn');
