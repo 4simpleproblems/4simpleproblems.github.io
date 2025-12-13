@@ -33,7 +33,7 @@ let currentBanData = null;
     if (!document.querySelector('link[href*="font-awesome"]')) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css';
+        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css';
         document.head.appendChild(link);
     }
     
@@ -117,7 +117,7 @@ function renderBanVisuals(banData) {
                 backdrop-filter: blur(5px) !important;
                 -webkit-backdrop-filter: blur(5px) !important;
             ">
-                <i class="fa-solid fa-external-link"></i> Review Policy
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Review Policy
             </a>
          `;
     }
@@ -182,8 +182,8 @@ function renderBanVisuals(banData) {
         position: fixed !important; bottom: ${spacing} !important; right: ${spacing} !important; z-index: 2147483647 !important;
         display: inline-flex !important; align-items: center !important; justify-content: center !important;
         padding: 0.5rem 1rem !important; background-color: transparent !important;
-        border: 1px solid #333 !important; border-radius: 0.75rem !important; color: #d1d5db !important;
-        font-size: 20px !important; text-decoration: none !important; cursor: pointer !important;
+        border: 1px solid #333 !important; border-radius: 14px !important; color: #d1d5db !important;
+        font-size: 28px !important; text-decoration: none !important; cursor: pointer !important;
         transition: all 0.2s !important; width: ${homeBtnSize} !important; height: ${homeBtnSize} !important; pointer-events: auto !important;
         font-weight: 400 !important; 
     `;
