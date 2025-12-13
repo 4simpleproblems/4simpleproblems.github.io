@@ -1,5 +1,5 @@
 /**
- * ban-enforcer.js (v6.4 - Robust Firebase Auth Check)
+ * ban-enforcer.js (v6.5 - Ultimate Reliability Fix)
  *
  * This script protects the website by blocking interaction ONLY 
  * when the user's ban status is verified as true.
@@ -12,10 +12,10 @@
  * 5. Excludes 'messenger-v2.html' from enforcement.
  * 6. Uses !important for robust styling.
  * 7. Enforces max font-weight of 400.
- * 8. FIX: Robust initialization checks for firebase.auth.
+ * 8. FIX: Robust initialization checks for Firebase App existence.
  */
 
-console.log("BanEnforcer (v6.4): Script loaded.");
+console.log("BanEnforcer (v6.5): Script loaded. Waiting for Firebase App initialization...");
 
 // --- Global State ---
 let banGuardInterval = null;
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Initializes the Firebase Authentication and Firestore listener.
      */
     const initListener = () => {
-        // At this point, firebase.auth is guaranteed to exist by waitForAuth
+        // At this point, firebase.apps.length > 0, and firebase.auth is available
         console.log("BanEnforcer: Initializing firebase.auth().onAuthStateChanged listener...");
         
         firebase.auth().onAuthStateChanged(user => {
@@ -309,15 +309,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Waits specifically for firebase.auth to be defined before calling initListener.
+     * Waits specifically for firebase.auth to be defined.
      */
     const waitForAuth = (callback) => {
-        console.log("BanEnforcer: Waiting for Firebase Auth to be available...");
+        console.log("BanEnforcer: Waiting for Firebase Auth library to be available...");
         const maxRetries = 100;
         let attempts = 0;
         const check = () => {
             if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function') {
-                 console.log(`BanEnforcer Auth: Firebase Auth available after ${attempts} attempts. Proceeding to listener setup.`);
+                 console.log(`BanEnforcer Auth: Firebase Auth library available after ${attempts} attempts. Proceeding to App check.`);
                  callback();
             } else {
                 attempts++;
@@ -330,23 +330,40 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         check();
     };
+    
+    /**
+     * Waits for a Firebase App to be initialized before running the listener setup.
+     */
+    const waitForFirebaseApp = (callback) => {
+        console.log("BanEnforcer: Waiting for Firebase App (initializeApp) to be called...");
+        const maxRetries = 100;
+        let attempts = 0;
+        const check = () => {
+            // Check if firebase object exists AND if at least one app is initialized
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                 console.log(`BanEnforcer App: Firebase App initialized after ${attempts} attempts. Starting Listener setup.`);
+                 callback();
+            } else {
+                attempts++;
+                if (attempts < maxRetries) {
+                    setTimeout(check, 50);
+                } else {
+                    console.error("BanEnforcer Error: Failed to find initialized Firebase App after max retries. Cannot run auth listener.");
+                }
+            }
+        };
+        check();
+    };
 
 
     // Initialize
     const attemptInit = () => {
-        if (typeof firebase !== 'undefined') {
-            console.log("BanEnforcer Init: Firebase object found immediately. Starting Auth check.");
-            waitForAuth(initListener);
-        } else {
-            console.warn("BanEnforcer Init: Firebase object not found immediately. Starting core retry loop.");
-            const checkFirebase = setInterval(() => {
-                if (typeof firebase !== 'undefined') {
-                    clearInterval(checkFirebase);
-                    console.log("BanEnforcer Init: Firebase core object found in retry loop. Starting Auth check.");
-                    waitForAuth(initListener);
-                }
-            }, 50);
-        }
+        // We start by ensuring the required auth library is loaded.
+        // Then we ensure the app is configured.
+        waitForAuth(() => {
+            waitForFirebaseApp(initListener);
+        });
     };
+    
     attemptInit();
 });
