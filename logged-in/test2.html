@@ -870,7 +870,7 @@
                 const photoArea = document.getElementById('photo-display-area');
                 PHOTO_DISPLAY_MODE = 0; 
                 photoArea.onclick = () => {
-                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 3;
+                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 2;
                     if (PHOTO_DISPLAY_MODE === 0) {
                         // Default: Limited by both (cover)
                         photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
