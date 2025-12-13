@@ -783,7 +783,7 @@
         /**
          * Generates the HTML for the "General Settings" section.
          */
-        function getGeneralContent(currentUsername, changesRemaining, changesThisMonth, currentMonthName, isEmailPasswordUser, providerData) {
+        function getGeneralContent(currentUsername, changesRemaining, changesThisMonth, currentMonthName, isEmailPasswordUser, providerData, downloadCode) {
              const changesUsed = changesThisMonth;
              
              // Conditionally generate the password section HTML
@@ -791,6 +791,8 @@
              if (isEmailPasswordUser) {
                  passwordSectionHtml = getChangePasswordSection();
              }
+
+             const downloadCodeValue = downloadCode || "No code generated";
 
              return `
                  <h2 class="text-3xl font-bold text-white mb-6">General Settings</h2>
@@ -849,6 +851,31 @@
                 ${passwordSectionHtml}
                 
                 ${getAccountManagementContent(providerData)}
+
+                <h3 class="text-xl font-bold text-white mb-2 mt-8">4SP Version 5: Download</h3>
+                <div class="settings-box w-full p-4">
+                    <p class="text-sm font-light text-gray-400 mb-3">
+                        Download a single HTML file to access 4SP v5 locally. This version loads the latest app from the cloud but runs independently. 
+                        It requires a unique code to launch and verifies your identity.
+                    </p>
+                    
+                    <div class="flex flex-col gap-3">
+                        <label class="block text-gray-400 text-sm font-light">Your Access Code</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="downloadCodeInput" readonly class="input-text-style font-mono text-center tracking-widest text-lg" value="${downloadCodeValue}">
+                            <button id="regenerateCodeBtn" class="btn-toolbar-style btn-primary-override w-12 flex justify-center items-center" title="Regenerate Code">
+                                <i class="fa-solid fa-rotate"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex justify-between items-center pt-4 border-t border-[#252525] mt-2">
+                            <p id="downloadMessage" class="general-message-area text-sm"></p>
+                            <button id="downloadClientBtn" class="btn-toolbar-style btn-primary-override w-48">
+                                <i class="fa-solid fa-download mr-2"></i> Download Client
+                            </button>
+                        </div>
+                    </div>
+                </div>
              `;
          }
 
@@ -2753,7 +2780,8 @@
                 changesThisMonth, 
                 currentMonthName,
                 isEmailPasswordUser, 
-                currentUser.providerData // Pass provider info
+                currentUser.providerData, // Pass provider info
+                userData.downloadCode // Pass download code
             );
             
             // 2. Element References (Username Section)
@@ -3245,6 +3273,78 @@ const performAccountDeletion = async (credential) => {
                 
                 // Final Delete button click
                 finalDeleteBtn.addEventListener('click', performAccountDeletion);
+            }
+
+            // =================================================================
+            // --- DOWNLOADABLE VERSION LOGIC (NEW) ---
+            // =================================================================
+            const regenerateCodeBtn = document.getElementById('regenerateCodeBtn');
+            const downloadClientBtn = document.getElementById('downloadClientBtn');
+            const downloadCodeInput = document.getElementById('downloadCodeInput');
+            const downloadMessage = document.getElementById('downloadMessage');
+
+            if (regenerateCodeBtn) {
+                regenerateCodeBtn.addEventListener('click', async () => {
+                    const confirmMsg = "Are you sure you want to regenerate your access code? This will invalidate any previously downloaded clients.";
+                    if (!confirm(confirmMsg)) return;
+
+                    regenerateCodeBtn.disabled = true;
+                    showMessage(downloadMessage, '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Generating new code...', 'warning');
+
+                    try {
+                        const newCode = generateDownloadCode();
+                        
+                        await updateDoc(userDocRef, {
+                            downloadCode: newCode,
+                            downloadCodeUpdatedAt: serverTimestamp()
+                        });
+
+                        if (downloadCodeInput) downloadCodeInput.value = newCode;
+                        showMessage(downloadMessage, 'New access code generated!', 'success');
+                        
+                        setTimeout(() => showMessage(downloadMessage, '', 'success'), 3000);
+
+                    } catch (error) {
+                        console.error("Error generating code:", error);
+                        showMessage(downloadMessage, "Failed to generate code.", 'error');
+                    } finally {
+                        regenerateCodeBtn.disabled = false;
+                    }
+                });
+            }
+
+            if (downloadClientBtn) {
+                downloadClientBtn.addEventListener('click', async () => {
+                    const code = downloadCodeInput ? downloadCodeInput.value : '';
+                    if (!code || code === "No code generated") {
+                        showMessage(downloadMessage, "Please generate an access code first.", 'error');
+                        return;
+                    }
+
+                    downloadClientBtn.disabled = true;
+                    showMessage(downloadMessage, '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Preparing download...', 'warning');
+
+                    try {
+                        const htmlContent = generateClientHTML(code);
+                        const blob = new Blob([htmlContent], { type: 'text/html' });
+                        const url = URL.createObjectURL(blob);
+                        
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = '4sp-v5-client.html';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+
+                        showMessage(downloadMessage, 'Download started!', 'success');
+                    } catch (error) {
+                        console.error("Error creating download:", error);
+                        showMessage(downloadMessage, "Failed to create download.", 'error');
+                    } finally {
+                        downloadClientBtn.disabled = false;
+                    }
+                });
             }
         }
         
@@ -4209,3 +4309,173 @@ const performAccountDeletion = async (credential) => {
         
         // Use a short timeout to allow the rest of the script to run before auth check
         setTimeout(() => { initializeAuth(); }, 100);
+
+        // --- Helper: Generate Random Code ---
+        function generateDownloadCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 12; i++) {
+                if (i > 0 && i % 4 === 0) result += '-';
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // --- Helper: Generate Client HTML Content ---
+        function generateClientHTML(targetCode) {
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4SP v5 - Local Client</title>
+    <base href="https://cdn.jsdelivr.net/gh/v5-4simpleproblems/v5@main/logged-in/">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        body { background-color: #040404; color: #c0c0c0; font-family: sans-serif; height: 100vh; margin: 0; display: flex; flex-direction: column; }
+        .center-box { margin: auto; padding: 2rem; background: #0d0d0d; border: 1px solid #333; border-radius: 1rem; max-width: 400px; width: 90%; text-align: center; }
+        .input-style { width: 100%; padding: 0.75rem; margin-bottom: 1rem; background: #111; border: 1px solid #333; color: white; border-radius: 0.5rem; text-align: center; letter-spacing: 2px; }
+        .btn-style { background: #4f46e5; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: bold; cursor: pointer; border: none; width: 100%; }
+        .btn-style:hover { background: #4338ca; }
+        .error-msg { color: #ef4444; margin-top: 1rem; font-size: 0.875rem; }
+        #app-frame { width: 100%; height: 100%; border: none; display: none; flex-grow: 1; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="lock-screen" class="center-box">
+        <h1 class="text-2xl font-bold text-white mb-4">4SP v5 Local</h1>
+        <p class="text-gray-400 mb-6 text-sm">Enter your access code to unlock.</p>
+        <input type="text" id="codeInput" class="input-style" placeholder="XXXX-XXXX-XXXX" value="\${targetCode}">
+        <button id="unlockBtn" class="btn-style">Unlock</button>
+        <p id="lockMessage" class="error-msg"></p>
+    </div>
+
+    <div id="auth-screen" class="center-box hidden">
+        <h1 class="text-2xl font-bold text-white mb-4">Verify Identity</h1>
+        <p class="text-gray-400 mb-6 text-sm">Please sign in to verify ownership of this code.</p>
+        <button id="googleSignInBtn" class="btn-style mb-2" style="background: white; color: black;">
+            <i class="fa-brands fa-google mr-2"></i> Sign in with Google
+        </button>
+        <p id="authMessage" class="error-msg"></p>
+    </div>
+
+    <iframe id="app-frame"></iframe>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZBKAckVa4IMvJGjcyndZx6Y1XD52lgro",
+            authDomain: "project-zirconium.firebaseapp.com",
+            projectId: "project-zirconium",
+            storageBucket: "project-zirconium.firebasestorage.app",
+            messagingSenderId: "1096564243475",
+            appId: "1:1096564243475:web:6d0956a70125eeea1ad3e6",
+            measurementId: "G-1D4F692C1Q"
+        };
+
+        const app = initializeApp(firebaseConfig, "launcher");
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const lockScreen = document.getElementById('lock-screen');
+        const authScreen = document.getElementById('auth-screen');
+        const appFrame = document.getElementById('app-frame');
+        const codeInput = document.getElementById('codeInput');
+        const unlockBtn = document.getElementById('unlockBtn');
+        const lockMessage = document.getElementById('lockMessage');
+        const authMessage = document.getElementById('authMessage');
+        const googleBtn = document.getElementById('googleSignInBtn');
+
+        let targetCode = codeInput.value.trim();
+        let unsubscribe = null;
+
+        unlockBtn.addEventListener('click', () => {
+            targetCode = codeInput.value.trim();
+            if (!targetCode) return;
+            lockScreen.classList.add('hidden');
+            authScreen.classList.remove('hidden');
+        });
+
+        googleBtn.addEventListener('click', async () => {
+            try {
+                await signInWithPopup(auth, new GoogleAuthProvider());
+            } catch (e) {
+                console.error(e);
+                authMessage.innerText = "Sign in failed: " + e.message;
+            }
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                if (lockScreen.classList.contains('hidden') === false && !targetCode) {
+                     return; 
+                }
+                
+                authScreen.classList.add('hidden');
+                lockScreen.classList.add('hidden');
+                
+                const statusDiv = document.createElement('div');
+                statusDiv.id = 'loading';
+                statusDiv.style.cssText = 'color:white; text-align:center; margin-top:20px;';
+                statusDiv.innerText = 'Verifying access...';
+                document.body.appendChild(statusDiv);
+
+                unsubscribe = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
+                    const loading = document.getElementById('loading');
+                    if (loading) loading.remove();
+
+                    if (!docSnap.exists()) {
+                        lockApp("Account not found.");
+                        return;
+                    }
+                    
+                    const data = docSnap.data();
+                    if (data.banned) {
+                        lockApp("Account is banned.");
+                        return;
+                    }
+                    if (data.downloadCode !== targetCode) {
+                        lockApp("Invalid or expired access code.");
+                        return;
+                    }
+                    
+                    if (appFrame.style.display === 'none') {
+                        launchApp();
+                    }
+                }, (error) => {
+                    lockApp("Connection error: " + error.message);
+                });
+            }
+        });
+
+        function lockApp(reason) {
+            if (unsubscribe) unsubscribe();
+            document.body.innerHTML = \\\`<div class="center-box"><h1 class="text-xl text-red-500 mb-4">Access Locked</h1><p class="text-white">\\\${reason}</p><button onclick="location.reload()" class="btn-style mt-4">Reload</button></div>\\\`;
+        }
+
+        function launchApp() {
+            if(lockScreen) lockScreen.remove();
+            if(authScreen) authScreen.remove();
+            appFrame.style.display = 'block';
+            
+            fetch('https://cdn.jsdelivr.net/gh/v5-4simpleproblems/v5@main/logged-in/dashboard.html')
+                .then(res => res.text())
+                .then(html => {
+                    const doc = appFrame.contentWindow.document;
+                    doc.open();
+                    const baseTag = '<base href="https://cdn.jsdelivr.net/gh/v5-4simpleproblems/v5@main/logged-in/">';
+                    const modifiedHtml = html.replace('<head>', '<head>' + baseTag);
+                    doc.write(modifiedHtml);
+                    doc.close();
+                })
+                .catch(err => lockApp("Failed to load app: " + err.message));
+        }
+    <\/script>
+</body>
+</html>`;
+        }
