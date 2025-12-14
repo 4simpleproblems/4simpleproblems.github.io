@@ -20,6 +20,8 @@
     let db = null;
     let auth = null;
     let currentUser = 'anonymous';
+    // Check previous session state to avoid tracking admins on page reload
+    let isExcluded = sessionStorage.getItem('analytics_is_admin') === 'true';
     let isTracking = false;
 
     // Wait for Firebase to be available
@@ -41,8 +43,39 @@
         auth = app.auth();
 
         // Track user
-        auth.onAuthStateChanged(user => {
-            currentUser = user ? user.uid : 'anonymous';
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                try {
+                    // Check if Superadmin or Admin
+                    const isSuperAdmin = user.email === '4simpleproblems@gmail.com';
+                    let isAdmin = false;
+                    
+                    if (!isSuperAdmin) {
+                        const adminDoc = await db.collection('admins').doc(user.uid).get();
+                        isAdmin = adminDoc.exists;
+                    }
+
+                    if (isSuperAdmin || isAdmin) {
+                        console.log("Analytics: Admin detected. Tracking disabled.");
+                        isExcluded = true;
+                        sessionStorage.setItem('analytics_is_admin', 'true');
+                        return; // Stop processing
+                    } else {
+                        // User is logged in but not admin
+                        isExcluded = false;
+                        sessionStorage.removeItem('analytics_is_admin');
+                    }
+                } catch (e) {
+                    console.error("Analytics: Error checking admin status", e);
+                }
+                
+                currentUser = user.uid;
+            } else {
+                // Logged out
+                currentUser = 'anonymous';
+                isExcluded = false;
+                sessionStorage.removeItem('analytics_is_admin');
+            }
             updateSession();
         });
 
@@ -70,7 +103,7 @@
     }
 
     function trackPageView() {
-        if (!db) return;
+        if (isExcluded || !db) return;
         const path = window.location.pathname;
         const pageName = document.title || path;
         
@@ -91,7 +124,7 @@
     }
 
     function updateSession() {
-        if (!db) return;
+        if (isExcluded || !db) return;
         
         const docRef = db.collection('analytics').doc(sessionId);
         
