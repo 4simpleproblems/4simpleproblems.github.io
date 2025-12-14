@@ -376,18 +376,41 @@
             try {
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
+                        // --- Authentication Success ---
+                        console.log(`[Soundboard Auth] SUCCESS: User is authenticated. UID: ${user.uid}.`);
                         loadingText.textContent = "Loading Sounds from Cloud...";
-                        loadSoundsFromStorage().then(() => {
-                            loadingScreen.style.display = 'none';
-                            pageContent.classList.remove('hidden');
-                        });
+                        
+                        // Proceed only if user is fully authenticated
+                        console.log("[Soundboard Storage] Attempting to load configuration from Firebase Storage...");
+                        loadSoundsFromStorage()
+                            .then(() => {
+                                // --- Loading Success ---
+                                console.log("[Soundboard Storage] Sound loading complete. Allowing entry.");
+                                loadingScreen.style.display = 'none';
+                                pageContent.classList.remove('hidden');
+                            })
+                            .catch(error => {
+                                // --- Storage Load Failure (e.g., storage/unauthenticated) ---
+                                console.error("[Soundboard Storage] FATAL ERROR: Failed to load sounds from storage.", error);
+                                loadingText.textContent = "Authentication Error: Cannot access files.";
+                                showStatus("Access Denied (Storage Error). Redirecting.", "error");
+                                // If loading fails (due to storage/unauthenticated), redirect the user out.
+                                setTimeout(() => {
+                                     window.location.href = '../index.html'; 
+                                }, 3000);
+                            });
+                        
                         monitorExplicitSettings();
                     } else {
+                        // --- Authentication Failure ---
+                        console.log("[Soundboard Auth] FAILURE: User is NOT authenticated. Redirecting to login.");
                         window.location.href = '../index.html'; 
                     }
                 });
             } catch (e) {
-                console.error("Auth Setup Error", e);
+                console.error("[Soundboard Auth] Auth Setup Error", e);
+                // On critical failure, also redirect
+                window.location.href = '../index.html'; 
             }
         }
 
@@ -453,9 +476,9 @@
                 await Promise.all(tasks);
 
             } catch (error) {
-                console.error("Load Error:", error);
-                showStatus("Unable to load sounds from storage.", "error");
+                // Display the failure message but re-throw the error for the calling function to handle the fatal state
                 normalSoundsContainer.innerHTML = `<p class="text-red-500 text-sm italic border border-red-900/50 p-2 rounded bg-red-900/10">Unable to load sounds. (Check Console)</p>`;
+                throw error; // CRITICAL: Re-throw the error to be caught in setupAuthAndLoad
             }
         }
 
@@ -469,8 +492,8 @@
                     const url = await getDownloadURL(soundRef);
                     createSoundButton(fileName, container, url);
                 } catch (err) {
-                    console.warn(`Could not load sound: ${fileName}`, err);
-                    // We don't stop the whole app, just log the missing sound
+                    // Log the warning but don't re-throw, as a single missing sound shouldn't crash the whole app
+                    console.warn(`[Soundboard Storage] Could not load sound: ${fileName}`, err);
                 }
             });
             
