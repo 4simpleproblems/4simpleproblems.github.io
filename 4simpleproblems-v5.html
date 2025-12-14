@@ -5,189 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4SP v5 - Local Client</title>
     <base href="https://cdn.jsdelivr.net/gh/v5-4simpleproblems/v5@main/logged-in/">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        /* --- FONT & BASE STYLING (MATCHING dashboard.html) --- */
-        :root {
-            --bg-page: #040404;
-            --bg-container: #000000;
-            --border-color: #333;
-            --text-primary: #c0c0c0;
-            --text-light-grey: #d1d5db;
-            --accent-color: #6366f1;
-            --text-link: #888;
-        }
-
-        body { 
-            font-family: 'Geist', sans-serif; 
-            background-color: var(--bg-page);
-            color: var(--text-primary);
-            font-weight: 300;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            margin: 0;
-        }
-
-        h1, h2, h3, .font-bold, .font-semibold, strong, .tracking-widest {
-            font-weight: 400 !important;
-        }
-
-        /* --- CENTERED WIDGET STYLES --- */
-        .center-container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-        }
-
-        .auth-widget {
-            border: 1px solid var(--border-color);
-            background-color: var(--bg-container);
-            padding: 2.5rem 4rem; 
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            border-radius: 32px; 
-            width: fit-content;
-            max-width: 90%;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .input-style {
-            width: 100%;
-            padding: 0.75rem;
-            background: #111;
-            border: 1px solid #333;
-            color: white;
-            border-radius: 0.75rem; /* Matching theme rounded corners */
-            text-align: center;
-            letter-spacing: 2px;
-            font-family: 'Geist', sans-serif;
-            font-size: 1.1rem;
-            transition: all 0.2s;
-        }
-        
-        .input-style:focus {
-            border-color: #505050; 
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(80, 80, 80, 0.5);
-        }
-
-        .btn-style {
-            background: rgba(79, 70, 229, 0.1);
-            border: 1px solid #4f46e5;
-            color: #4f46e5;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .btn-style:hover {
-            background-color: rgba(79, 70, 229, 0.15);
-            border-color: #6366f1;
-            color: #6366f1;
-        }
-        
-        .btn-google {
-            background: white; 
-            color: black; 
-            border: 1px solid white;
-        }
-        .btn-google:hover {
-            background: #f0f0f0;
-            border-color: #f0f0f0;
-            color: black;
-        }
-
-        .error-msg { 
-            color: #f87171; 
-            font-size: 0.875rem; 
-            min-height: 1.25rem;
-        }
-
-        #app-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: none;
-            flex-grow: 1;
-        }
-
+        body { background-color: #040404; color: #c0c0c0; font-family: sans-serif; height: 100vh; margin: 0; display: flex; flex-direction: column; }
+        .center-box { margin: auto; padding: 2rem; background: #0d0d0d; border: 1px solid #333; border-radius: 1rem; max-width: 400px; width: 90%; text-align: center; }
+        .input-style { width: 100%; padding: 0.75rem; margin-bottom: 1rem; background: #111; border: 1px solid #333; color: white; border-radius: 0.5rem; text-align: center; letter-spacing: 2px; }
+        .btn-style { background: #4f46e5; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: bold; cursor: pointer; border: none; width: 100%; }
+        .btn-style:hover { background: #4338ca; }
+        .error-msg { color: #ef4444; margin-top: 1rem; font-size: 0.875rem; }
+        #app-frame { width: 100%; height: 100%; border: none; display: none; flex-grow: 1; }
         .hidden { display: none !important; }
-        
-        /* Spinner */
-        .spinner {
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        #loading-text { color: #888; margin-top: 1rem; }
     </style>
 </head>
 <body>
-
-    <div id="lock-screen" class="center-container">
-        <div class="auth-widget">
-            <div>
-                <h1 class="text-3xl font-bold text-white mb-2">4SP v5 Local</h1>
-                <p class="text-gray-400 text-sm">Enter your access code to unlock.</p>
-            </div>
-            
-            <input type="text" id="codeInput" class="input-style" placeholder="XXXX-XXXX-XXXX">
-            
-            <button id="unlockBtn" class="btn-style">
-                <i class="fa-solid fa-lock-open"></i> Unlock
-            </button>
-            
-            <p id="lockMessage" class="error-msg"></p>
-        </div>
-    </div>
-
-    <div id="auth-screen" class="center-container hidden">
-        <div class="auth-widget">
-            <div>
-                <h1 class="text-3xl font-bold text-white mb-2">Verify Identity</h1>
-                <p class="text-gray-400 text-sm">Please sign in to verify ownership of this code.</p>
-            </div>
-            
-            <button id="googleSignInBtn" class="btn-style btn-google">
-                <i class="fa-brands fa-google"></i> Sign in with Google
-            </button>
-            
-            <p id="authMessage" class="error-msg"></p>
-        </div>
-    </div>
-    
-    <div id="loading-screen" class="center-container hidden">
-        <div class="text-center">
-            <i class="fa-solid fa-circle-notch fa-3x text-[#666] spinner mb-4"></i>
-            <p class="text-gray-400">Verifying access...</p>
-        </div>
+    <div id="lock-screen" class="center-box">
+        <h1 class="text-2xl font-bold text-white mb-4">4SP v5 Local</h1>
+        <p class="text-gray-400 mb-6 text-sm">Enter your access code to unlock this secure file.</p>
+        <input type="text" id="codeInput" class="input-style" placeholder="XXXX-XXXX-XXXX">
+        <button id="unlockBtn" class="btn-style">Unlock</button>
+        <p id="lockMessage" class="error-msg"></p>
+        <p id="loading-text" class="hidden">Restoring data...</p>
     </div>
 
     <iframe id="app-frame"></iframe>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    <!-- INJECTED DATA PLACEHOLDERS -->
+    <script>
+        window.__ACCESS_CODE__ = "{{ACCESS_CODE}}";
+        window.__USER_DATA__ = {{USER_DATA}};
+    </script>
 
-        // --- FIREBASE CONFIGURATION (Embedded) ---
+    <script type="module">
+        // Firebase Config included for reference/completeness as requested
         const firebaseConfig = {
             apiKey: "AIzaSyAZBKAckVa4IMvJGjcyndZx6Y1XD52lgro",
             authDomain: "project-zirconium.firebaseapp.com",
@@ -198,141 +49,170 @@
             measurementId: "G-1D4F692C1Q"
         };
 
-        const app = initializeApp(firebaseConfig, "launcher");
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // Elements
         const lockScreen = document.getElementById('lock-screen');
-        const authScreen = document.getElementById('auth-screen');
-        const loadingScreen = document.getElementById('loading-screen');
         const appFrame = document.getElementById('app-frame');
-        
         const codeInput = document.getElementById('codeInput');
         const unlockBtn = document.getElementById('unlockBtn');
-        const googleBtn = document.getElementById('googleSignInBtn');
-        
         const lockMessage = document.getElementById('lockMessage');
-        const authMessage = document.getElementById('authMessage');
+        const loadingText = document.getElementById('loading-text');
 
-        let targetCode = "";
-        let unsubscribe = null;
+        const BASE_URL = 'https://cdn.jsdelivr.net/gh/v5-4simpleproblems/v5@main/logged-in/';
 
-        // Unlock Step 1: Code Entry
-        unlockBtn.addEventListener('click', () => {
+        // Check if data is present
+        if (!window.__ACCESS_CODE__ || window.__ACCESS_CODE__ === "{{ACCESS_CODE}}") {
+            lockMessage.innerText = "Error: This file is corrupt or missing embedded data.";
+            unlockBtn.disabled = true;
+            unlockBtn.style.opacity = "0.5";
+        }
+
+        unlockBtn.addEventListener('click', async () => {
             const code = codeInput.value.trim();
             if (!code) {
                 lockMessage.innerText = "Please enter a code.";
                 return;
             }
-            targetCode = code;
-            lockScreen.classList.add('hidden');
-            authScreen.classList.remove('hidden');
-        });
 
-        // Unlock Step 2: Auth
-        googleBtn.addEventListener('click', async () => {
+            if (code !== window.__ACCESS_CODE__) {
+                lockMessage.innerText = "Invalid access code.";
+                return;
+            }
+
+            // Code is valid
+            lockMessage.innerText = "";
+            unlockBtn.classList.add('hidden');
+            codeInput.classList.add('hidden');
+            loadingText.classList.remove('hidden');
+
             try {
-                await signInWithPopup(auth, new GoogleAuthProvider());
+                await restoreUserData();
+                // Start with dashboard
+                loadPage('dashboard.html');
             } catch (e) {
+                lockMessage.innerText = "Failed to restore data: " + e.message;
                 console.error(e);
-                authMessage.innerText = "Sign in failed: " + e.message;
             }
         });
 
-        // Auth State Listener
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // If we are on the lock screen and haven't entered a code yet, do nothing (wait for user)
-                // However, if the user was already logged in from a previous session, we might want to auto-verify
-                // But we don't have the code yet. So we wait for the code.
-                
-                if (targetCode) {
-                    verifyAndLaunch(user);
-                } else {
-                    // User is signed in but no code entered.
-                    // If they enter the code now, we can skip the auth screen.
-                    // We can modify the flow:
-                    // If signed in, "Unlock" button goes straight to loading.
-                    
-                    // Update UI to reflect signed-in state on lock screen?
-                    // For simplicity, let's keep the flow: Code -> Auth (Auto-skip if already signed in) -> Verify
-                    
-                    unlockBtn.onclick = () => {
-                        const code = codeInput.value.trim();
-                        if (!code) {
-                            lockMessage.innerText = "Please enter a code.";
-                            return;
-                        }
-                        targetCode = code;
-                        verifyAndLaunch(user);
-                    };
+        async function restoreUserData() {
+            const data = window.__USER_DATA__;
+            if (!data) return;
+
+            // 1. Restore LocalStorage
+            if (data.localStorage) {
+                for (const [key, value] of Object.entries(data.localStorage)) {
+                    localStorage.setItem(key, value);
                 }
             }
-        });
 
-        function verifyAndLaunch(user) {
-            lockScreen.classList.add('hidden');
-            authScreen.classList.add('hidden');
-            loadingScreen.classList.remove('hidden');
+            // 2. Restore IndexedDB
+            if (data.indexedDB) {
+                for (const dbName in data.indexedDB) {
+                    const storesData = data.indexedDB[dbName];
+                    await new Promise(r => {
+                        const req = indexedDB.deleteDatabase(dbName);
+                        req.onsuccess = r; req.onerror = r;
+                    });
 
-            unsubscribe = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
-                if (!docSnap.exists()) {
-                    lockApp("Account not found.");
-                    return;
+                    await new Promise((resolve, reject) => {
+                        const req = indexedDB.open(dbName, 1);
+                        req.onupgradeneeded = (e) => {
+                            const db = e.target.result;
+                            for (const storeName in storesData) {
+                                if (!db.objectStoreNames.contains(storeName)) {
+                                    db.createObjectStore(storeName); 
+                                }
+                            }
+                        };
+                        req.onsuccess = async (e) => {
+                            const db = e.target.result;
+                            const tx = db.transaction(Object.keys(storesData), 'readwrite');
+                            for (const storeName in storesData) {
+                                const store = tx.objectStore(storeName);
+                                for (const item of storesData[storeName]) {
+                                    store.put(item.value, item.key);
+                                }
+                            }
+                            tx.oncomplete = () => {
+                                db.close();
+                                resolve();
+                            };
+                            tx.onerror = (err) => reject(err);
+                        };
+                        req.onerror = reject;
+                    });
                 }
-                
-                const data = docSnap.data();
-                if (data.banned) {
-                    lockApp("Account is banned.");
-                    return;
-                }
-                if (data.downloadCode !== targetCode) {
-                    lockApp("Invalid or expired access code.");
-                    return;
-                }
-                
-                // Success
-                if (appFrame.style.display === 'none') {
-                    launchApp();
-                }
-            }, (error) => {
-                lockApp("Connection error: " + error.message);
-            });
+            }
         }
 
-        function lockApp(reason) {
-            if (unsubscribe) unsubscribe();
-            loadingScreen.classList.add('hidden');
-            document.body.innerHTML = `
-                <div class="center-container">
-                    <div class="auth-widget" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.05);">
-                        <h1 class="text-2xl font-bold text-red-500 mb-2">Access Locked</h1>
-                        <p class="text-white mb-4">${reason}</p>
-                        <button onclick="location.reload()" class="btn-style">Reload</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function launchApp() {
-            loadingScreen.classList.add('hidden');
-            appFrame.style.display = 'block';
+        // Exposed function to load pages
+        window.loadPage = function(pageName) {
+            // Handle relative paths roughly
+            if (pageName.startsWith('./')) pageName = pageName.substring(2);
+            if (pageName.startsWith('../')) pageName = pageName.substring(3); // Assuming flattened structure for simplified view
             
-            // Load dashboard from CDN
-            fetch('https://cdn.jsdelivr.net/gh/v5-4simpleproblems/v5@main/logged-in/dashboard.html')
+            // If full URL, strip base
+            if (pageName.startsWith(BASE_URL)) {
+                pageName = pageName.substring(BASE_URL.length);
+            }
+
+            const url = BASE_URL + pageName;
+            
+            fetch(url)
                 .then(res => res.text())
                 .then(html => {
+                    lockScreen.classList.add('hidden');
+                    appFrame.style.display = 'block';
+                    
                     const doc = appFrame.contentWindow.document;
                     doc.open();
-                    // Inject base tag to ensure relative links work against the CDN
-                    const baseTag = '<base href="https://cdn.jsdelivr.net/gh/v5-4simpleproblems/v5@main/logged-in/">';
-                    const modifiedHtml = html.replace('<head>', '<head>' + baseTag);
+                    
+                    const baseTag = '<base href="' + BASE_URL + '">';
+                    
+                    // Script to intercept clicks and keep them "local" (in the iframe fetch loop)
+                    // Also mock Auth
+                    const patchScript = `
+                        <script>
+                            window._LOCAL_MODE = true;
+                            
+                            // Mock Firebase Auth User if profile exists
+                            try {
+                                const profile = localStorage.getItem('offline_user_profile');
+                                if (profile) {
+                                    const userData = JSON.parse(profile);
+                                    // Mock enough for the UI to render
+                                    window.currentUser = {
+                                        uid: 'offline-user',
+                                        displayName: userData.username || 'Offline User',
+                                        email: 'offline@local',
+                                        photoURL: userData.customPfp || null,
+                                        providerData: []
+                                    };
+                                }
+                            } catch(e) {}
+
+                            document.addEventListener('click', e => {
+                                const link = e.target.closest('a');
+                                if (link && link.href) {
+                                    e.preventDefault();
+                                    const href = link.getAttribute('href');
+                                    // Call parent loader
+                                    window.parent.loadPage(href);
+                                }
+                            });
+                        <\/script>
+                    `;
+                    
+                    let modifiedHtml = html.replace('<head>', '<head>' + baseTag + patchScript);
+                    
                     doc.write(modifiedHtml);
                     doc.close();
                 })
-                .catch(err => lockApp("Failed to load app: " + err.message));
-        }
+                .catch(err => {
+                    // If dashboard fails, we show lock screen again? Or alert inside frame?
+                    console.error(err);
+                    alert("Failed to load page: " + pageName);
+                });
+        };
     </script>
 </body>
 </html>

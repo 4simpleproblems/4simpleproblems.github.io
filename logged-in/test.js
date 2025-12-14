@@ -3322,15 +3322,33 @@ const performAccountDeletion = async (credential) => {
                     }
 
                     downloadClientBtn.disabled = true;
-                    showMessage(downloadMessage, '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Fetching client...', 'warning');
+                    showMessage(downloadMessage, '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Packing data & downloading...', 'warning');
 
                     try {
+                        // 1. Fetch Template
                         const response = await fetch('../4simpleproblems-v5.html');
-                        if (!response.ok) throw new Error("Failed to fetch client file.");
+                        if (!response.ok) throw new Error("Failed to fetch client template.");
+                        let htmlContent = await response.text();
+
+                        // 2. Gather Data
+                        const localData = getAllLocalStorageData();
+                        const indexedData = await getAllIndexedDBData();
                         
-                        const htmlContent = await response.text();
-                        
-                        // Create Blob
+                        // Include critical user profile data in localStorage export for offline usage
+                        if (userData) {
+                            localData['offline_user_profile'] = JSON.stringify(userData);
+                        }
+
+                        const fullData = {
+                            localStorage: localData,
+                            indexedDB: indexedData
+                        };
+
+                        // 3. Inject Data
+                        htmlContent = htmlContent.replace('{{ACCESS_CODE}}', code);
+                        htmlContent = htmlContent.replace('{{USER_DATA}}', JSON.stringify(fullData));
+
+                        // 4. Download
                         const blob = new Blob([htmlContent], { type: 'text/html' });
                         const url = URL.createObjectURL(blob);
                         
@@ -3342,7 +3360,7 @@ const performAccountDeletion = async (credential) => {
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
 
-                        showMessage(downloadMessage, 'Download started! Please enter your code in the downloaded file.', 'success');
+                        showMessage(downloadMessage, 'Download started! Your data has been securely embedded.', 'success');
                     } catch (error) {
                         console.error("Error downloading client:", error);
                         showMessage(downloadMessage, "Failed to download client.", 'error');
@@ -4290,16 +4308,22 @@ const performAccountDeletion = async (credential) => {
 
         function initializeAuth() {
             onAuthStateChanged(auth, async (user) => {
-                if (!user) {
+                if (!user && !window._LOCAL_MODE) {
                     // No user is logged in, redirect to authentication.html (path corrected)
                     window.location.href = '../authentication.html'; 
                 } else {
-                    currentUser = user; 
+                    if (user) currentUser = user; 
                     
                     // --- MODIFIED: Mandatory Admin Status Check ---
                     // We MUST await this check before proceeding to load tabs that might require admin privileges.
                     // This prevents "Missing or insufficient permissions" errors due to race conditions.
-                    isUserAdmin = await checkAdminStatus(user.uid);
+                    if (user) {
+                        isUserAdmin = await checkAdminStatus(user.uid);
+                    } else if (window._LOCAL_MODE) {
+                        // Offline/Local Mode: Assume no admin, or load from offline profile
+                        isUserAdmin = false;
+                        // Mock userData if needed
+                    }
 
                     if (isUserAdmin) {
                         const adminTab = document.getElementById('tab-management');

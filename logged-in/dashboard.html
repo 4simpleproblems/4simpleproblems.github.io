@@ -658,7 +658,7 @@
             waitForFirebase(() => {
                  if (firebase.auth) {
                     firebase.auth().onAuthStateChanged((user) => {
-                        if (!user) {
+                        if (!user && !window._LOCAL_MODE) {
                             window.location.replace(redirectPath);
                         }
                     });
