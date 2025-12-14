@@ -340,8 +340,10 @@
         
         // Import Modular SDKs directly
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        // *** NEW: Import Firebase Storage SDK ***
+        import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
         // --- UI & State References ---
         const loadingScreen = document.getElementById('loading-screen');
@@ -365,11 +367,14 @@
         let requestAnimationFrameId = null;
         let currentlyHoveredButton = null;
         let toasterTimeout = null;
+        const soundUrlCache = new Map(); 
 
         // --- Firebase Initialization (Modular) ---
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        // *** NEW: Initialize Firebase Storage ***
+        const storage = getStorage(app);
 
         function setupAuthAndLoad() {
             try {
@@ -377,7 +382,7 @@
                     if (user) {
                         loadingScreen.style.display = 'none';
                         pageContent.classList.remove('hidden');
-                        loadSoundsLocal();
+                        loadSoundsFromStorage(); // Call the new loading function
                         monitorExplicitSettings();
                     } else {
                         window.location.href = '../index.html'; 
@@ -427,36 +432,69 @@
             toasterTimeout = setTimeout(() => statusToaster.classList.remove('visible'), 2000);
         }
 
-        async function loadSoundsLocal() {
+        // *** MODIFIED: Load sounds and get URLs from Firebase Storage ***
+        async function loadSoundsFromStorage() {
             try {
                 const response = await fetch('../soundboard_names.json');
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
                 const data = await response.json();
-
-                if (data.NormalSounds) data.NormalSounds.forEach(f => createSoundButton(f, normalSoundsContainer));
-                if (data.ExplicitSounds) data.ExplicitSounds.forEach(f => createSoundButton(f, explicitSoundsContainer));
+                
+                // Create an array of promises for button creation
+                const normalSoundPromises = (data.NormalSounds || []).map(fileName => createSoundButtonWithStorage(fileName, normalSoundsContainer));
+                const explicitSoundPromises = (data.ExplicitSounds || []).map(fileName => createSoundButtonWithStorage(fileName, explicitSoundsContainer));
+                
+                // Wait for all buttons to be created and URLs fetched
+                await Promise.all([...normalSoundPromises, ...explicitSoundPromises]);
 
             } catch (error) {
                 console.error("Load Error:", error);
-                showStatus("Unable to load sounds.", "error");
-                normalSoundsContainer.innerHTML = `<p class="text-red-500 text-sm italic border border-red-900/50 p-2 rounded bg-red-900/10">Unable to load sounds. (Check Console)</p>`;
+                showStatus("Unable to load sounds. (Check Console)", "error");
+                normalSoundsContainer.innerHTML = `<p class="text-red-500 text-sm italic border border-red-900/50 p-2 rounded bg-red-900/10">Unable to load sounds from Firebase Storage. (Check Console)</p>`;
             }
         }
 
-        function createSoundButton(fileName, container) {
+        // *** NEW/MODIFIED: Function to get URL and create button ***
+        async function createSoundButtonWithStorage(fileName, container) {
+            let audioPath;
+            
+            // 1. Try to get URL from cache
+            if (soundUrlCache.has(fileName)) {
+                audioPath = soundUrlCache.get(fileName);
+            } else {
+                try {
+                    // 2. Get URL from Firebase Storage
+                    // *** PATH MODIFICATION HERE: Using 'Soundboard/' as per the image ***
+                    const storageRef = ref(storage, `Soundboard/${fileName}`);
+                    audioPath = await getDownloadURL(storageRef);
+                    // 3. Store in cache
+                    soundUrlCache.set(fileName, audioPath);
+                } catch (err) {
+                    console.warn(`Could not fetch URL for ${fileName}:`, err);
+                    audioPath = null; // Set to null if the URL cannot be fetched
+                }
+            }
+
             const soundName = fileName.replace('.mp3', '').replace(/_/g, ' ');
             const btn = document.createElement('div');
             btn.className = 'sound-btn';
-            btn.textContent = soundName;
+            btn.textContent = audioPath ? soundName : `${soundName} (Unavailable)`;
             
-            const audioPath = `../sounds/${fileName}`;
-            
+            // If URL is not available, slightly disable the button visually and functionally
+            if (!audioPath) {
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                container.appendChild(btn);
+                return; // Stop here if the audio path is null
+            }
+
+            // The rest of the logic remains mostly the same, using the fetched audioPath
             btn.addEventListener('click', async () => {
                 if (!soundOverlayCheckbox.checked) stopAllAudios();
 
                 try {
-                    const audio = new Audio(audioPath);
+                    // Use the fetched download URL
+                    const audio = new Audio(audioPath); 
                     audio.soundButton = btn; // Store reference to the button
                     playingAudios.push(audio);
                     audio.addEventListener('ended', () => {
