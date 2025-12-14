@@ -169,20 +169,29 @@
             color: white;
             border-bottom-color: #3b82f6;
         }
+        
+        .alert-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body class="min-h-screen pb-10">
 
     <div id="page-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         
-        <header class="mb-8 flex justify-between items-end">
+        <header class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-white mb-2">Analytics</h1>
                 <p class="text-gray-400">System overview and user management.</p>
             </div>
-            <div class="flex gap-4 border-b border-[#1a1a1a]">
-                <button class="tab-btn active" data-tab="users">User Management</button>
-                <button class="tab-btn" data-tab="traffic">Site Traffic</button>
+            <div class="flex gap-4 border-b border-[#1a1a1a] w-full sm:w-auto overflow-x-auto">
+                <button class="tab-btn active whitespace-nowrap" data-tab="users">User Management</button>
+                <button class="tab-btn whitespace-nowrap" data-tab="traffic">Site Traffic</button>
+                <button class="tab-btn whitespace-nowrap" data-tab="health">System Health</button>
             </div>
         </header>
 
@@ -310,7 +319,7 @@
                         <table class="analytics-table">
                             <thead>
                                 <tr>
-                                    <th>User</th>
+                                    <th>User / Email</th>
                                     <th>Start Time</th>
                                     <th>Duration</th>
                                     <th>Pages</th>
@@ -324,6 +333,50 @@
             
              <div id="loading-traffic" class="p-8 text-center text-gray-500">
                 <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading analytics data...
+            </div>
+        </div>
+
+        <!-- SYSTEM HEALTH TAB -->
+        <div id="tab-health" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Browser Distribution -->
+                <div class="chart-container">
+                    <h3 class="text-white text-lg mb-4">Browser Distribution</h3>
+                    <div class="relative h-full w-full" style="height: 220px;">
+                        <canvas id="browserChart"></canvas>
+                    </div>
+                </div>
+                <!-- OS Distribution -->
+                 <div class="chart-container">
+                    <h3 class="text-white text-lg mb-4">OS Distribution</h3>
+                    <div class="relative h-full w-full" style="height: 220px;">
+                        <canvas id="osChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bugged Docs Section -->
+            <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl overflow-hidden">
+                <div class="p-4 border-b border-[#1a1a1a]">
+                    <h3 class="text-white text-lg">Data Integrity</h3>
+                    <p class="text-sm text-gray-500">Potential orphaned documents or incomplete records.</p>
+                </div>
+                <div class="p-4">
+                    <div id="integrity-status" class="text-sm text-gray-400 mb-4">Scanning...</div>
+                    <div class="overflow-x-auto">
+                        <table class="analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>Document ID</th>
+                                    <th>Issue Type</th>
+                                    <th>Details</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="integrity-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -397,9 +450,12 @@
         const db = getFirestore(app);
 
         let allUsers = [];
+        let allSessions = [];
         let admins = new Set();
         let bannedUsers = new Set();
         let chartInstance = null;
+        let browserChartInstance = null;
+        let osChartInstance = null;
         let userToBan = null;
 
         const providerImages = {
@@ -417,8 +473,9 @@
                     const isSuperAdmin = user.email === '4simpleproblems@gmail.com';
                     
                     if (adminDoc.exists() || isSuperAdmin) {
-                        loadUserData();
+                        await loadUserData();
                         loadTrafficData();
+                        runIntegrityCheck();
                     } else {
                         window.location.href = '../logged-in/dashboard.html';
                     }
@@ -470,31 +527,35 @@
 
         const loadTrafficData = async () => {
             try {
-                const q = query(collection(db, 'analytics'), orderBy('lastActive', 'desc'), limit(100));
+                // Fetch all recent sessions (limit to 200 for perf)
+                const q = query(collection(db, 'analytics'), orderBy('lastActive', 'desc'), limit(200));
                 const snap = await getDocs(q);
-                const sessions = snap.docs.map(d => d.data());
+                allSessions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-                if (sessions.length === 0) {
+                if (allSessions.length === 0) {
                     document.getElementById('loading-traffic').textContent = "No traffic data available.";
                     return;
                 }
 
-                // Calculate Stats
-                const totalSessions = sessions.length; // Limited by 100 for now, ideally count total
+                // --- Calculate Stats ---
+                const totalSessions = allSessions.length; 
                 let totalDuration = 0;
                 let totalPageViews = 0;
                 let active24h = 0;
                 const pageCounts = {};
                 const now = Date.now();
                 const oneDay = 24 * 60 * 60 * 1000;
+                const browsers = {};
+                const os = {};
 
-                sessions.forEach(s => {
+                allSessions.forEach(s => {
                     totalDuration += (s.duration || 0);
                     
+                    // Parse Pages
                     if (s.visitedPages && Array.isArray(s.visitedPages)) {
                         totalPageViews += s.visitedPages.length;
                         s.visitedPages.forEach(p => {
-                            const path = p.path || p; // Handle string or object
+                            const path = p.path || p; 
                             const title = p.title || path;
                             if (!pageCounts[path]) pageCounts[path] = { count: 0, title: title };
                             pageCounts[path].count++;
@@ -503,20 +564,27 @@
                         totalPageViews += s.pageCount;
                     }
 
-                    // Check last active timestamp
+                    // Parse User Agent
+                    if (s.userAgent) {
+                        const ua = parseUserAgent(s.userAgent);
+                        browsers[ua.browser] = (browsers[ua.browser] || 0) + 1;
+                        os[ua.os] = (os[ua.os] || 0) + 1;
+                    }
+
+                    // Check last active
                     const lastActive = s.lastActive && s.lastActive.toDate ? s.lastActive.toDate().getTime() : 0;
                     if (now - lastActive < oneDay) active24h++;
                 });
 
                 const avgDuration = totalSessions > 0 ? (totalDuration / totalSessions).toFixed(1) : 0;
 
-                // Render Top Stats
-                document.getElementById('stat-total-sessions').textContent = totalSessions + (sessions.length === 100 ? '+' : '');
+                // --- Render Top Stats ---
+                document.getElementById('stat-total-sessions').textContent = totalSessions + (allSessions.length === 200 ? '+' : '');
                 document.getElementById('stat-avg-duration').textContent = formatDuration(avgDuration);
                 document.getElementById('stat-total-views').textContent = totalPageViews;
                 document.getElementById('stat-active-24h').textContent = active24h;
 
-                // Render Top Pages
+                // --- Render Top Pages ---
                 const sortedPages = Object.values(pageCounts).sort((a, b) => b.count - a.count).slice(0, 10);
                 const pagesBody = document.getElementById('top-pages-body');
                 pagesBody.innerHTML = sortedPages.map(p => `
@@ -527,28 +595,122 @@
                     </tr>
                 `).join('');
 
-                // Render Recent Sessions
+                // --- Render Recent Sessions (Updated) ---
                 const sessionsBody = document.getElementById('recent-sessions-body');
-                sessionsBody.innerHTML = sessions.slice(0, 10).map(s => `
+                sessionsBody.innerHTML = allSessions.slice(0, 15).map(s => {
+                    let displayName = 'Guest';
+                    let displayEmail = '-';
+                    let userClass = 'text-gray-500';
+
+                    if (s.userId && s.userId !== 'anonymous') {
+                        const matchedUser = allUsers.find(u => u.id === s.userId);
+                        if (matchedUser) {
+                            displayName = matchedUser.username || 'Unknown Name';
+                            displayEmail = matchedUser.email || 'No Email';
+                            userClass = 'text-blue-400 font-medium';
+                        } else {
+                            displayName = 'Orphaned ID';
+                            displayEmail = s.userId;
+                            userClass = 'text-red-400 font-mono text-xs';
+                        }
+                    }
+
+                    return `
                     <tr>
-                        <td class="text-white">
+                        <td>
                             <div class="flex flex-col">
-                                <span class="text-sm">${s.userId === 'anonymous' ? 'Guest' : 'User'}</span>
-                                <span class="text-xs text-gray-600 font-mono">${s.sessionId ? s.sessionId.substr(0, 8) + '...' : '-'}</span>
+                                <span class="${userClass}">${displayName}</span>
+                                <span class="text-xs text-gray-600">${displayEmail}</span>
                             </div>
                         </td>
                         <td class="text-gray-400 text-sm">${formatTimeAgo(s.startTime)}</td>
                         <td class="text-gray-300 text-sm">${formatDuration(s.duration)}</td>
                         <td class="text-gray-400 text-sm">${s.visitedPages ? s.visitedPages.length : (s.pageCount || 0)}</td>
                     </tr>
-                `).join('');
+                `}).join('');
 
                 document.getElementById('loading-traffic').style.display = 'none';
+
+                // --- Render Health Charts ---
+                renderPieChart('browserChart', browsers, 'Browsers');
+                renderPieChart('osChart', os, 'Operating Systems');
 
             } catch (error) {
                 console.error("Error loading traffic data:", error);
                 document.getElementById('loading-traffic').textContent = "Error loading analytics.";
             }
+        };
+
+        const runIntegrityCheck = async () => {
+            const tbody = document.getElementById('integrity-table-body');
+            const statusDiv = document.getElementById('integrity-status');
+            tbody.innerHTML = '';
+            let issuesFound = 0;
+
+            // 1. Check for Malformed User Docs (Missing Email/Username)
+            allUsers.forEach(user => {
+                let issues = [];
+                if (!user.email) issues.push('Missing Email');
+                if (!user.username) issues.push('Missing Username');
+                if (!user.authMethod) issues.push('Missing AuthMethod');
+
+                if (issues.length > 0) {
+                    issuesFound++;
+                    addIntegrityRow(user.id, 'Incomplete User Record', issues.join(', '), 'delete-user');
+                }
+            });
+
+            // 2. Check for Orphaned Analytics (Session ID not in Users)
+            // Note: Only checking loaded sessions to save reads
+            allSessions.forEach(s => {
+                if (s.userId && s.userId !== 'anonymous') {
+                    const userExists = allUsers.some(u => u.id === s.userId);
+                    if (!userExists) {
+                         issuesFound++;
+                         addIntegrityRow(s.id, 'Orphaned Analytics', `User ID ${s.userId} not found in DB`, 'delete-session');
+                    }
+                }
+            });
+
+            statusDiv.textContent = issuesFound > 0 
+                ? `Found ${issuesFound} potential data integrity issues.` 
+                : 'No data integrity issues found.';
+        };
+
+        const addIntegrityRow = (id, type, details, actionType) => {
+            const tbody = document.getElementById('integrity-table-body');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="font-mono text-xs text-gray-500">${id}</td>
+                <td class="text-orange-400">${type}</td>
+                <td class="text-sm text-gray-400">${details}</td>
+                <td>
+                    <button class="text-xs bg-red-900/30 border border-red-500/30 text-red-400 px-2 py-1 rounded hover:bg-red-900/50" onclick="alert('Manual deletion required via Firebase Console for safety.')">
+                        Review
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        };
+
+        // --- Helpers ---
+
+        const parseUserAgent = (ua) => {
+            let browser = 'Unknown';
+            let os = 'Unknown';
+
+            if (ua.includes('Firefox')) browser = 'Firefox';
+            else if (ua.includes('Chrome')) browser = 'Chrome';
+            else if (ua.includes('Safari')) browser = 'Safari';
+            else if (ua.includes('Edge')) browser = 'Edge';
+
+            if (ua.includes('Windows')) os = 'Windows';
+            else if (ua.includes('Mac')) os = 'MacOS';
+            else if (ua.includes('Linux')) os = 'Linux';
+            else if (ua.includes('Android')) os = 'Android';
+            else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+
+            return { browser, os };
         };
 
         const formatDuration = (seconds) => {
@@ -894,6 +1056,35 @@
                             grid: { color: '#1a1a1a' },
                             ticks: { color: '#707070', stepSize: 1 }
                         }
+                    }
+                }
+            });
+        };
+        
+        const renderPieChart = (canvasId, dataMap, label) => {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const labels = Object.keys(dataMap);
+            const data = Object.values(dataMap);
+            const colors = [
+                '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#6366f1'
+            ];
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#9ca3af' } }
                     }
                 }
             });
