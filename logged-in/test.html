@@ -61,6 +61,7 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            text-decoration: none; /* For anchor tags */
         }
         .btn-toolbar-style:hover {
             background-color: var(--menu-bg);
@@ -299,12 +300,33 @@
         </header>
 
         <main class="flex-grow p-5 md:p-8 max-w-7xl mx-auto w-full">
+            
+            <div class="mb-8 p-5 rounded-2xl border border-cyan-900/30 bg-cyan-900/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex-grow">
+                    <h3 class="text-lg text-cyan-400 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-globe"></i> Unblockable Soundboard Available
+                    </h3>
+                    <p class="text-sm text-cyan-100/80 leading-relaxed max-w-3xl">
+                        A local soundboard file is available that uses <code class="text-cyan-300 bg-cyan-900/30 px-1 rounded">cdn.jsdelivr.net</code> to bypass the Soundboard game block on the GAMES collection. 
+                        <br>
+                        <span class="text-cyan-300/60 italic text-xs mt-1 block">
+                            <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                            Note: This contains non-4SP approved sounds. Titles in this version may not accurately explain the sounds they play.
+                        </span>
+                    </p>
+                </div>
+                
+                <a href="../logged-in/third-party-soundboard.html" download="third-party-soundboard.html" class="btn-toolbar-style text-sm whitespace-nowrap shrink-0">
+                    <i class="fa-solid fa-file-arrow-down"></i> <span>Download HTML</span>
+                </a>
+            </div>
+
             <div class="mb-10">
                 <h2 class="section-header">Normal Sounds</h2>
                 <div id="normalSoundsContainer" class="sound-grid"></div>
             </div>
 
-            <div class="mb-10">
+            <div class="mb-10" id="explicitSectionWrapper">
                 <h2 class="section-header text-red-400/80 border-red-900/30">Explicit Sounds</h2>
                 <div id="explicitSoundsContainer" class="sound-grid"></div>
             </div>
@@ -316,10 +338,10 @@
     <script type="module">
         import { firebaseConfig } from '../firebase-config.js';
         
-        // Import Modular SDKs directly (This avoids the global scope conflict)
+        // Import Modular SDKs directly
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         // --- UI & State References ---
         const loadingScreen = document.getElementById('loading-screen');
@@ -335,6 +357,7 @@
         const statusToaster = document.getElementById('status-toaster');
         const normalSoundsContainer = document.getElementById('normalSoundsContainer');
         const explicitSoundsContainer = document.getElementById('explicitSoundsContainer');
+        const explicitSectionWrapper = document.getElementById('explicitSectionWrapper');
 
         // --- Soundboard Logic State ---
         let playingAudios = [];
@@ -344,19 +367,18 @@
         let toasterTimeout = null;
 
         // --- Firebase Initialization (Modular) ---
-        // This initialization is contained within the module's scope and won't conflict with global 'firebase'
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const storage = getStorage(app);
+        const db = getFirestore(app);
 
         function setupAuthAndLoad() {
             try {
-                // Modular: using 'onAuthStateChanged(auth, ...)'
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         loadingScreen.style.display = 'none';
                         pageContent.classList.remove('hidden');
-                        loadSoundsFromStorage();
+                        loadSoundsLocal();
+                        monitorExplicitSettings();
                     } else {
                         window.location.href = '../index.html'; 
                     }
@@ -365,6 +387,32 @@
 
             } catch (e) {
                 console.error("Auth Setup Error", e);
+            }
+        }
+
+        function monitorExplicitSettings() {
+            try {
+                onSnapshot(doc(db, 'config', 'soundboard'), (docSnap) => {
+                    // Default to true if document doesn't exist or field is missing
+                    let isEnabled = true;
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        if (data.explicitEnabled !== undefined) {
+                            isEnabled = data.explicitEnabled;
+                        }
+                    }
+
+                    if (explicitSectionWrapper) {
+                        if (isEnabled) {
+                            explicitSectionWrapper.style.display = 'block';
+                        } else {
+                            explicitSectionWrapper.style.display = 'none';
+                            stopAllAudios(); // Stop all sounds to be safe as per requirements
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error("Error monitoring explicit settings:", err);
             }
         }
 
@@ -379,13 +427,9 @@
             toasterTimeout = setTimeout(() => statusToaster.classList.remove('visible'), 2000);
         }
 
-        async function loadSoundsFromStorage() {
+        async function loadSoundsLocal() {
             try {
-                // Modular: using 'ref(storage, ...)' and 'getDownloadURL(...)'
-                const jsonRef = ref(storage, 'Soundboard/SoundboardNames.json');
-                const url = await getDownloadURL(jsonRef);
-                
-                const response = await fetch(url);
+                const response = await fetch('../soundboard_names.json');
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
                 const data = await response.json();
@@ -394,17 +438,9 @@
                 if (data.ExplicitSounds) data.ExplicitSounds.forEach(f => createSoundButton(f, explicitSoundsContainer));
 
             } catch (error) {
-                console.error("Storage Error:", error);
-                
-                let errorMsg = "Unable to load sounds.";
-                if (error.message.includes("Failed to fetch") || error.code === 'storage/unknown') {
-                    errorMsg = "CORS Error: Bucket configuration needed.";
-                } else if (error.code === 'storage/object-not-found') {
-                    errorMsg = "Config file missing in Storage.";
-                }
-
-                showStatus(errorMsg, "error");
-                normalSoundsContainer.innerHTML = `<p class="text-red-500 text-sm italic border border-red-900/50 p-2 rounded bg-red-900/10">${errorMsg} (Check Console)</p>`;
+                console.error("Load Error:", error);
+                showStatus("Unable to load sounds.", "error");
+                normalSoundsContainer.innerHTML = `<p class="text-red-500 text-sm italic border border-red-900/50 p-2 rounded bg-red-900/10">Unable to load sounds. (Check Console)</p>`;
             }
         }
 
@@ -413,17 +449,14 @@
             const btn = document.createElement('div');
             btn.className = 'sound-btn';
             btn.textContent = soundName;
-            btn.dataset.storagePath = `Soundboard/Sounds/${fileName}`;
+            
+            const audioPath = `../sounds/${fileName}`;
             
             btn.addEventListener('click', async () => {
                 if (!soundOverlayCheckbox.checked) stopAllAudios();
 
                 try {
-                    // Modular: using 'ref(storage, ...)' and 'getDownloadURL(...)'
-                    const audioRef = ref(storage, btn.dataset.storagePath);
-                    const audioUrl = await getDownloadURL(audioRef);
-                    
-                    const audio = new Audio(audioUrl);
+                    const audio = new Audio(audioPath);
                     audio.soundButton = btn; // Store reference to the button
                     playingAudios.push(audio);
                     audio.addEventListener('ended', () => {
@@ -434,7 +467,7 @@
                     await audio.play();
                 } catch (err) {
                     console.error("Playback failed:", err);
-                    showStatus('Error playing sound (CORS?)', 'error');
+                    showStatus('Error playing sound', 'error');
                     btn.classList.remove('sound-btn-playing'); // Remove class on error
                 }
             });
@@ -536,7 +569,6 @@
         });
 
         // --- Init ---
-        // This runs after all imports are loaded and sets up the event listeners
         window.addEventListener('load', () => {
             const savedOverlay = localStorage.getItem('soundOverlay') === 'true';
             const savedAutoClick = localStorage.getItem('autoClicker') === 'true';
