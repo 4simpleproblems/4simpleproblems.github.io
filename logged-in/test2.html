@@ -61,6 +61,7 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            text-decoration: none; /* For anchor tags */
         }
         .btn-toolbar-style:hover {
             background-color: var(--menu-bg);
@@ -299,12 +300,33 @@
         </header>
 
         <main class="flex-grow p-5 md:p-8 max-w-7xl mx-auto w-full">
+            
+            <div class="mb-8 p-5 rounded-2xl border border-cyan-900/30 bg-cyan-900/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex-grow">
+                    <h3 class="text-lg text-cyan-400 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-globe"></i> Unblockable Soundboard Available
+                    </h3>
+                    <p class="text-sm text-cyan-100/80 leading-relaxed max-w-3xl">
+                        A local soundboard file is available that uses <code class="text-cyan-300 bg-cyan-900/30 px-1 rounded">cdn.jsdelivr.net</code> to bypass the Soundboard game block on the GAMES collection. 
+                        <br>
+                        <span class="text-cyan-300/60 italic text-xs mt-1 block">
+                            <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                            Note: This contains non-4SP approved sounds. Titles in this version may not accurately explain the sounds they play.
+                        </span>
+                    </p>
+                </div>
+                
+                <a href="../logged-in/third-party-soundboard.html" download="third-party-soundboard.html" class="btn-toolbar-style text-sm whitespace-nowrap shrink-0">
+                    <i class="fa-solid fa-file-arrow-down"></i> <span>Download HTML</span>
+                </a>
+            </div>
+
             <div class="mb-10">
                 <h2 class="section-header">Normal Sounds</h2>
                 <div id="normalSoundsContainer" class="sound-grid"></div>
             </div>
 
-            <div class="mb-10">
+            <div class="mb-10" id="explicitSectionWrapper">
                 <h2 class="section-header text-red-400/80 border-red-900/30">Explicit Sounds</h2>
                 <div id="explicitSoundsContainer" class="sound-grid"></div>
             </div>
@@ -316,9 +338,11 @@
     <script type="module">
         import { firebaseConfig } from '../firebase-config.js';
         
-        // Import Modular SDKs directly (This avoids the global scope conflict)
+        // Import Modular SDKs directly
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        // *** NEW: Import Firebase Storage SDK ***
         import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
         // --- UI & State References ---
@@ -335,6 +359,7 @@
         const statusToaster = document.getElementById('status-toaster');
         const normalSoundsContainer = document.getElementById('normalSoundsContainer');
         const explicitSoundsContainer = document.getElementById('explicitSoundsContainer');
+        const explicitSectionWrapper = document.getElementById('explicitSectionWrapper');
 
         // --- Soundboard Logic State ---
         let playingAudios = [];
@@ -342,21 +367,24 @@
         let requestAnimationFrameId = null;
         let currentlyHoveredButton = null;
         let toasterTimeout = null;
+        // *** NEW: Cache for sound URLs to avoid repeated fetching ***
+        const soundUrlCache = new Map(); 
 
         // --- Firebase Initialization (Modular) ---
-        // This initialization is contained within the module's scope and won't conflict with global 'firebase'
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
+        // *** NEW: Initialize Firebase Storage ***
         const storage = getStorage(app);
 
         function setupAuthAndLoad() {
             try {
-                // Modular: using 'onAuthStateChanged(auth, ...)'
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         loadingScreen.style.display = 'none';
                         pageContent.classList.remove('hidden');
-                        loadSoundsFromStorage();
+                        loadSoundsFromStorage(); // Call the new loading function
+                        monitorExplicitSettings();
                     } else {
                         window.location.href = '../index.html'; 
                     }
@@ -365,6 +393,32 @@
 
             } catch (e) {
                 console.error("Auth Setup Error", e);
+            }
+        }
+
+        function monitorExplicitSettings() {
+            try {
+                onSnapshot(doc(db, 'config', 'soundboard'), (docSnap) => {
+                    // Default to true if document doesn't exist or field is missing
+                    let isEnabled = true;
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        if (data.explicitEnabled !== undefined) {
+                            isEnabled = data.explicitEnabled;
+                        }
+                    }
+
+                    if (explicitSectionWrapper) {
+                        if (isEnabled) {
+                            explicitSectionWrapper.style.display = 'block';
+                        } else {
+                            explicitSectionWrapper.style.display = 'none';
+                            stopAllAudios(); // Stop all sounds to be safe as per requirements
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error("Error monitoring explicit settings:", err);
             }
         }
 
@@ -379,51 +433,68 @@
             toasterTimeout = setTimeout(() => statusToaster.classList.remove('visible'), 2000);
         }
 
+        // *** MODIFIED: Load sounds and get URLs from Firebase Storage ***
         async function loadSoundsFromStorage() {
             try {
-                // Modular: using 'ref(storage, ...)' and 'getDownloadURL(...)'
-                const jsonRef = ref(storage, 'Soundboard/SoundboardNames.json');
-                const url = await getDownloadURL(jsonRef);
-                
-                const response = await fetch(url);
+                const response = await fetch('../soundboard_names.json');
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
                 const data = await response.json();
-
-                if (data.NormalSounds) data.NormalSounds.forEach(f => createSoundButton(f, normalSoundsContainer));
-                if (data.ExplicitSounds) data.ExplicitSounds.forEach(f => createSoundButton(f, explicitSoundsContainer));
+                
+                const normalSoundPromises = (data.NormalSounds || []).map(fileName => createSoundButtonWithStorage(fileName, normalSoundsContainer));
+                const explicitSoundPromises = (data.ExplicitSounds || []).map(fileName => createSoundButtonWithStorage(fileName, explicitSoundsContainer));
+                
+                // Wait for all buttons to be created and URLs fetched
+                await Promise.all([...normalSoundPromises, ...explicitSoundPromises]);
 
             } catch (error) {
-                console.error("Storage Error:", error);
-                
-                let errorMsg = "Unable to load sounds.";
-                if (error.message.includes("Failed to fetch") || error.code === 'storage/unknown') {
-                    errorMsg = "CORS Error: Bucket configuration needed.";
-                } else if (error.code === 'storage/object-not-found') {
-                    errorMsg = "Config file missing in Storage.";
-                }
-
-                showStatus(errorMsg, "error");
-                normalSoundsContainer.innerHTML = `<p class="text-red-500 text-sm italic border border-red-900/50 p-2 rounded bg-red-900/10">${errorMsg} (Check Console)</p>`;
+                console.error("Load Error:", error);
+                showStatus("Unable to load sounds. (Check Console)", "error");
+                normalSoundsContainer.innerHTML = `<p class="text-red-500 text-sm italic border border-red-900/50 p-2 rounded bg-red-900/10">Unable to load sounds from Firebase Storage. (Check Console)</p>`;
             }
         }
 
-        function createSoundButton(fileName, container) {
+        // *** NEW/MODIFIED: Function to get URL and create button ***
+        async function createSoundButtonWithStorage(fileName, container) {
+            let audioPath;
+            
+            // 1. Try to get URL from cache
+            if (soundUrlCache.has(fileName)) {
+                audioPath = soundUrlCache.get(fileName);
+            } else {
+                try {
+                    // 2. If not in cache, get URL from Firebase Storage
+                    // Assuming the sounds are in a folder named 'sounds' in the root of the bucket
+                    const storageRef = ref(storage, `sounds/${fileName}`);
+                    audioPath = await getDownloadURL(storageRef);
+                    // 3. Store in cache
+                    soundUrlCache.set(fileName, audioPath);
+                } catch (err) {
+                    console.warn(`Could not fetch URL for ${fileName}:`, err);
+                    audioPath = null; // Set to null if the URL cannot be fetched
+                }
+            }
+
             const soundName = fileName.replace('.mp3', '').replace(/_/g, ' ');
             const btn = document.createElement('div');
             btn.className = 'sound-btn';
-            btn.textContent = soundName;
-            btn.dataset.storagePath = `Soundboard/Sounds/${fileName}`;
+            btn.textContent = audioPath ? soundName : `${soundName} (Unavailable)`;
             
+            // If URL is not available, slightly disable the button visually and functionally
+            if (!audioPath) {
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                container.appendChild(btn);
+                return; // Stop here if the audio path is null
+            }
+
+            // The rest of the logic remains mostly the same, using the fetched audioPath
             btn.addEventListener('click', async () => {
                 if (!soundOverlayCheckbox.checked) stopAllAudios();
 
                 try {
-                    // Modular: using 'ref(storage, ...)' and 'getDownloadURL(...)'
-                    const audioRef = ref(storage, btn.dataset.storagePath);
-                    const audioUrl = await getDownloadURL(audioRef);
-                    
-                    const audio = new Audio(audioUrl);
+                    // Use the fetched download URL
+                    const audio = new Audio(audioPath); 
                     audio.soundButton = btn; // Store reference to the button
                     playingAudios.push(audio);
                     audio.addEventListener('ended', () => {
@@ -434,7 +505,7 @@
                     await audio.play();
                 } catch (err) {
                     console.error("Playback failed:", err);
-                    showStatus('Error playing sound (CORS?)', 'error');
+                    showStatus('Error playing sound', 'error');
                     btn.classList.remove('sound-btn-playing'); // Remove class on error
                 }
             });
@@ -536,7 +607,6 @@
         });
 
         // --- Init ---
-        // This runs after all imports are loaded and sets up the event listeners
         window.addEventListener('load', () => {
             const savedOverlay = localStorage.getItem('soundOverlay') === 'true';
             const savedAutoClick = localStorage.getItem('autoClicker') === 'true';
