@@ -61,7 +61,6 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            text-decoration: none; /* For anchor tags */
         }
         .btn-toolbar-style:hover {
             background-color: var(--menu-bg);
@@ -250,7 +249,6 @@
 
     <div id="loading-screen" class="fixed inset-0 bg-[#040404] flex items-center justify-center z-50">
         <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
-        <div class="absolute mt-16 text-sm text-gray-500" id="loading-text">Connecting to Storage...</div>
     </div>
 
     <div id="page-content" class="hidden">
@@ -301,29 +299,12 @@
         </header>
 
         <main class="flex-grow p-5 md:p-8 max-w-7xl mx-auto w-full">
-            
-            <div class="mb-8 p-5 rounded-2xl border border-cyan-900/30 bg-cyan-900/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div class="flex-grow">
-                    <h3 class="text-lg text-cyan-400 mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-cloud"></i> Firebase Storage Enabled
-                    </h3>
-                    <p class="text-sm text-cyan-100/80 leading-relaxed max-w-3xl">
-                        This soundboard is now powered by Firebase Storage for faster retrieval and better efficiency. 
-                        <br>
-                        <span class="text-cyan-300/60 italic text-xs mt-1 block">
-                            <i class="fa-solid fa-check mr-1"></i>
-                            Sounds are streamed directly from the cloud bucket.
-                        </span>
-                    </p>
-                </div>
-            </div>
-
             <div class="mb-10">
                 <h2 class="section-header">Normal Sounds</h2>
                 <div id="normalSoundsContainer" class="sound-grid"></div>
             </div>
 
-            <div class="mb-10" id="explicitSectionWrapper">
+            <div class="mb-10">
                 <h2 class="section-header text-red-400/80 border-red-900/30">Explicit Sounds</h2>
                 <div id="explicitSoundsContainer" class="sound-grid"></div>
             </div>
@@ -335,16 +316,13 @@
     <script type="module">
         import { firebaseConfig } from '../firebase-config.js';
         
-        // Import Modular SDKs directly
+        // Import Modular SDKs directly (This avoids the global scope conflict)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-        // Import Storage SDK
         import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
         // --- UI & State References ---
         const loadingScreen = document.getElementById('loading-screen');
-        const loadingText = document.getElementById('loading-text');
         const pageContent = document.getElementById('page-content');
         const optionsMenuBtn = document.getElementById('options-menu-btn');
         const optionsDropdown = document.getElementById('options-dropdown');
@@ -357,7 +335,6 @@
         const statusToaster = document.getElementById('status-toaster');
         const normalSoundsContainer = document.getElementById('normalSoundsContainer');
         const explicitSoundsContainer = document.getElementById('explicitSoundsContainer');
-        const explicitSectionWrapper = document.getElementById('explicitSectionWrapper');
 
         // --- Soundboard Logic State ---
         let playingAudios = [];
@@ -367,76 +344,27 @@
         let toasterTimeout = null;
 
         // --- Firebase Initialization (Modular) ---
+        // This initialization is contained within the module's scope and won't conflict with global 'firebase'
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
         const storage = getStorage(app);
 
         function setupAuthAndLoad() {
             try {
+                // Modular: using 'onAuthStateChanged(auth, ...)'
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        // --- Authentication Success ---
-                        console.log(`[Soundboard Auth] SUCCESS: User is authenticated. UID: ${user.uid}.`);
-                        loadingText.textContent = "Loading Sounds from Cloud...";
-                        
-                        // Proceed only if user is fully authenticated
-                        console.log("[Soundboard Storage] Attempting to load configuration from Firebase Storage...");
-                        loadSoundsFromStorage()
-                            .then(() => {
-                                // --- Loading Success ---
-                                console.log("[Soundboard Storage] Sound loading complete. Allowing entry.");
-                                loadingScreen.style.display = 'none';
-                                pageContent.classList.remove('hidden');
-                            })
-                            .catch(error => {
-                                // --- Storage Load Failure (e.g., storage/unauthenticated) ---
-                                console.error("[Soundboard Storage] FATAL ERROR: Failed to load sounds from storage.", error);
-                                loadingText.textContent = "Authentication Error: Cannot access files.";
-                                showStatus("Access Denied (Storage Error). Redirecting.", "error");
-                                // If loading fails (due to storage/unauthenticated), redirect the user out.
-                                setTimeout(() => {
-                                     window.location.href = '../index.html'; 
-                                }, 3000);
-                            });
-                        
-                        monitorExplicitSettings();
+                        loadingScreen.style.display = 'none';
+                        pageContent.classList.remove('hidden');
+                        loadSoundsFromStorage();
                     } else {
-                        // --- Authentication Failure ---
-                        console.log("[Soundboard Auth] FAILURE: User is NOT authenticated. Redirecting to login.");
                         window.location.href = '../index.html'; 
                     }
                 });
+
+
             } catch (e) {
-                console.error("[Soundboard Auth] Auth Setup Error", e);
-                // On critical failure, also redirect
-                window.location.href = '../index.html'; 
-            }
-        }
-
-        function monitorExplicitSettings() {
-            try {
-                onSnapshot(doc(db, 'config', 'soundboard'), (docSnap) => {
-                    // Default to true if document doesn't exist or field is missing
-                    let isEnabled = true;
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        if (data.explicitEnabled !== undefined) {
-                            isEnabled = data.explicitEnabled;
-                        }
-                    }
-
-                    if (explicitSectionWrapper) {
-                        if (isEnabled) {
-                            explicitSectionWrapper.style.display = 'block';
-                        } else {
-                            explicitSectionWrapper.style.display = 'none';
-                            stopAllAudios(); // Stop all sounds to be safe as per requirements
-                        }
-                    }
-                });
-            } catch (err) {
-                console.error("Error monitoring explicit settings:", err);
+                console.error("Auth Setup Error", e);
             }
         }
 
@@ -453,87 +381,60 @@
 
         async function loadSoundsFromStorage() {
             try {
-                // 1. Get the JSON configuration file from Storage (Based on your image image_ccb516.png)
-                // Note: The file is inside the Soundboard folder and named 'SoundboardNames.json'
+                // Modular: using 'ref(storage, ...)' and 'getDownloadURL(...)'
                 const jsonRef = ref(storage, 'Soundboard/SoundboardNames.json');
-                const jsonUrl = await getDownloadURL(jsonRef);
+                const url = await getDownloadURL(jsonRef);
                 
-                // 2. Fetch the JSON content
-                const response = await fetch(jsonUrl);
+                const response = await fetch(url);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
                 const data = await response.json();
 
-                // 3. Process lists concurrently for efficiency
-                // We pass the list and the container to a helper function
-                const tasks = [];
-                if (data.NormalSounds) {
-                    tasks.push(loadBatchSounds(data.NormalSounds, normalSoundsContainer));
-                }
-                if (data.ExplicitSounds) {
-                    tasks.push(loadBatchSounds(data.ExplicitSounds, explicitSoundsContainer));
-                }
-                
-                await Promise.all(tasks);
+                if (data.NormalSounds) data.NormalSounds.forEach(f => createSoundButton(f, normalSoundsContainer));
+                if (data.ExplicitSounds) data.ExplicitSounds.forEach(f => createSoundButton(f, explicitSoundsContainer));
 
             } catch (error) {
-                // Display the failure message but re-throw the error for the calling function to handle the fatal state
-                normalSoundsContainer.innerHTML = `<p class="text-red-500 text-sm italic border border-red-900/50 p-2 rounded bg-red-900/10">Unable to load sounds. (Check Console)</p>`;
-                throw error; // CRITICAL: Re-throw the error to be caught in setupAuthAndLoad
+                console.error("Storage Error:", error);
+                
+                let errorMsg = "Unable to load sounds.";
+                if (error.message.includes("Failed to fetch") || error.code === 'storage/unknown') {
+                    errorMsg = "CORS Error: Bucket configuration needed.";
+                } else if (error.code === 'storage/object-not-found') {
+                    errorMsg = "Config file missing in Storage.";
+                }
+
+                showStatus(errorMsg, "error");
+                normalSoundsContainer.innerHTML = `<p class="text-red-500 text-sm italic border border-red-900/50 p-2 rounded bg-red-900/10">${errorMsg} (Check Console)</p>`;
             }
         }
 
-        // Helper to load a list of sounds efficiently
-        async function loadBatchSounds(soundList, container) {
-            // Map each filename to a promise that fetches its URL and creates the button
-            const promises = soundList.map(async (fileName) => {
-                try {
-                    // Based on your image image_ccb4f9.png, sounds are in 'Soundboard/Sounds/'
-                    const soundRef = ref(storage, `Soundboard/Sounds/${fileName}`);
-                    const url = await getDownloadURL(soundRef);
-                    createSoundButton(fileName, container, url);
-                } catch (err) {
-                    // Log the warning but don't re-throw, as a single missing sound shouldn't crash the whole app
-                    console.warn(`[Soundboard Storage] Could not load sound: ${fileName}`, err);
-                }
-            });
-            
-            // Wait for all URLs in this batch to resolve
-            await Promise.all(promises);
-        }
-
-        function createSoundButton(fileName, container, audioUrl) {
+        function createSoundButton(fileName, container) {
             const soundName = fileName.replace('.mp3', '').replace(/_/g, ' ');
             const btn = document.createElement('div');
             btn.className = 'sound-btn';
             btn.textContent = soundName;
-            
-            // We use the authenticated/signed URL from Firebase Storage
+            btn.dataset.storagePath = `Soundboard/Sounds/${fileName}`;
             
             btn.addEventListener('click', async () => {
                 if (!soundOverlayCheckbox.checked) stopAllAudios();
 
                 try {
+                    // Modular: using 'ref(storage, ...)' and 'getDownloadURL(...)'
+                    const audioRef = ref(storage, btn.dataset.storagePath);
+                    const audioUrl = await getDownloadURL(audioRef);
+                    
                     const audio = new Audio(audioUrl);
                     audio.soundButton = btn; // Store reference to the button
                     playingAudios.push(audio);
-                    
                     audio.addEventListener('ended', () => {
                         playingAudios = playingAudios.filter(a => a !== audio);
                         btn.classList.remove('sound-btn-playing'); // Remove class when ended
                     });
-                    
-                    // Error handling for playback specific errors
-                    audio.addEventListener('error', (e) => {
-                         console.error("Playback error:", e);
-                         btn.classList.remove('sound-btn-playing');
-                         showStatus("Error playing audio", "error");
-                    });
-
                     btn.classList.add('sound-btn-playing'); // Add class when playing
                     await audio.play();
                 } catch (err) {
                     console.error("Playback failed:", err);
-                    showStatus('Error playing sound', 'error');
+                    showStatus('Error playing sound (CORS?)', 'error');
                     btn.classList.remove('sound-btn-playing'); // Remove class on error
                 }
             });
@@ -635,6 +536,7 @@
         });
 
         // --- Init ---
+        // This runs after all imports are loaded and sets up the event listeners
         window.addEventListener('load', () => {
             const savedOverlay = localStorage.getItem('soundOverlay') === 'true';
             const savedAutoClick = localStorage.getItem('autoClicker') === 'true';
