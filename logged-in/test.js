@@ -3326,7 +3326,7 @@ const performAccountDeletion = async (credential) => {
 
                     try {
                         // 1. Fetch Template
-                        const response = await fetch('../4simpleproblems-v5.html');
+                        const response = await fetch('../4simpleproblems-v5.html', { cache: "no-store" }); // Prevent caching
                         if (!response.ok) throw new Error("Failed to fetch client template.");
                         let htmlContent = await response.text();
 
@@ -3334,7 +3334,6 @@ const performAccountDeletion = async (credential) => {
                         const localData = getAllLocalStorageData();
                         const indexedData = await getAllIndexedDBData();
                         
-                        // Include critical user profile data in localStorage export for offline usage
                         if (userData) {
                             localData['offline_user_profile'] = JSON.stringify(userData);
                         }
@@ -3343,10 +3342,20 @@ const performAccountDeletion = async (credential) => {
                             localStorage: localData,
                             indexedDB: indexedData
                         };
+                        
+                        // Serialize and escape potential script-breaking characters
+                        const jsonString = JSON.stringify(fullData).replace(/<\/script>/g, '<\\/script>');
 
-                        // 3. Inject Data
-                        htmlContent = htmlContent.replace('{{ACCESS_CODE}}', code);
-                        htmlContent = htmlContent.replace('{{USER_DATA}}', JSON.stringify(fullData));
+                        // 3. Inject Data (Robust Replacement)
+                        // Use regex to be safe against spacing, and use callback to prevent '$' replacement issues
+                        htmlContent = htmlContent.replace(/{{ACCESS_CODE}}/g, () => code);
+                        htmlContent = htmlContent.replace(/{{USER_DATA}}/g, () => jsonString);
+                        
+                        // Verification Log
+                        if (htmlContent.includes('{{USER_DATA}}')) {
+                            console.error("CRITICAL: Data injection failed. Placeholder still present.");
+                            throw new Error("Data injection failed.");
+                        }
 
                         // 4. Download
                         const blob = new Blob([htmlContent], { type: 'text/html' });
