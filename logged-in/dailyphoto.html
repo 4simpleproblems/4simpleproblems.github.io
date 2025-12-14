@@ -454,7 +454,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs, serverTimestamp, orderBy, deleteDoc, onSnapshot, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
         import { firebaseConfig } from "../firebase-config.js";
         
         if (!firebaseConfig || !firebaseConfig.apiKey) throw new Error("Missing Firebase Config.");
@@ -793,7 +792,7 @@
                 // Render Modal Content
                 container.innerHTML = `
                     <div id="photo-display-area">
-                         <img src="${data.imageUrl}" class="photo-modal-img">
+                         <img src="${data.imageBase64}" class="photo-modal-img">
                     </div>
                     <div id="photo-info-panel">
                         <button id="close-modal-btn" class="absolute top-2 right-2 btn-icon" style="z-index: 50; border: none; background: transparent;" title="Close"><i class="fas fa-times text-xl text-gray-400 hover:text-white"></i></button>
@@ -885,7 +884,7 @@
                             uid: currentUser.uid,
                             username: CURRENT_USERNAME,
                             text: await cleanText(text),
-                            timestamp: serverTimestamp()
+                            timestamp: new Date()
                         })
                     });
                     input.value = '';
@@ -1058,50 +1057,33 @@
                     
                     if (!PENDING_FILE || !auth.currentUser) return;
 
-                    // Create Firestore document reference BEFORE upload to get an ID for storage path
-                    const photoDocRef = doc(DAILY_COLLECTION);
+                    const ref = doc(DAILY_COLLECTION);
+                    await setDoc(ref, {
+                        creatorUid: auth.currentUser.uid,
+                        creatorUsername: await cleanText(username),
+                        createdAt: serverTimestamp(),
+                        imageBase64: imgData,
+                        title: await cleanText(desc) || "Daily Photo",
+                        hearts: [],
+                        comments: [],
+                        isPublic: isPublic,
+                        status: 'active'
+                    });
 
-                    try {
-                        // 1. Upload image to Firebase Storage
-                        const storage = getStorage(app);
-                        const storagePath = `daily_photos/${auth.currentUser.uid}/${photoDocRef.id}-${Date.now()}.jpeg`; // Unique path using photoDocRef.id
-                        const storageRef = ref(storage, storagePath);
-                        await uploadString(storageRef, imgData, 'data_url');
-                        const imageUrl = await getDownloadURL(storageRef);
-
-                        // 2. Create Firestore document with image URL
-                        await setDoc(photoDocRef, { // Use the pre-created doc ref
-                            creatorUid: auth.currentUser.uid,
-                            creatorUsername: await cleanText(username),
-                            createdAt: serverTimestamp(),
-                            imageUrl: imageUrl, // Store the URL instead of base64
-                            title: await cleanText(desc) || "Daily Photo",
-                            hearts: [],
-                            comments: [],
-                            isPublic: isPublic,
-                            status: 'active'
-                        });
-
-                        const userRef = doc(db, USERS_COLLECTION, auth.currentUser.uid);
-                        const userData = (await getDoc(userRef)).data();
-                        const slots = userData.dailySlotsUsed || [];
-                        
-                        if (PENDING_SLOT < slots.length) {
-                            slots[PENDING_SLOT] = photoDocRef.id; // Use photoDocRef.id
-                        } else if (PENDING_SLOT === slots.length) {
-                            slots.push(photoDocRef.id); // Use photoDocRef.id
-                        }
-                        
-                        await updateDoc(userRef, { dailySlotsUsed: slots });
-                        modal.classList.add('hidden');
-                        PENDING_FILE = null;
-                        document.removeEventListener('click', closeMenuHandler); // Clean up emoji handler
-                    } catch (error) {
-                        console.error("Error posting photo:", error);
-                        alert("Failed to post photo. Please try again.");
-                        btn.disabled = false;
-                        btn.innerHTML = `<i class="fas fa-paper-plane"></i> Post`;
+                    const userRef = doc(db, USERS_COLLECTION, auth.currentUser.uid);
+                    const userData = (await getDoc(userRef)).data();
+                    const slots = userData.dailySlotsUsed || [];
+                    
+                    if (PENDING_SLOT < slots.length) {
+                        slots[PENDING_SLOT] = ref.id;
+                    } else if (PENDING_SLOT === slots.length) {
+                        slots.push(ref.id);
                     }
+                    
+                    await updateDoc(userRef, { dailySlotsUsed: slots });
+                    modal.classList.add('hidden');
+                    PENDING_FILE = null;
+                    document.removeEventListener('click', closeMenuHandler); // Clean up emoji handler
                 };
             }).catch(err => {
                 console.error("Compression failed", err);
@@ -1137,7 +1119,7 @@
                 const el = document.createElement('div');
                 el.className = 'photo-thumbnail';
                 el.innerHTML = `
-                    <img src="${data.imageUrl}" loading="lazy">
+                    <img src="${data.imageBase64}" loading="lazy">
                     <div class="overlay"></div>
                     <div class="absolute top-2 right-2 flex gap-2">
                         <span class="text-white text-xs bg-black/50 px-2 py-1 rounded-lg backdrop-blur-sm" title="Likes"><i class="fas fa-heart text-red-400"></i> ${formatCount(data.heartCount)}</span>
