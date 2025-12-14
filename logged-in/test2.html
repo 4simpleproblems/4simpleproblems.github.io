@@ -311,7 +311,8 @@
         // Import Modular SDKs directly
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+        // Only Firebase Storage is needed for the actual MP3 files, but the config list is local.
+        import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js"; 
 
         // --- UI & State References ---
         const loadingScreen = document.getElementById('loading-screen');
@@ -350,7 +351,7 @@
                     if (user) {
                         loadingScreen.style.display = 'none';
                         pageContent.classList.remove('hidden');
-                        loadSoundsFromStorage();
+                        loadSoundsLocally(); // *** MODIFIED: Call the local loading function ***
                     } else {
                         // Redirect unauthenticated users
                         window.location.href = '../index.html'; 
@@ -378,16 +379,15 @@
         }
 
         /**
-         * Fetches the list of sounds from Firebase Storage and creates buttons.
+         * Fetches the list of sounds from the local configuration file.
+         * *** MODIFIED: This function now fetches the JSON file locally instead of from Firebase Storage. ***
          */
-        async function loadSoundsFromStorage() {
+        async function loadSoundsLocally() {
+            const SOUNDS_CONFIG_PATH = '../soundboard_names.json'; // The requested local path
             try {
-                // Modular: using 'ref(storage, ...)' to specify the file path
-                const jsonRef = ref(storage, 'Soundboard/SoundboardNames.json');
-                const url = await getDownloadURL(jsonRef);
-                
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                // Fetch the local JSON file
+                const response = await fetch(SOUNDS_CONFIG_PATH);
+                if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${SOUNDS_CONFIG_PATH}`);
                 
                 const data = await response.json();
 
@@ -396,22 +396,20 @@
                 if (data.ExplicitSounds) data.ExplicitSounds.forEach(f => createSoundButton(f, explicitSoundsContainer));
 
             } catch (error) {
-                console.error("Storage Error:", error);
+                console.error("Local Config Error:", error);
                 
-                let errorMsg = "Unable to load sounds. Check console for details.";
-                if (error.message.includes("Failed to fetch") || error.code === 'storage/unknown') {
-                    errorMsg = "CORS Error: Check Firebase Storage bucket configuration.";
-                } else if (error.code === 'storage/object-not-found') {
-                    errorMsg = "Config file 'Soundboard/SoundboardNames.json' is missing in Storage.";
+                let errorMsg = `Unable to load sounds from ${SOUNDS_CONFIG_PATH}.`;
+                if (error.message.includes("Failed to fetch")) {
+                    errorMsg = `Config file missing or path incorrect: ${SOUNDS_CONFIG_PATH}. Check file existence and CORS if applicable.`;
                 }
-
+                
                 showStatus(errorMsg, "error");
                 normalSoundsContainer.innerHTML = `<p class="text-red-500 text-sm italic border border-red-900/50 p-2 rounded bg-red-900/10">${errorMsg} (Check Console)</p>`;
             }
         }
 
         /**
-         * Creates a clickable sound button element.
+         * Creates a clickable sound button element and sets up Firebase Storage path for playback.
          * @param {string} fileName - The name of the sound file (e.g., "sound_name.mp3").
          * @param {HTMLElement} container - The container element to append the button to.
          */
@@ -420,14 +418,15 @@
             const btn = document.createElement('div');
             btn.className = 'sound-btn';
             btn.textContent = soundName;
-            btn.dataset.storagePath = `Soundboard/${fileName}`;
+            // The audio file path remains pointing to Firebase Storage
+            btn.dataset.storagePath = `Soundboard/${fileName}`; 
             
             btn.addEventListener('click', async () => {
                 // Stop all sounds if 'Sound Overlay' is disabled
                 if (!soundOverlayCheckbox.checked) stopAllAudios();
 
                 try {
-                    // Get the download URL for the specific audio file
+                    // Get the download URL for the specific audio file from Firebase Storage
                     const audioRef = ref(storage, btn.dataset.storagePath);
                     const audioUrl = await getDownloadURL(audioRef);
                     
@@ -444,7 +443,7 @@
                     await audio.play();
                 } catch (err) {
                     console.error("Playback failed:", err);
-                    showStatus('Error playing sound (Check CORS and file path)', 'error');
+                    showStatus('Error playing sound (Check Firebase path/permissions)', 'error');
                     btn.classList.remove('sound-btn-playing'); // Remove class on error
                 }
             });
