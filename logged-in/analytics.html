@@ -35,23 +35,23 @@
             font-weight: 400 !important;
         }
 
-        .user-table {
+        .user-table, .analytics-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
         }
-        .user-table th, .user-table td {
+        .user-table th, .user-table td, .analytics-table th, .analytics-table td {
             text-align: left;
             padding: 0.75rem 1rem;
             border-bottom: 1px solid #1a1a1a;
         }
-        .user-table th {
+        .user-table th, .analytics-table th {
             color: #707070;
             font-size: 0.875rem;
             font-weight: 500;
             text-transform: uppercase;
         }
-        .user-table tr:hover {
+        .user-table tr:hover, .analytics-table tr:hover {
             background-color: #0d0d0d;
         }
 
@@ -139,7 +139,6 @@
             margin-bottom: 2rem;
         }
         
-        /* Ban Modal Presets */
         .preset-chip {
             display: inline-block;
             padding: 0.25rem 0.75rem;
@@ -158,84 +157,173 @@
             color: white;
             border-color: #555;
         }
+
+        .tab-btn {
+            background: transparent;
+            color: #707070;
+            padding: 0.5rem 1rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            color: white;
+            border-bottom-color: #3b82f6;
+        }
     </style>
 </head>
 <body class="min-h-screen pb-10">
 
     <div id="page-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold text-white mb-2">Analytics</h1>
-            <p class="text-gray-400">User management and system statistics.</p>
+        <header class="mb-8 flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2">Analytics</h1>
+                <p class="text-gray-400">System overview and user management.</p>
+            </div>
+            <div class="flex gap-4 border-b border-[#1a1a1a]">
+                <button class="tab-btn active" data-tab="users">User Management</button>
+                <button class="tab-btn" data-tab="traffic">Site Traffic</button>
+            </div>
         </header>
 
-        <!-- Charts Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="chart-container">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-white text-lg">New Users</h3>
-                    <select id="chart-period" class="bg-[#1a1a1a] text-gray-300 border border-[#333] rounded px-2 py-1 text-sm focus:outline-none">
-                        <option value="week">Past Week</option>
-                        <option value="month" selected>Past Month</option>
-                        <option value="year">Past Year</option>
-                    </select>
+        <!-- USER MANAGEMENT TAB -->
+        <div id="tab-users" class="tab-content">
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="chart-container">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-white text-lg">New Users</h3>
+                        <select id="chart-period" class="bg-[#1a1a1a] text-gray-300 border border-[#333] rounded px-2 py-1 text-sm focus:outline-none">
+                            <option value="week">Past Week</option>
+                            <option value="month" selected>Past Month</option>
+                            <option value="year">Past Year</option>
+                        </select>
+                    </div>
+                    <div class="relative h-full w-full" style="height: 220px;">
+                        <canvas id="userGrowthChart"></canvas>
+                    </div>
                 </div>
-                <div class="relative h-full w-full" style="height: 220px;">
-                    <canvas id="userGrowthChart"></canvas>
+                
+                 <div class="grid grid-cols-2 gap-4 h-full">
+                    <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6 flex flex-col justify-center items-center">
+                        <span class="text-gray-400 text-sm mb-2">Total Users</span>
+                        <span id="total-users-count" class="text-4xl text-white font-light">--</span>
+                    </div>
+                    <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6 flex flex-col justify-center items-center">
+                        <span class="text-gray-400 text-sm mb-2">Admins</span>
+                        <span id="total-admins-count" class="text-4xl text-blue-400 font-light">--</span>
+                    </div>
+                     <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6 flex flex-col justify-center items-center">
+                        <span class="text-gray-400 text-sm mb-2">Banned</span>
+                        <span id="total-banned-count" class="text-4xl text-red-400 font-light">--</span>
+                    </div>
+                     <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6 flex flex-col justify-center items-center">
+                        <span class="text-gray-400 text-sm mb-2">Reports</span>
+                        <span id="total-reports-count" class="text-4xl text-yellow-400 font-light">0</span>
+                    </div>
+                 </div>
+            </div>
+
+            <!-- User List Section -->
+            <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl overflow-hidden">
+                <div class="p-4 border-b border-[#1a1a1a] flex justify-between items-center flex-wrap gap-4">
+                    <h3 class="text-white text-lg">User Directory</h3>
+                    <div class="flex gap-4">
+                        <input type="text" id="user-search" placeholder="Search users..." class="bg-[#1a1a1a] text-white border border-[#333] rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 w-64">
+                        <select id="user-sort" class="bg-[#1a1a1a] text-gray-300 border border-[#333] rounded-lg px-3 py-2 text-sm focus:outline-none">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="admin">Admins First</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Provider</th>
+                                <th>Joined</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table-body"></tbody>
+                    </table>
+                </div>
+                <div id="loading-users" class="p-8 text-center text-gray-500">
+                    <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading users...
                 </div>
             </div>
-            
-             <div class="grid grid-cols-2 gap-4 h-full">
-                <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6 flex flex-col justify-center items-center">
-                    <span class="text-gray-400 text-sm mb-2">Total Users</span>
-                    <span id="total-users-count" class="text-4xl text-white font-light">--</span>
-                </div>
-                <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6 flex flex-col justify-center items-center">
-                    <span class="text-gray-400 text-sm mb-2">Admins</span>
-                    <span id="total-admins-count" class="text-4xl text-blue-400 font-light">--</span>
-                </div>
-                 <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6 flex flex-col justify-center items-center">
-                    <span class="text-gray-400 text-sm mb-2">Banned</span>
-                    <span id="total-banned-count" class="text-4xl text-red-400 font-light">--</span>
-                </div>
-                 <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6 flex flex-col justify-center items-center">
-                    <span class="text-gray-400 text-sm mb-2">Reports</span>
-                    <span id="total-reports-count" class="text-4xl text-yellow-400 font-light">0</span>
-                </div>
-             </div>
         </div>
 
-        <!-- User List Section -->
-        <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl overflow-hidden">
-            <div class="p-4 border-b border-[#1a1a1a] flex justify-between items-center flex-wrap gap-4">
-                <h3 class="text-white text-lg">User Directory</h3>
-                <div class="flex gap-4">
-                    <input type="text" id="user-search" placeholder="Search users..." class="bg-[#1a1a1a] text-white border border-[#333] rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 w-64">
-                    <select id="user-sort" class="bg-[#1a1a1a] text-gray-300 border border-[#333] rounded-lg px-3 py-2 text-sm focus:outline-none">
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="admin">Admins First</option>
-                    </select>
+        <!-- TRAFFIC TAB -->
+        <div id="tab-traffic" class="tab-content hidden">
+            <!-- Traffic Overview -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                 <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6">
+                    <div class="text-gray-400 text-sm mb-2">Total Sessions</div>
+                    <div id="stat-total-sessions" class="text-3xl text-white font-light">--</div>
+                </div>
+                <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6">
+                    <div class="text-gray-400 text-sm mb-2">Avg Duration</div>
+                    <div id="stat-avg-duration" class="text-3xl text-blue-400 font-light">--</div>
+                </div>
+                 <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6">
+                    <div class="text-gray-400 text-sm mb-2">Total Page Views</div>
+                    <div id="stat-total-views" class="text-3xl text-purple-400 font-light">--</div>
+                </div>
+                 <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6">
+                    <div class="text-gray-400 text-sm mb-2">Active (24h)</div>
+                    <div id="stat-active-24h" class="text-3xl text-green-400 font-light">--</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Most Visited Pages -->
+                <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl overflow-hidden h-fit">
+                    <div class="p-4 border-b border-[#1a1a1a]">
+                        <h3 class="text-white text-lg">Top Pages</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>Page Path</th>
+                                    <th>Title</th>
+                                    <th class="text-right">Visits</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-pages-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Sessions -->
+                <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl overflow-hidden h-fit">
+                    <div class="p-4 border-b border-[#1a1a1a]">
+                         <h3 class="text-white text-lg">Recent Sessions</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Start Time</th>
+                                    <th>Duration</th>
+                                    <th>Pages</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-sessions-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             
-            <div class="overflow-x-auto">
-                <table class="user-table">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Provider</th>
-                            <th>Joined</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-table-body"></tbody>
-                </table>
-            </div>
-            <div id="loading-users" class="p-8 text-center text-gray-500">
-                <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading users...
+             <div id="loading-traffic" class="p-8 text-center text-gray-500">
+                <i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading analytics data...
             </div>
         </div>
 
@@ -299,7 +387,8 @@
             deleteDoc,
             updateDoc,
             query,
-            orderBy 
+            orderBy,
+            limit
         } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { firebaseConfig } from "../firebase-config.js";
 
@@ -328,7 +417,8 @@
                     const isSuperAdmin = user.email === '4simpleproblems@gmail.com';
                     
                     if (adminDoc.exists() || isSuperAdmin) {
-                        loadData();
+                        loadUserData();
+                        loadTrafficData();
                     } else {
                         window.location.href = '../logged-in/dashboard.html';
                     }
@@ -336,9 +426,24 @@
                     window.location.href = '../index.html';
                 }
             });
+            
+            setupTabs();
         };
 
-        const loadData = async () => {
+        const setupTabs = () => {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                    
+                    btn.classList.add('active');
+                    const tabId = btn.dataset.tab;
+                    document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+                });
+            });
+        };
+
+        const loadUserData = async () => {
             try {
                 const adminsSnap = await getDocs(collection(db, 'admins'));
                 admins = new Set(adminsSnap.docs.map(d => d.id));
@@ -358,9 +463,105 @@
                 renderChart(allUsers);
                 
             } catch (error) {
-                console.error("Error loading data:", error);
+                console.error("Error loading user data:", error);
                 document.getElementById('loading-users').textContent = "Error loading data.";
             }
+        };
+
+        const loadTrafficData = async () => {
+            try {
+                const q = query(collection(db, 'analytics'), orderBy('lastActive', 'desc'), limit(100));
+                const snap = await getDocs(q);
+                const sessions = snap.docs.map(d => d.data());
+
+                if (sessions.length === 0) {
+                    document.getElementById('loading-traffic').textContent = "No traffic data available.";
+                    return;
+                }
+
+                // Calculate Stats
+                const totalSessions = sessions.length; // Limited by 100 for now, ideally count total
+                let totalDuration = 0;
+                let totalPageViews = 0;
+                let active24h = 0;
+                const pageCounts = {};
+                const now = Date.now();
+                const oneDay = 24 * 60 * 60 * 1000;
+
+                sessions.forEach(s => {
+                    totalDuration += (s.duration || 0);
+                    
+                    if (s.visitedPages && Array.isArray(s.visitedPages)) {
+                        totalPageViews += s.visitedPages.length;
+                        s.visitedPages.forEach(p => {
+                            const path = p.path || p; // Handle string or object
+                            const title = p.title || path;
+                            if (!pageCounts[path]) pageCounts[path] = { count: 0, title: title };
+                            pageCounts[path].count++;
+                        });
+                    } else if (s.pageCount) {
+                        totalPageViews += s.pageCount;
+                    }
+
+                    // Check last active timestamp
+                    const lastActive = s.lastActive && s.lastActive.toDate ? s.lastActive.toDate().getTime() : 0;
+                    if (now - lastActive < oneDay) active24h++;
+                });
+
+                const avgDuration = totalSessions > 0 ? (totalDuration / totalSessions).toFixed(1) : 0;
+
+                // Render Top Stats
+                document.getElementById('stat-total-sessions').textContent = totalSessions + (sessions.length === 100 ? '+' : '');
+                document.getElementById('stat-avg-duration').textContent = formatDuration(avgDuration);
+                document.getElementById('stat-total-views').textContent = totalPageViews;
+                document.getElementById('stat-active-24h').textContent = active24h;
+
+                // Render Top Pages
+                const sortedPages = Object.values(pageCounts).sort((a, b) => b.count - a.count).slice(0, 10);
+                const pagesBody = document.getElementById('top-pages-body');
+                pagesBody.innerHTML = sortedPages.map(p => `
+                    <tr>
+                        <td class="text-xs font-mono text-gray-500 truncate max-w-[150px]">${p.title}</td>
+                         <td class="text-white">${p.title}</td>
+                        <td class="text-right text-gray-300">${p.count}</td>
+                    </tr>
+                `).join('');
+
+                // Render Recent Sessions
+                const sessionsBody = document.getElementById('recent-sessions-body');
+                sessionsBody.innerHTML = sessions.slice(0, 10).map(s => `
+                    <tr>
+                        <td class="text-white">
+                            <div class="flex flex-col">
+                                <span class="text-sm">${s.userId === 'anonymous' ? 'Guest' : 'User'}</span>
+                                <span class="text-xs text-gray-600 font-mono">${s.sessionId ? s.sessionId.substr(0, 8) + '...' : '-'}</span>
+                            </div>
+                        </td>
+                        <td class="text-gray-400 text-sm">${formatTimeAgo(s.startTime)}</td>
+                        <td class="text-gray-300 text-sm">${formatDuration(s.duration)}</td>
+                        <td class="text-gray-400 text-sm">${s.visitedPages ? s.visitedPages.length : (s.pageCount || 0)}</td>
+                    </tr>
+                `).join('');
+
+                document.getElementById('loading-traffic').style.display = 'none';
+
+            } catch (error) {
+                console.error("Error loading traffic data:", error);
+                document.getElementById('loading-traffic').textContent = "Error loading analytics.";
+            }
+        };
+
+        const formatDuration = (seconds) => {
+            if (!seconds) return '0s';
+            if (seconds < 60) return `${Math.floor(seconds)}s`;
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}m ${s}s`;
+        };
+
+        const formatTimeAgo = (timestamp) => {
+            if (!timestamp) return '-';
+            return moment(timestamp).fromNow();
         };
 
         const getProviderHtml = (authMethod) => {
@@ -451,7 +652,6 @@
             if (action === 'toggle-ban') {
                 const isBanned = bannedUsers.has(uid);
                 if (isBanned) {
-                    // Unban immediately
                     if (confirm(`Are you sure you want to unban this user?`)) {
                         try {
                             await deleteDoc(doc(db, 'bans', uid));
@@ -461,7 +661,6 @@
                         } catch (err) { alert("Unban failed: " + err.message); }
                     }
                 } else {
-                    // Open Ban Modal
                     userToBan = { uid, username: btn.dataset.username };
                     openBanModal();
                 }
@@ -488,7 +687,6 @@
             }
         };
 
-        // --- Ban Modal Logic ---
         const openBanModal = () => {
             document.getElementById('ban-user-target').textContent = `Banning user: ${userToBan.username}`;
             document.getElementById('ban-reason').value = '';
@@ -504,7 +702,6 @@
         document.getElementById('close-ban-modal').addEventListener('click', closeBanModal);
         document.getElementById('cancel-ban').addEventListener('click', closeBanModal);
         
-        // Presets Logic
         document.querySelectorAll('.preset-chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 const reason = chip.dataset.reason;
@@ -534,7 +731,6 @@
             }
         });
 
-        // --- User Details Modal ---
         const showUserDetails = (uid) => {
             const user = allUsers.find(u => u.id === uid);
             if (!user) return;
@@ -582,7 +778,6 @@
             document.getElementById('user-modal').classList.remove('open');
         });
 
-        // Search & Sort Logic
         const getFilteredUsers = () => {
             const searchTerm = document.getElementById('user-search').value.toLowerCase();
             const sortVal = document.getElementById('user-sort').value;
@@ -613,7 +808,6 @@
         document.getElementById('user-search').addEventListener('input', () => renderTable(getFilteredUsers()));
         document.getElementById('user-sort').addEventListener('change', () => renderTable(getFilteredUsers()));
 
-        // Chart Logic
         const renderChart = (users) => {
             const ctx = document.getElementById('userGrowthChart').getContext('2d');
             const period = document.getElementById('chart-period').value;
