@@ -367,7 +367,6 @@
         let requestAnimationFrameId = null;
         let currentlyHoveredButton = null;
         let toasterTimeout = null;
-        // *** NEW: Cache for sound URLs to avoid repeated fetching ***
         const soundUrlCache = new Map(); 
 
         // --- Firebase Initialization (Modular) ---
@@ -441,6 +440,7 @@
                 
                 const data = await response.json();
                 
+                // Create an array of promises for button creation
                 const normalSoundPromises = (data.NormalSounds || []).map(fileName => createSoundButtonWithStorage(fileName, normalSoundsContainer));
                 const explicitSoundPromises = (data.ExplicitSounds || []).map(fileName => createSoundButtonWithStorage(fileName, explicitSoundsContainer));
                 
@@ -463,9 +463,9 @@
                 audioPath = soundUrlCache.get(fileName);
             } else {
                 try {
-                    // 2. If not in cache, get URL from Firebase Storage
-                    // Assuming the sounds are in a folder named 'sounds' in the root of the bucket
-                    const storageRef = ref(storage, `sounds/${fileName}`);
+                    // 2. Get URL from Firebase Storage
+                    // *** PATH MODIFICATION HERE: Using 'Soundboard/' as per the image ***
+                    const storageRef = ref(storage, `Soundboard/${fileName}`);
                     audioPath = await getDownloadURL(storageRef);
                     // 3. Store in cache
                     soundUrlCache.set(fileName, audioPath);
