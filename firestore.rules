@@ -124,5 +124,25 @@ service cloud.firestore {
       // Only admins can change the config
       allow write: if isAdminOrSuperAdmin();
     }
+
+    // ----------------------------------------------------------------------------------
+    // IX. Analytics Collection (`analytics`)
+    // ----------------------------------------------------------------------------------
+    match /analytics/{sessionId} {
+      // Admins/SuperAdmins can read/write all analytics data
+      allow read, write: if isAdminOrSuperAdmin();
+
+      // Authenticated users can create/update their own session data
+      // For anonymous sessions, the sessionId is linked to the browser session, not a user.
+      // The `userId` field in the document will be 'anonymous' or the actual UID.
+      // So, create/update should be allowed if:
+      // 1. The user is anonymous AND the document's userId is 'anonymous'.
+      // 2. The user is authenticated AND the document's userId matches their UID.
+      allow create, update: if (request.auth == null && request.resource.data.userId == 'anonymous') ||
+                               (isAuthenticated() && request.resource.data.userId == request.auth.uid);
+
+      // No one can delete analytics sessions from the client directly, only admins via backend or console.
+      allow delete: if false;
+    }
   }
 }
