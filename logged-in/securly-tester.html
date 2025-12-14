@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔒 Securly Block Tester</title>
+    <title>4SP - SECURLY TESTER</title>
     <meta name="description" content="A tool to test Securly block status on the useast server.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,7 +32,7 @@
         /* --- FONT & BASE STYLING (MATCHING notes.html) --- */
         body { 
             font-family: 'Geist', sans-serif; 
-            background-color: #070707; 
+            background-color: #040404; /* Matches notes.html */
             color: #c0c0c0; 
             transition: all 0.3s ease;
             font-size: 16px;
@@ -41,9 +41,6 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center; 
-            justify-content: flex-start; 
-            padding-top: 4rem; 
         }
 
         /* REQUIRED CHANGE: Set max boldness to 500 */
@@ -76,7 +73,6 @@
         }
         /* Primary Button Style (The check button) */
         .btn-toolbar-style.btn-primary-override {
-            /* REQUIRED CHANGE: Black background, lighter outline */
             background-color: #000000;
             border: 1px solid #707070; /* Light border color */
             color: #d1d5db; /* Light text color */
@@ -84,7 +80,6 @@
             justify-content: center;
         }
         .btn-toolbar-style.btn-primary-override:hover {
-            /* REQUIRED CHANGE: Hover keeps black background, lightens border/text */
             background-color: #1a1a1a;
             border-color: #ffffff;
             color: #ffffff;
@@ -192,30 +187,33 @@
 
 </head>
 <body class="min-h-screen">
-    <div id="loading-screen" class="fixed inset-0 bg-[#070707] flex items-center justify-center z-50">
+    <div id="loading-screen" class="fixed inset-0 bg-[#040404] flex items-center justify-center z-50">
         <i class="fa-solid fa-spinner fa-spin fa-2x text-white"></i>
     </div>
 
-    <div id="page-content" class="w-full">
+    <div id="page-content" class="w-full hidden">
         
-        <header class="fixed top-0 left-0 w-full z-1000 flex justify-between items-center p-4 border-b border-[#1a1a1a] bg-[#070707]">
-            <h1 class="text-2xl font-bold text-white">Securly Tester</h1>
+        <header class="flex justify-between items-center p-4 border-b border-[#1a1a1a] w-full bg-[#040404] sticky top-0 z-50">
+            <h1 class="text-2xl font-bold text-white">4SP Securly Tester</h1>
             <div class="flex items-center gap-2">
-                
+                <!-- Placeholder for potential future controls -->
             </div>
         </header>
 
-        <div id="tester-container">
+        <div id="tester-container" class="mt-8">
             <h2 class="text-xl font-bold text-white mb-6 text-center">Block Status Check (US-EAST)</h2>
 
+            <!-- User Email Display (Not an input) -->
             <div class="input-group">
-                <label for="user">Student Email (User)</label>
-                <input id="user" type="text" placeholder="student@yourschool.org" value="student@yourschool.org" oninput="clearResult()">
+                <label>Student Email (You)</label>
+                <div id="user-email-display" class="w-full p-3 border border-[#333] rounded-lg bg-[#111] text-gray-400 font-mono text-sm">
+                    Loading...
+                </div>
             </div>
 
             <div class="input-group">
                 <label for="url">URL to Test</label>
-                <input id="url" type="text" placeholder="https://zapatopi.net/treeoctopus/" value="https://zapatopi.net/treeoctopus/" oninput="clearResult()">
+                <input id="url" type="text" placeholder="https://example.com" value="https://zapatopi.net/treeoctopus/" oninput="clearResult()">
             </div>
 
             <button id="check-button" class="btn-toolbar-style btn-primary-override text-sm" onclick="checkSecurlyStatus()">
@@ -243,7 +241,10 @@
         const checkButton = document.getElementById('check-button');
         const loadingScreen = document.getElementById('loading-screen');
         const pageContent = document.getElementById('page-content');
+        const userEmailDisplay = document.getElementById('user-email-display');
         
+        let currentUserEmail = null;
+
         // --- UI Functions ---
 
         function clearResult() {
@@ -254,29 +255,41 @@
         // --- Core Securly Logic ---
 
         function buildSecurlyUrl() {
-            const user = document.getElementById('user').value.trim();
-            const url = document.getElementById('url').value.trim();
-            const serverUrl = SECURLY_SERVER_URL; 
-            
-            if (!user || !url) {
+            if (!currentUserEmail) {
+                alert("Error: No user email found. Please ensure you are logged in.");
                 return null;
             }
 
+            let urlInput = document.getElementById('url').value.trim();
+            if (!urlInput) return null;
+
+            // Auto-correct URL protocol
+            // If starts with http://, replace with https://
+            // If doesn't start with https:// (and wasn't http://), prepend https://
+            if (urlInput.startsWith('http://')) {
+                urlInput = urlInput.replace('http://', 'https://');
+            } else if (!urlInput.startsWith('https://')) {
+                urlInput = 'https://' + urlInput;
+            }
+            
+            // Update the input field to show the corrected URL to the user
+            document.getElementById('url').value = urlInput;
+
+            const serverUrl = SECURLY_SERVER_URL; 
             let urlHost;
             try {
-                const fullUrl = url.startsWith('http') ? url : 'https://' + url;
-                urlHost = (new URL(fullUrl)).hostname;
+                urlHost = (new URL(urlInput)).hostname;
             } catch (e) {
                 return null;
             }
             
             // Construct the raw Securly Broker URL
             const securlyLink = `${serverUrl}/crextn/broker?useremail=` +
-                encodeURIComponent(user) +
+                encodeURIComponent(currentUserEmail) +
                 "&reason=crextn&host=" +
                 encodeURIComponent(urlHost) +
                 "&url=" +
-                btoa(url) +
+                btoa(urlInput) +
                 "&msg=&ver=2.97.13&cu=" + encodeURIComponent(serverUrl + "/crextn") + "&uf=1&cf=1&lat=34.5678910&lng=-98.7654321";
             
             // Prepend the CORS Proxy
@@ -288,7 +301,7 @@
 
             if (!proxiedSecurlyLink) {
                 resultDisplay.className = 'status-blocked';
-                resultDisplay.innerHTML = '⚠️ <span class="custom-bold">Please enter valid Email and URL.</span>';
+                resultDisplay.innerHTML = '⚠️ <span class="custom-bold">Please enter a valid URL.</span>';
                 return;
             }
 
@@ -332,22 +345,34 @@
             }
         }
         
-        // --- Initialization (Matching notes.html auth pattern) ---
+        // --- Initialization ---
 
-        const mockAuth = { onAuthStateChanged: (cb) => cb(true) }; 
-        
-        async function initializeAuth() {
-            mockAuth.onAuthStateChanged((user) => {
+        // We use the global 'firebase' object provided by navigation.js
+        function waitForFirebase() {
+            if (window.firebase && window.firebase.auth) {
+                initializeAuth();
+            } else {
+                setTimeout(waitForFirebase, 100);
+            }
+        }
+
+        function initializeAuth() {
+            firebase.auth().onAuthStateChanged((user) => {
                 if (!user) {
-                    // window.location.href = '../index.html'; 
+                    window.location.href = '../index.html'; 
                 } else {
-                    clearResult();
+                    currentUserEmail = user.email;
+                    userEmailDisplay.textContent = currentUserEmail || "No Email Found";
+                    
                     loadingScreen.style.display = 'none';
-                    pageContent.style.display = 'flex';
+                    pageContent.classList.remove('hidden');
                 }
             });
         }
-        setTimeout(() => { initializeAuth(); }, 100); 
+        
+        window.addEventListener('load', () => {
+            waitForFirebase();
+        });
 
     </script>
 </body>
