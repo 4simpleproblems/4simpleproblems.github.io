@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4SP - Securly Tester</title>
+    <title>🔒 Securly Block Tester</title>
     <meta name="description" content="A tool to test Securly block status on the useast server.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../navigation.js"></script>
     <script src="../injector.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 
@@ -75,16 +76,18 @@
         }
         /* Primary Button Style (The check button) */
         .btn-toolbar-style.btn-primary-override {
-            background-color: var(--tab-active-bg, rgba(79, 70, 229, 0.1));
-            border: 1px solid var(--tab-active-border, #4f46e5);
-            color: var(--tab-active-text, #4f46e5);
+            /* REQUIRED CHANGE: Black background, lighter outline */
+            background-color: #000000;
+            border: 1px solid #707070; /* Light border color */
+            color: #d1d5db; /* Light text color */
             width: 100%;
             justify-content: center;
         }
         .btn-toolbar-style.btn-primary-override:hover {
-            background-color: var(--tab-active-hover-bg, rgba(79, 70, 229, 0.15));
-            border-color: var(--tab-active-hover-border, #6366f1);
-            color: var(--tab-active-hover-text, #6366f1);
+            /* REQUIRED CHANGE: Hover keeps black background, lightens border/text */
+            background-color: #1a1a1a;
+            border-color: #ffffff;
+            color: #ffffff;
         }
         
         /* --- MAIN TESTER UI STYLES --- */
@@ -101,9 +104,9 @@
             background-color: #0d0d0d;
             border: 1px solid #1a1a1a;
             border-radius: 1rem;
-            padding: 60px; /* Increased padding */
-            width: 95%; 
-            max-width: 800px; /* Increased max-width */
+            padding: 40px;
+            width: 90%; 
+            max-width: 600px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
             margin-bottom: 50px;
         }
@@ -134,11 +137,6 @@
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
             outline: none;
         }
-        input[type="text"]:disabled {
-            background-color: #111;
-            color: #666;
-            cursor: not-allowed;
-        }
         
         /* Check Button disabled state */
         .btn-toolbar-style.btn-primary-override:disabled {
@@ -164,7 +162,6 @@
             min-height: 40px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
             border: 1px solid transparent; /* Base for status borders */
-            word-wrap: break-word;
         }
         /* REQUIRED CHANGE: Denied Status Styling */
         .status-blocked {
@@ -193,7 +190,6 @@
         }
     </style>
 
-    
 </head>
 <body class="min-h-screen">
     <div id="loading-screen" class="fixed inset-0 bg-[#070707] flex items-center justify-center z-50">
@@ -214,12 +210,12 @@
 
             <div class="input-group">
                 <label for="user">Student Email (User)</label>
-                <input id="user" type="text" placeholder="Loading email..." value="" disabled>
+                <input id="user" type="text" placeholder="student@yourschool.org" value="student@yourschool.org" oninput="clearResult()">
             </div>
 
             <div class="input-group">
                 <label for="url">URL to Test</label>
-                <input id="url" type="text" placeholder="https://youtube.com" value="https://youtube.com" oninput="clearResult()">
+                <input id="url" type="text" placeholder="https://zapatopi.net/treeoctopus/" value="https://zapatopi.net/treeoctopus/" oninput="clearResult()">
             </div>
 
             <button id="check-button" class="btn-toolbar-style btn-primary-override text-sm" onclick="checkSecurlyStatus()">
@@ -231,52 +227,22 @@
             </div>
 
             <p id="disclaimer">
-                <span class="custom-bold">CORS PROXY IN USE:</span> A public proxy is used to contact Securly APIs.
+                <span class="custom-bold">CORS PROXY IN USE:</span> A public proxy is prepended to the Securly URL to attempt to bypass browser restrictions.
             </p>
         </div>
 
     </div>
     
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { firebaseConfig } from "../firebase-config.js";
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        
-        const loadingScreen = document.getElementById('loading-screen');
-        const pageContent = document.getElementById('page-content');
-        const userInput = document.getElementById('user');
-
-        onAuthStateChanged(auth, (user) => {
-            if (user && user.email) {
-                userInput.value = user.email;
-                loadingScreen.style.display = 'none';
-                pageContent.style.display = 'flex';
-            } else if (user) {
-                userInput.value = "Anonymous / No Email";
-                loadingScreen.style.display = 'none';
-                pageContent.style.display = 'flex';
-            } else {
-                // Not logged in - redirect or show error
-                 window.location.href = '../authentication.html';
-            }
-        });
-        
-        // Expose function to window for the button onclick
-        window.checkSecurlyStatus = checkSecurlyStatus;
-        window.clearResult = clearResult;
-    </script>
-
     <script type="text/javascript">
         // Hardcoded server URL
         const SECURLY_SERVER_URL = 'https://useast-www.securly.com';
         
         // --- Global State and Element References ---
-        const CORS_PROXY = 'https://api.allorigins.win/raw?url='; 
+        const CORS_PROXY = 'https://corsproxy.io/?'; 
         const resultDisplay = document.getElementById('result-display');
         const checkButton = document.getElementById('check-button');
+        const loadingScreen = document.getElementById('loading-screen');
+        const pageContent = document.getElementById('page-content');
         
         // --- UI Functions ---
 
@@ -365,6 +331,24 @@
                 checkButton.innerHTML = `<i class="fa-solid fa-check-circle"></i> Check Block Status`;
             }
         }
+        
+        // --- Initialization (Matching notes.html auth pattern) ---
+
+        const mockAuth = { onAuthStateChanged: (cb) => cb(true) }; 
+        
+        async function initializeAuth() {
+            mockAuth.onAuthStateChanged((user) => {
+                if (!user) {
+                    // window.location.href = '../index.html'; 
+                } else {
+                    clearResult();
+                    loadingScreen.style.display = 'none';
+                    pageContent.style.display = 'flex';
+                }
+            });
+        }
+        setTimeout(() => { initializeAuth(); }, 100); 
+
     </script>
 </body>
 </html>
