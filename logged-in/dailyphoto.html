@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4SP - DAILYPHOTO</title>
+    <meta name="description" content="Share your day with friends through three daily photos.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../navigation.js"></script>
+
+    <script src="../injector.js"></script>
+    <style>
+        /* BUBBLY ANIMATIONS */
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            80% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        /* --- BASE STYLES --- */
+        body { 
+            font-family: 'Geist', sans-serif; 
+            background-color: #040404; 
+            color: #c0c0c0; 
+            font-weight: 300; 
+            overflow: hidden; /* Prevent body scroll */
+            height: 100vh;
+        }
+        
+        h1, h2, h3, .font-bold, .font-semibold, strong, .tracking-widest {
+            font-weight: 400 !important; 
+        }
+
+        /* --- THEME BUTTONS --- */
+        .btn-toolbar-style {
+            background: #000000;
+            border: 1px solid #333;
+            border-radius: 0.75rem;
+            color: #d1d5db;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-toolbar-style:hover {
+            border-color: #fff;
+            color: #ffffff;
+        }
+        
+        /* Specific override for active state to ensure no conflict */
+        .btn-toolbar-style.active, .btn-primary-override {
+            background-color: rgba(79, 70, 229, 0.1) !important;
+            border: 1px solid #4f46e5 !important;
+            color: #4f46e5 !important;
+        }
+        .btn-toolbar-style.active:hover, .btn-primary-override:hover {
+            background-color: rgba(79, 70, 229, 0.15) !important;
+            border-color: #6366f1 !important;
+            color: #6366f1 !important;
+        }
+
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem; 
+            height: 2.5rem; 
+            border-radius: 0.5rem;
+            background-color: #000000;
+            border: 1px solid #333;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover {
+            border-color: #fff;
+            color: #fff;
+        }
+        
+        /* --- LAYOUT --- */
+        .messenger-container {
+            display: block; 
+            width: 100vw;
+            height: calc(100vh - 4rem); 
+            margin-top: 4rem; 
+        }
+
+        /* --- SIDEBAR (Fixed Left) --- */
+        .left-panel {
+            position: fixed;
+            top: 4rem;
+            left: 0;
+            bottom: 0;
+            width: 350px;
+            background-color: #000000;
+            border-right: 1px solid #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+        }
+
+        .left-panel-scroll-content {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex-grow: 1;
+            mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+        }
+        .left-panel-scroll-content::-webkit-scrollbar { width: 6px; }
+        .left-panel-scroll-content::-webkit-scrollbar-thumb { background-color: #333; border-radius: 3px; }
+        .left-panel-scroll-content::-webkit-scrollbar-track { background-color: #000; }
+
+        .sidebar-bottom-controls {
+            display: flex;
+            width: 100%;
+            border-top: 1px solid #1a1a1a;
+            background-color: #000000;
+            padding: 0; 
+        }
+        .sidebar-control-btn {
+            flex: 1; 
+            color: #6b7280;
+            font-size: 1.25rem;
+            padding: 1rem 0;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0; 
+        }
+        .sidebar-control-btn:hover { color: #d1d5db; }
+        .sidebar-control-btn.active { color: #4f46e5; background-color: transparent; }
+
+        /* --- LISTS --- */
+        .compact-list-wrapper {
+             background-color: #000000;
+             border-radius: 0.75rem; 
+             border: 1px solid #1a1a1a; 
+             margin-top: 0.75rem;
+        }
+        .compact-list-items {
+            overflow-y: auto;
+            max-height: 250px; 
+            padding: 0.25rem; 
+        }
+        .compact-list-items::-webkit-scrollbar { width: 4px; }
+        .compact-list-items::-webkit-scrollbar-thumb { background-color: #4f46e5; }
+        
+        .compact-list-item {
+            border-radius: 0.5rem; 
+            margin-bottom: 2px;
+            padding: 0.5rem; 
+            transition: background-color 0.2s;
+        }
+        .compact-list-item:hover { background-color: #111; }
+
+        /* --- FEED PANEL --- */
+        .feed-panel { 
+            margin-left: 350px; 
+            height: 100%;
+            background-color: #040404;
+            padding: 0.5rem; 
+            overflow-y: auto; 
+        }
+        
+        .feed-content-inner {
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding-bottom: 5rem; 
+        }
+        
+        .feed-toggle {
+            display: flex;
+            gap: 0.5rem;
+            background: transparent;
+            padding: 0;
+        }
+
+        /* --- GRID & PHOTOS --- */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+            gap: 1rem; 
+        }
+        .photo-thumbnail {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            aspect-ratio: 1 / 1; 
+            background-color: #0a0a0a;
+            border: 1px solid #1a1a1a;
+        }
+        .photo-thumbnail img {
+            width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;
+        }
+        .photo-thumbnail:hover img { transform: scale(1.05); }
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            pointer-events: none; 
+        }
+        .title-overlay {
+            position: absolute; bottom: 0.5rem; left: 0.5rem; right: 0.5rem;
+            color: white; font-size: 0.85rem; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            z-index: 10;
+        }
+        
+        .photo-thumbnail .flex span { border-radius: 0.5rem; }
+        
+        /* --- MODAL STYLES --- */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 200; 
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-content {
+            background-color: #0d0d0d; 
+            border: 1px solid #1a1a1a;
+            border-radius: 1rem;
+            padding: 0; 
+            max-width: 90%; width: 1200px;
+            max-height: 90vh; 
+            aspect-ratio: 16 / 9; 
+            display: flex; overflow: hidden;
+            position: relative;
+        }
+        
+        @media (max-height: 800px) {
+            .modal-content {
+                max-height: 75vh; 
+                max-width: 80%;
+            }
+        }
+        
+        #photo-display-area {
+            flex: 2;
+            background-color: #000;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .photo-modal-img {
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            transition: all 0.2s ease-in-out; 
+        }
+
+        #photo-info-panel {
+            flex: 1;
+            min-width: 350px;
+            max-width: 400px;
+            background-color: #0d0d0d;
+            border-left: 1px solid #1a1a1a;
+            display: flex; flex-direction: column;
+            padding: 1.5rem;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 0.5rem; gap: 1rem;
+        }
+        .modal-title-box { flex-grow: 1; overflow: hidden; }
+        
+        .modal-actions-box { 
+            display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center;
+        }
+
+        #comments-section {
+            flex-grow: 1;
+            background-color: #000000; 
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            overflow-y: auto;
+            border: 1px solid #1a1a1a;
+            mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+        }
+        
+        .comment-input-area {
+            display: flex; gap: 0.5rem; align-items: center;
+            position: relative; /* Added for emoji menu */
+        }
+
+        /* Helpers */
+        .hidden { display: none !important; }
+        .opacity-0 { opacity: 0; }
+        .opacity-100 { opacity: 1; }
+        
+        input.thin-font { font-weight: 300 !important; }
+
+        /* Custom Tooltip */
+        #custom-tooltip {
+            position: fixed; background-color: #000; border: 1px solid #333; color: #fff;
+            padding: 0.4rem 0.8rem; border-radius: 0.5rem; font-size: 0.75rem;
+            pointer-events: none; z-index: 10000; opacity: 0; transition: opacity 0.15s ease;
+            white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        
+    </style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1D4F692C1Q"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-1D4F692C1Q');
+</script>
+</head>
+<body class="pt-16">
+
+    <div id="custom-tooltip"></div>
+
+    <div id="disclaimer-modal" class="fixed inset-0 bg-black/70 z-[9999] transition-opacity duration-300 opacity-0 hidden">
+        <div id="disclaimer-banner" class="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-7xl px-4">
+            <div class="bg-black/95 text-white p-4 sm:p-6 rounded-3xl border border-gray-700 shadow-2xl backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 md:space-x-6">
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-xl font-normal mb-1">Safe Browsing Notice</h3>
+                    <p class="text-sm text-gray-300 mb-2 font-light">
+                        The Public Feed may contain media that does not comply with school rules. You must report any content that violates policies immediately. False reporting may result in a temporary ban. Please browse responsibly.
+                    </p>
+                    <div class="space-x-3 text-xs">
+                        <a href="https://www.justice.gov/criminal/criminal-ceos/keeping-children-safe-online" target="_blank" class="text-indigo-400 hover:text-indigo-300 underline transition">
+                            Internet Safety Resources
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex-shrink-0 flex gap-2">
+                    <button id="disclaimer-cancel-btn" class="w-full md:w-auto inline-flex items-center justify-center px-6 py-3 border border-gray-700 text-base font-normal rounded-xl text-gray-300 bg-transparent hover:bg-gray-800 transition duration-150 transform hover:scale-[1.02]">
+                        Go Back
+                    </button>
+                    <button id="disclaimer-confirm-btn" class="w-full md:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-normal rounded-xl text-white bg-indigo-500/10 ring-1 ring-indigo-500/50 hover:bg-indigo-500/20 transition duration-150 transform hover:scale-[1.02]">
+                        Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="photo-modal" class="modal-backdrop hidden">
+        <div id="modal-content-container" class="modal-content"></div>
+    </div>
+    
+    <div id="upload-menu-modal" class="modal-backdrop hidden opacity-0">
+        <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl w-full max-w-sm p-6">
+            <h3 id="upload-menu-title" class="text-xl mb-4 text-white">Post Photo</h3>
+            <input type="file" id="upload-file-input" class="hidden" accept="image/*" data-slot-index="">
+            <div id="upload-select-options" class="flex flex-col gap-3 mb-6">
+                 <label for="upload-file-input" id="upload-drop-area" class="bg-black border-2 border-dashed border-[#333] rounded-lg p-8 text-center cursor-pointer hover:border-indigo-500 transition-colors">
+                    <i class="fas fa-cloud-upload-alt text-4xl mb-3 text-gray-500"></i>
+                    <span class="block font-semibold text-gray-400">Select Image</span>
+                 </label>
+            </div>
+            <button id="upload-menu-close-btn" class="btn-toolbar-style mt-4 w-full">Cancel</button>
+        </div>
+    </div>
+
+    <main id="messenger-ui" class="messenger-container" style="display: none;">
+        
+        <aside class="left-panel">
+            <div class="left-panel-scroll-content">
+                
+                <div class="mb-6 pb-4 border-b border-[#1a1a1a]">
+                    <h2 class="text-lg text-white mb-2">My Code</h2>
+                    <div id="friend-code-display" class="p-2 text-center bg-black border border-[#333] rounded-md font-mono text-indigo-400 tracking-widest select-all cursor-pointer" data-tooltip="Click to Copy">LOADING</div>
+                </div>
+
+                <div class="mb-6 pb-4 border-b border-[#1a1a1a]">
+                    <h2 class="text-lg text-white mb-2">Add Friend</h2>
+                    <form id="add-friend-form" class="flex gap-2">
+                        <input type="text" id="friend-code-input" placeholder="CODE" maxlength="8" class="flex-grow p-2 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-center font-mono uppercase text-white thin-font">
+                        <button type="submit" class="btn-icon" data-tooltip="Send Request"><i class="fas fa-plus"></i></button>
+                    </form>
+                    <div id="add-friend-message" class="text-xs mt-2 min-h-[16px]"></div>
+                </div>
+
+                <div id="daily-posts-section">
+                    <h2 class="text-lg text-white mb-2">My Posts</h2>
+                    <p class="text-xs text-gray-500 mb-2">5 slots / day</p>
+                    <div id="daily-posts-wrapper" class="compact-list-wrapper">
+                        <div id="daily-posts-container" class="compact-list-items"></div>
+                    </div>
+                </div>
+
+                <div id="friends-section-wrapper" class="hidden">
+                    <h2 class="text-lg text-white mb-2">Friends</h2>
+                    <div id="friends-list-wrapper" class="compact-list-wrapper">
+                        <div id="friends-list-items" class="compact-list-items"></div>
+                    </div>
+                </div>
+
+                <div id="blocked-section" class="hidden">
+                    <h2 class="text-lg text-white mb-2">Blocked</h2>
+                    <div id="blocked-list-wrapper" class="compact-list-wrapper">
+                        <div id="blocked-list-items" class="compact-list-items"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="sidebar-bottom-controls">
+                <button id="sidebar-nav-posts" class="sidebar-control-btn active" title="My Posts"><i class="fas fa-images"></i></button>
+                <button id="sidebar-nav-friends" class="sidebar-control-btn" title="Friends"><i class="fas fa-user-friends"></i></button>
+                <button id="sidebar-nav-blocked" class="sidebar-control-btn" title="Blocked Users"><i class="fas fa-user-shield"></i></button>
+            </div>
+        </aside>
+
+        <section class="feed-panel">
+            <div class="feed-content-inner">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl text-white">Today's Feed</h1>
+                    
+                    <div class="feed-toggle">
+                        <button id="feed-toggle-friends" class="btn-toolbar-style btn-primary-override active">
+                            <i class="fas fa-user-friends"></i> Friends
+                        </button>
+                        <button id="feed-toggle-public" class="btn-toolbar-style">
+                            <i class="fas fa-globe"></i> Public
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="photo-feed" class="photo-grid"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="loading-screen" class="fixed inset-0 bg-black flex justify-center items-center z-[100]">
+        <i class="fas fa-circle-notch fa-spin text-4xl text-indigo-600"></i>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs, serverTimestamp, orderBy, deleteDoc, onSnapshot, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { firebaseConfig } from "../firebase-config.js";
+        
+        if (!firebaseConfig || !firebaseConfig.apiKey) throw new Error("Missing Firebase Config.");
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let CURRENT_FRIENDS = [];
+        let CURRENT_USERNAME = 'User'; 
+        let UNSUBSCRIBE_POSTS = () => {};
+        let UNSUBSCRIBE_MODAL = () => {}; 
+        let BLOCKED_USERS = []; 
+        let CURRENT_FEED_MODE = 'friends';
+        let PENDING_FILE = null;
+        let PENDING_SLOT = 0;
+        let PHOTO_DISPLAY_MODE = 0; 
+        let ALL_FRIEND_PROFILES = [];
+        
+        const DAILY_COLLECTION = collection(db, 'daily_photos');
+        const USERS_COLLECTION = 'users';
+
+        // EMOJI CONSTANT (Moved up for reuse in modal and post creation)
+        const EMOJIS = ["😀","😃","😄","😁","😆","😅","😂","🤣","🥲","🥹","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","😵‍💫","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸","😹","😻","😼","😽","🙀","😿","😾","👋","🤚","🖐","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🧠","🫀","🫁","🦷","🦴","👀","👁","👅","👄","💋","🩸","❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉","☸️","✡️","🔯","🕎","☯️","☦️","🛐","⛎","♈️","♉️","♊️","♋️","♌️","♍️","♎️","♏️","♐️","♑️","♒️","♓️","🆔","⚛️"];
+        
+        // --- INTELLIGENT TOOLTIPS ---
+        const tooltipEl = document.getElementById('custom-tooltip');
+        
+        document.body.addEventListener('mouseover', (e) => {
+            const target = e.target.closest('[title]'); 
+            if (!target) { tooltipEl.style.opacity = 0; return; }
+            
+            // If it's the tooltip itself, ignore
+            if (target.id === 'custom-tooltip') return;
+
+            const text = target.getAttribute('title');
+            if (!text) return;
+            
+            target.dataset.originalTitle = text;
+            target.removeAttribute('title');
+            
+            tooltipEl.textContent = text;
+            tooltipEl.style.opacity = 1;
+            
+            const rect = target.getBoundingClientRect();
+            const tipRect = tooltipEl.getBoundingClientRect();
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const gap = 10;
+
+            let top, left;
+
+            if (rect.bottom + tipRect.height + gap <= winH) {
+                top = rect.bottom + gap;
+                left = rect.left + (rect.width/2) - (tipRect.width/2);
+            } else if (rect.top - tipRect.height - gap >= 0) {
+                top = rect.top - tipRect.height - gap;
+                left = rect.left + (rect.width/2) - (tipRect.width/2);
+            } else {
+                top = rect.top + (rect.height/2) - (tipRect.height/2);
+                if (rect.left > winW / 2) {
+                    left = rect.left - tipRect.width - gap; 
+                } else {
+                    left = rect.right + gap; 
+                }
+            }
+            
+            if (left < gap) left = gap;
+            if (left + tipRect.width > winW - gap) left = winW - tipRect.width - gap;
+
+            tooltipEl.style.top = `${top}px`;
+            tooltipEl.style.left = `${left}px`;
+        });
+        
+        document.body.addEventListener('mouseout', (e) => {
+            const target = e.target.closest('[data-original-title]');
+            if(target) {
+                target.setAttribute('title', target.dataset.originalTitle);
+                tooltipEl.style.opacity = 0;
+            }
+        });
+
+        // --- HELPER FUNCTIONS ---
+
+        const getUserProfileDocRef = (userId) => doc(db, 'users', userId);
+        const getFriendCodeDocRef = (code) => doc(db, 'friend_codes', code);
+
+        function formatCount(num) {
+            if (typeof num !== 'number') return '0';
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+            }
+            return num.toString();
+        }
+
+        async function cleanText(text) {
+            if(!text) return "";
+            try {
+                // Switched to profanity.dev API
+                const res = await fetch(`https://api.profanity.dev/api/v1/json?text=${encodeURIComponent(text)}`);
+                const data = await res.json();
+                // Assuming 'cleanText' is the key for the cleaned string
+                return data.cleanText || text; 
+            } catch {
+                return text;
+            }
+        }
+        
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800; 
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(ctx.canvas.toDataURL('image/jpeg', 0.8));
+                    };
+                    img.onerror = reject;
+                };
+                reader.onerror = reject;
+            });
+        }
+
+        async function generateUniqueFriendCode() {
+            let code, isUnique = false;
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            try {
+                while (!isUnique) {
+                    code = Array.from({ length: 8 }, () => characters.charAt(Math.floor(Math.random() * characters.length))).join('');
+                    const codeDoc = await getDoc(getFriendCodeDocRef(code));
+                    if (!codeDoc.exists()) isUnique = true;
+                }
+                return code;
+            } catch (error) {
+                console.error("Error generating friend code:", error);
+                throw new Error("Failed to generate unique friend code.");
+            }
+        }
+
+        async function handleFriendCodeLogic(user) {
+            try {
+                const userProfileRef = getUserProfileDocRef(user.uid);
+                let userProfileSnap = await getDoc(userProfileRef);
+
+                // Ensure profile exists with basic fields if it's new-ish or incomplete
+                const profileData = userProfileSnap.exists() ? userProfileSnap.data() : {};
+                CURRENT_USERNAME = profileData.username || 'User';
+
+                if (!userProfileSnap.exists() || profileData.friends === undefined || profileData.dailySlotsUsed === undefined || profileData.lastPostReset === undefined || profileData.pending_requests === undefined) {
+                    await setDoc(userProfileRef, {
+                        username: profileData.username || 'User',
+                        friends: profileData.friends || [],
+                        dailySlotsUsed: profileData.dailySlotsUsed || [],
+                        lastPostReset: profileData.lastPostReset || serverTimestamp(),
+                        pending_requests: profileData.pending_requests || [],
+                        blocked_users: profileData.blocked_users || [] // Ensure this is also present
+                    }, { merge: true });
+                    userProfileSnap = await getDoc(userProfileRef); // Re-fetch after creation
+                }
+
+
+                const codeQuery = query(collection(db, 'friend_codes'), where('userId', '==', user.uid), limit(1));
+                const codeQuerySnap = await getDocs(codeQuery);
+                
+                let existingCode = codeQuerySnap.empty ? null : codeQuerySnap.docs[0].id;
+                if (!existingCode) {
+                    document.getElementById('friend-code-display').textContent = 'Generating...';
+                    existingCode = await generateUniqueFriendCode();
+                    await setDoc(getFriendCodeDocRef(existingCode), { userId: user.uid, createdAt: serverTimestamp() });
+                }
+                document.getElementById('friend-code-display').textContent = existingCode;
+            } catch (error) {
+                console.error("Profile/Friend Code Setup Failed:", error);
+            }
+        }
+
+        async function cleanupOldPosts(user) {
+            try {
+                const now = new Date();
+                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const userProfileRef = getUserProfileDocRef(user.uid);
+                const userProfileSnap = await getDoc(userProfileRef);
+                const lastReset = userProfileSnap.data()?.lastPostReset?.toDate() || new Date(0);
+                
+                if (lastReset < startOfToday) {
+                    await updateDoc(userProfileRef, { dailySlotsUsed: [], lastPostReset: serverTimestamp() });
+                    console.log("Daily post slots reset for new day.");
+                }
+
+                // Also clean up any actual documents that are old (optional but good for DB hygiene)
+                // dailyphoto does this, so we will too.
+                const oldPostsQuery = query(DAILY_COLLECTION, where('createdAt', '<', startOfToday), limit(50));
+                const snapshot = await getDocs(oldPostsQuery);
+                if (snapshot.empty) return;
+
+                const batch = writeBatch(db);
+                snapshot.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+            } catch (error) {
+                console.warn("Post cleanup failed:", error);
+            }
+        }
+
+        function switchSidebar(view) {
+             document.querySelectorAll('.sidebar-control-btn').forEach(b => b.classList.remove('active'));
+             document.getElementById('daily-posts-section').classList.add('hidden');
+             document.getElementById('friends-section-wrapper').classList.add('hidden');
+             document.getElementById('blocked-section').classList.add('hidden');
+
+             const searchInput = document.getElementById('friend-search-input');
+             if(searchInput) searchInput.value = '';
+             
+             if (view === 'posts') {
+                 document.getElementById('sidebar-nav-posts').classList.add('active');
+                 document.getElementById('daily-posts-section').classList.remove('hidden');
+             } else if (view === 'friends') {
+                 document.getElementById('sidebar-nav-friends').classList.add('active');
+                 document.getElementById('friends-section-wrapper').classList.remove('hidden');
+                 renderFriendsList();
+             } else if (view === 'blocked') {
+                 document.getElementById('sidebar-nav-blocked').classList.add('active');
+                 document.getElementById('blocked-section').classList.remove('hidden');
+                 renderBlockedList();
+             }
+        }
+        document.getElementById('sidebar-nav-posts').onclick = () => switchSidebar('posts');
+        document.getElementById('sidebar-nav-friends').onclick = () => switchSidebar('friends');
+        document.getElementById('sidebar-nav-blocked').onclick = () => switchSidebar('blocked');
+
+        // --- MODAL & UPLOAD LOGIC ---
+        
+        // Modal Backdrop Click Closer
+        document.getElementById('photo-modal').onclick = (e) => {
+            // If the click is on the backdrop (the parent container), close it
+            if(e.target.id === 'photo-modal') {
+                document.getElementById('photo-modal').classList.add('hidden');
+                UNSUBSCRIBE_MODAL();
+            }
+        };
+
+        // Reusable Emoji Picker Logic (For Post Title and Comments)
+        let closeMenuHandler = () => {};
+        
+        // Updated to accept all unique IDs
+        function setupEmojiPicker(triggerId, inputId, menuId, closeBtnId, listId, searchId) {
+            const menu = document.getElementById(menuId);
+            const list = document.getElementById(listId);
+            const input = document.getElementById(inputId);
+            const trigger = document.getElementById(triggerId);
+            const search = document.getElementById(searchId);
+            const closeBtn = document.getElementById(closeBtnId);
+            
+            if(!menu || !list || !input || !trigger || !search || !closeBtn) return;
+
+            const renderEmojis = (filter = '') => {
+                list.innerHTML = '';
+                const lowerFilter = filter.toLowerCase().trim();
+                EMOJIS.forEach(emoji => {
+                    // Simple filter based on the character itself
+                    if (lowerFilter && !emoji.includes(lowerFilter)) return;
+
+                    const btn = document.createElement('button');
+                    btn.className = 'text-xl hover:bg-white/10 rounded p-1 transition flex justify-center items-center h-8 w-8';
+                    btn.textContent = emoji;
+                    btn.type = 'button'; // Prevent form submission
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        // Insert the emoji at the end of the input's current value
+                        input.value += emoji; 
+                        // Focus the input after adding emoji
+                        input.focus(); 
+                    };
+                    list.appendChild(btn);
+                });
+            };
+            
+            // Initial render
+            renderEmojis(search.value || '');
+            
+            search.oninput = (e) => renderEmojis(e.target.value);
+            
+            trigger.onclick = (e) => {
+                e.stopPropagation();
+                menu.classList.toggle('hidden');
+                search.value = '';
+                renderEmojis(); // Reset search on open
+            };
+            
+            closeBtn.onclick = (e) => {
+                 e.stopPropagation();
+                 menu.classList.add('hidden');
+            };
+            
+            menu.onclick = (e) => e.stopPropagation();
+            
+            // Clean up old handler before creating a new one
+            document.removeEventListener('click', closeMenuHandler);
+
+            // Global click handler to close menu when clicking outside
+            closeMenuHandler = (e) => {
+                if (!menu.classList.contains('hidden') && !menu.contains(e.target) && !trigger.contains(e.target)) {
+                    menu.classList.add('hidden');
+                }
+            };
+            document.addEventListener('click', closeMenuHandler);
+        }
+
+        window.openPhotoModal = (photoId) => {
+            const container = document.getElementById('modal-content-container');
+            const modal = document.getElementById('photo-modal');
+            modal.classList.remove('hidden');
+            container.innerHTML = `<div class="w-full h-full flex items-center justify-center"><i class="fas fa-spinner fa-spin text-white text-2xl"></i></div>`;
+            
+            UNSUBSCRIBE_MODAL(); 
+            document.removeEventListener('click', closeMenuHandler); // Clean up any lingering emoji menu handler
+            
+            UNSUBSCRIBE_MODAL = onSnapshot(doc(DAILY_COLLECTION, photoId), (snap) => {
+                if (!snap.exists()) { modal.classList.add('hidden'); return; }
+                const data = snap.data();
+                if (data.status === 'hidden') { modal.classList.add('hidden'); return; }
+
+                const currentUser = auth.currentUser;
+                const hearts = data.hearts || [];
+                const comments = (data.comments || []).sort((a,b) => (a.timestamp?.toDate() || 0) - (b.timestamp?.toDate() || 0));
+                const isHearted = hearts.includes(currentUser.uid);
+                const isOwner = data.creatorUid === currentUser.uid;
+
+                // Render Modal Content
+                container.innerHTML = `
+                    <div id="photo-display-area">
+                         <img src="${data.imageBase64}" class="photo-modal-img">
+                    </div>
+                    <div id="photo-info-panel">
+                        <button id="close-modal-btn" class="absolute top-2 right-2 btn-icon" style="z-index: 50; border: none; background: transparent;" title="Close"><i class="fas fa-times text-xl text-gray-400 hover:text-white"></i></button>
+                        
+                        <div class="modal-header mt-6">
+                            <div class="modal-title-box">
+                                <h2 class="text-xl text-white font-normal truncate" title="${data.title}">${data.title || 'Untitled'}</h2>
+                                <p class="text-sm text-indigo-400 font-bold">${data.creatorUsername}</p>
+                            </div>
+                            <div class="modal-actions-box">
+                                <button id="heart-btn" class="text-2xl transition-colors ${isHearted ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}" title="${isHearted ? 'Unlike' : 'Like'}">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                                <span class="text-gray-400 text-sm font-mono">${formatCount(hearts.length)}</span>
+
+                                <span class="text-gray-400 text-sm font-mono ml-4" title="Comments">
+                                    <i class="fas fa-comment text-indigo-400 mr-1"></i> ${formatCount(comments.length)}
+                                </span>
+                                ${!isOwner ? `<button id="report-btn" class="text-gray-600 hover:text-red-400 text-lg ml-2" title="Report Post"><i class="fas fa-flag"></i></button>` : ''}
+                                ${isOwner ? `<button id="delete-btn" class="text-gray-600 hover:text-red-400 text-lg ml-2" title="Delete Post"><i class="fas fa-trash"></i></button>` : ''}
+                                ${!isOwner && !BLOCKED_USERS.includes(data.creatorUid) ? `<button id="block-btn" class="text-gray-600 hover:text-red-400 text-lg ml-2" title="Block User"><i class="fas fa-ban"></i></button>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="mb-4 pb-2 border-b border-[#1a1a1a]">
+                             <span class="text-xs text-gray-600">${new Date(data.createdAt?.toDate()).toLocaleString()}</span>
+                        </div>
+
+                        <div id="comments-section">
+                            ${comments.map(c => `
+                                <div class="mb-2 text-sm break-words">
+                                    <span class="text-indigo-300 font-bold">${c.username}</span>
+                                    <span class="text-gray-400">: ${c.text}</span>
+                                </div>
+                            `).join('') || '<p class="text-gray-600 text-sm italic">No comments yet.</p>'}
+                        </div>
+
+                        <form id="comment-form" class="comment-input-area mt-auto">
+                            <div class="flex-grow relative">
+                                <input type="text" id="comment-input" placeholder="Add a comment..." class="w-full p-3 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-white thin-font text-sm pr-10" maxlength="140">
+                                <button type="button" id="comment-emoji-trigger" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-400" title="Add Emoji">
+                                    <i class="fa-solid fa-face-kiss-wink-heart"></i>
+                                </button>
+                                <div id="comment-emoji-picker-menu" class="hidden absolute right-0 bottom-full mb-2 w-64 bg-black border border-[#333] rounded-xl z-50 shadow-xl flex flex-col h-64">
+                                    <div class="flex justify-between items-center p-3 border-b border-[#333]">
+                                        <input type="text" id="comment-emoji-search" placeholder="Search..." class="bg-[#1a1a1a] border-none rounded text-xs p-1.5 text-white w-full mr-2 outline-none">
+                                        <button id="comment-close-emoji-menu" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div id="comment-emoji-list" class="flex-grow overflow-y-auto p-2 grid grid-cols-6 gap-1">
+                                        </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-icon" style="border-color: #333; width: 44px; height: 44px;" title="Post Comment">
+                                <i class="fas fa-paper-plane text-indigo-400"></i>
+                            </button>
+                        </form>
+                    </div>
+                `;
+
+                // Setup Emoji Picker for Comments (using new unique IDs)
+                setupEmojiPicker('comment-emoji-trigger', 'comment-input', 'comment-emoji-picker-menu', 'comment-close-emoji-menu', 'comment-emoji-list', 'comment-emoji-search');
+                
+                // Image Size Toggle Logic (Updated mode order - Removed Width-Limit Mode)
+                const photoImg = container.querySelector('.photo-modal-img');
+                const photoArea = document.getElementById('photo-display-area');
+                PHOTO_DISPLAY_MODE = 0; 
+                photoArea.onclick = () => {
+                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 2;
+                    if (PHOTO_DISPLAY_MODE === 0) {
+                        // Default: Limited by both (cover)
+                        photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
+                    } else if (PHOTO_DISPLAY_MODE === 1) {
+                        // 1st Click: Limited only by height (contain, fills height)
+                        photoImg.style.width = 'auto'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'contain';
+                    }
+                };
+
+                // Events
+                document.getElementById('close-modal-btn').onclick = () => { modal.classList.add('hidden'); UNSUBSCRIBE_MODAL(); document.removeEventListener('click', closeMenuHandler); };
+                document.getElementById('heart-btn').onclick = () => updateDoc(doc(DAILY_COLLECTION, photoId), { hearts: isHearted ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid) });
+                document.getElementById('comment-form').onsubmit = async (e) => {
+                    e.preventDefault();
+                    const input = document.getElementById('comment-input');
+                    const text = input.value.trim();
+                    if(!text) return;
+
+                    await updateDoc(doc(DAILY_COLLECTION, photoId), {
+                        comments: arrayUnion({
+                            uid: currentUser.uid,
+                            username: CURRENT_USERNAME,
+                            text: await cleanText(text),
+                            timestamp: new Date()
+                        })
+                    });
+                    input.value = '';
+                };
+                
+                if(isOwner) {
+                    document.getElementById('delete-btn').onclick = async () => {
+                        if(confirm('Are you sure you want to delete this post? This cannot be undone.')) {
+                            const userRef = doc(db, USERS_COLLECTION, currentUser.uid);
+                            const slots = (await getDoc(userRef)).data()?.dailySlotsUsed || [];
+                            const slotIndex = slots.indexOf(photoId);
+
+                            const batch = writeBatch(db);
+                            
+                            // Delete document
+                            batch.delete(doc(DAILY_COLLECTION, photoId));
+                            
+                            // Mark slot as DELETED (used but empty)
+                            if (slotIndex > -1) {
+                                slots[slotIndex] = 'DELETED'; 
+                                batch.update(userRef, { dailySlotsUsed: slots });
+                            }
+                            
+                            await batch.commit();
+                            modal.classList.add('hidden');
+                        }
+                    };
+                } else {
+                    const blockBtn = document.getElementById('block-btn');
+                    if(blockBtn) {
+                         blockBtn.onclick = async () => {
+                             if(confirm(`Block ${data.creatorUsername}?`)) {
+                                 await updateDoc(doc(db, USERS_COLLECTION, currentUser.uid), { 
+                                     blocked_users: arrayUnion(data.creatorUid),
+                                     friends: arrayRemove(data.creatorUid) 
+                                 });
+                                 modal.classList.add('hidden');
+                             }
+                         };
+                    }
+                }
+            });
+        };
+
+        // --- UPLOAD FLOW (NEW DESIGN) ---
+        window.openUpload = (idx) => {
+            PENDING_SLOT = idx;
+            document.getElementById('upload-menu-modal').classList.remove('hidden', 'opacity-0');
+            document.getElementById('upload-select-options').classList.remove('hidden');
+            document.getElementById('upload-file-input').value = '';
+        };
+
+        document.getElementById('upload-menu-close-btn').onclick = () => document.getElementById('upload-menu-modal').classList.add('hidden');
+
+        document.getElementById('upload-file-input').onchange = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            PENDING_FILE = file;
+            document.getElementById('upload-menu-modal').classList.add('hidden');
+
+            const container = document.getElementById('modal-content-container');
+            const modal = document.getElementById('photo-modal');
+            modal.classList.remove('hidden');
+            
+            // Clean up any lingering emoji menu handler
+            document.removeEventListener('click', closeMenuHandler);
+
+            compressImage(file).then(imgData => {
+                container.innerHTML = `
+                    <div id="photo-display-area">
+                         <img src="${imgData}" class="photo-modal-img">
+                         <button id="cancel-create-btn" class="absolute top-4 right-4 btn-icon" style="width: 48px; height: 48px; border-color: #333; background: black; border-radius: 8px;" title="Cancel"><i class="fas fa-times text-xl text-gray-400"></i></button>
+                    </div>
+                    <div id="photo-info-panel">
+                        <div class="modal-header">
+                            <div class="modal-title-box">
+                                <label class="text-xs text-gray-500 mb-1 block">Username</label>
+                                <input type="text" id="create-username" class="w-full bg-transparent border-b border-[#333] text-gray-500 font-bold outline-none mb-2 cursor-not-allowed" value="${CURRENT_USERNAME}" disabled readonly>
+                            </div>
+                            <div class="modal-actions-box opacity-50 cursor-not-allowed">
+                                <i class="fas fa-heart text-gray-600 text-2xl"></i>
+                            </div>
+                        </div>
+
+                        <div class="mb-4 relative">
+                            <label class="text-xs text-gray-500 mb-1 block">Title</label>
+                            <div class="relative">
+                                <input type="text" id="create-description" class="w-full bg-black border border-[#333] rounded p-2 pr-10 text-white outline-none" maxlength="28" placeholder="Write a title...">
+                                <button type="button" id="emoji-trigger-btn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-400" title="Add Emoji">
+                                    <i class="fa-solid fa-face-kiss-wink-heart"></i>
+                                </button>
+                            </div>
+                            <div id="emoji-picker-menu" class="hidden absolute right-0 top-full mt-2 w-64 bg-black border border-[#333] rounded-xl z-50 shadow-xl flex flex-col h-64">
+                                <div class="flex justify-between items-center p-3 border-b border-[#333]">
+                                    <input type="text" id="emoji-search" placeholder="Search..." class="bg-[#1a1a1a] border-none rounded text-xs p-1.5 text-white w-full mr-2 outline-none">
+                                    <button id="close-emoji-menu" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+                                </div>
+                                <div id="emoji-list" class="flex-grow overflow-y-auto p-2 grid grid-cols-6 gap-1">
+                                    </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4 flex-grow border border-[#1a1a1a] rounded p-3 bg-black/50 overflow-hidden relative min-h-[100px]">
+                             <div class="absolute inset-0 flex items-center justify-center text-gray-700 text-xs uppercase tracking-widest pointer-events-none select-none">Comments Section</div>
+                             <div class="opacity-20 blur-[1px] select-none pointer-events-none">
+                                 <div class="mb-2 text-sm"><span class="text-indigo-400 font-bold">Friend</span> <span class="text-gray-400">Nice photo!</span></div>
+                                 <div class="mb-2 text-sm"><span class="text-indigo-400 font-bold">User</span> <span class="text-gray-400">Cool!</span></div>
+                             </div>
+                        </div>
+
+                        <div class="mt-auto mb-3">
+                             <button id="public-toggle-btn" class="btn-toolbar-style w-full justify-center" style="height: 50px;" data-public="false">
+                                <i class="fas fa-user-friends"></i> <span>Friends Only</span>
+                            </button>
+                        </div>
+
+                        <button id="confirm-post-btn" class="btn-toolbar-style btn-primary-override w-full" style="height: 50px;">
+                            <i class="fas fa-paper-plane"></i> Post
+                        </button>
+                    </div>
+                `;
+
+                const photoImg = container.querySelector('.photo-modal-img');
+                const photoArea = document.getElementById('photo-display-area');
+                PHOTO_DISPLAY_MODE = 0; 
+                photoArea.onclick = () => {
+                    PHOTO_DISPLAY_MODE = (PHOTO_DISPLAY_MODE + 1) % 2;
+                    if (PHOTO_DISPLAY_MODE === 0) {
+                        // Default: Limited by both (cover)
+                        photoImg.style.width = '100%'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'cover';
+                    } else if (PHOTO_DISPLAY_MODE === 1) {
+                        // 1st Click: Limited only by height (contain, fills height)
+                        photoImg.style.width = 'auto'; photoImg.style.height = '100%'; photoImg.style.objectFit = 'contain';
+                    }
+                };
+                
+                // Emoji Logic for Post Title
+                setupEmojiPicker('emoji-trigger-btn', 'create-description', 'emoji-picker-menu', 'close-emoji-menu', 'emoji-list', 'emoji-search');
+                
+                // Public Toggle Logic
+                const toggleBtn = document.getElementById('public-toggle-btn');
+                toggleBtn.onclick = () => {
+                    const isPublic = toggleBtn.dataset.public === 'true';
+                    if (isPublic) {
+                        toggleBtn.dataset.public = 'false';
+                        toggleBtn.innerHTML = '<i class="fas fa-user-friends"></i> <span>Friends Only</span>';
+                        toggleBtn.classList.remove('btn-primary-override');
+                    } else {
+                        toggleBtn.dataset.public = 'true';
+                        toggleBtn.innerHTML = '<i class="fas fa-globe"></i> <span>Public</span>';
+                        toggleBtn.classList.add('btn-primary-override');
+                    }
+                };
+                
+                document.getElementById('cancel-create-btn').onclick = () => { 
+                    modal.classList.add('hidden'); 
+                    PENDING_FILE = null;
+                    document.removeEventListener('click', closeMenuHandler); // Clean up emoji handler
+                };
+
+                document.getElementById('confirm-post-btn').onclick = async () => {
+                    const btn = document.getElementById('confirm-post-btn');
+                    btn.disabled = true;
+                    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Posting...`;
+
+                    const desc = document.getElementById('create-description').value.trim();
+                    const username = document.getElementById('create-username').value;
+                    const isPublic = document.getElementById('public-toggle-btn').dataset.public === 'true';
+                    
+                    if (!PENDING_FILE || !auth.currentUser) return;
+
+                    const ref = doc(DAILY_COLLECTION);
+                    await setDoc(ref, {
+                        creatorUid: auth.currentUser.uid,
+                        creatorUsername: await cleanText(username),
+                        createdAt: serverTimestamp(),
+                        imageBase64: imgData,
+                        title: await cleanText(desc) || "Daily Photo",
+                        hearts: [],
+                        comments: [],
+                        isPublic: isPublic,
+                        status: 'active'
+                    });
+
+                    const userRef = doc(db, USERS_COLLECTION, auth.currentUser.uid);
+                    const userData = (await getDoc(userRef)).data();
+                    const slots = userData.dailySlotsUsed || [];
+                    
+                    if (PENDING_SLOT < slots.length) {
+                        slots[PENDING_SLOT] = ref.id;
+                    } else if (PENDING_SLOT === slots.length) {
+                        slots.push(ref.id);
+                    }
+                    
+                    await updateDoc(userRef, { dailySlotsUsed: slots });
+                    modal.classList.add('hidden');
+                    PENDING_FILE = null;
+                    document.removeEventListener('click', closeMenuHandler); // Clean up emoji handler
+                };
+            }).catch(err => {
+                console.error("Compression failed", err);
+                alert("Failed to process image.");
+            });
+        };
+
+        // --- FEED LOGIC ---
+        async function renderFeed(snap) {
+            const feed = document.getElementById('photo-feed');
+            feed.innerHTML = '';
+            
+            // Collect post IDs and fetch necessary data (like comments count for the thumbnail)
+            const postDataPromises = [];
+            snap.forEach(d => {
+                const data = d.data();
+                if(BLOCKED_USERS.includes(data.creatorUid)) return; 
+                
+                // Directly use data from the snapshot, no separate fetch needed for comments/hearts
+                postDataPromises.push(new Promise(resolve => {
+                    resolve({
+                        id: d.id,
+                        ...data,
+                        commentCount: data.comments?.length || 0,
+                        heartCount: data.hearts?.length || 0
+                    });
+                }));
+            });
+
+            const posts = await Promise.all(postDataPromises);
+
+            posts.forEach(data => {
+                const el = document.createElement('div');
+                el.className = 'photo-thumbnail';
+                el.innerHTML = `
+                    <img src="${data.imageBase64}" loading="lazy">
+                    <div class="overlay"></div>
+                    <div class="absolute top-2 right-2 flex gap-2">
+                        <span class="text-white text-xs bg-black/50 px-2 py-1 rounded-lg backdrop-blur-sm" title="Likes"><i class="fas fa-heart text-red-400"></i> ${formatCount(data.heartCount)}</span>
+                        <span class="text-white text-xs bg-black/50 px-2 py-1 rounded-lg backdrop-blur-sm" title="Comments"><i class="fas fa-comment text-indigo-400"></i> ${formatCount(data.commentCount)}</span>
+                    </div>
+                    <div class="title-overlay">${data.title}</div>
+                `;
+                el.onclick = () => window.openPhotoModal(data.id);
+                feed.appendChild(el);
+            });
+
+            if(feed.children.length === 0) feed.innerHTML = `<p class="text-gray-600 col-span-3 text-center py-10">No photos in this feed.</p>`;
+        }
+
+        function setupFeed(mode, user) {
+            UNSUBSCRIBE_POSTS();
+            
+            // PREVENT GLITCH: Clear all active classes first
+            const btnFriends = document.getElementById('feed-toggle-friends');
+            const btnPublic = document.getElementById('feed-toggle-public');
+            
+            btnFriends.classList.remove('active', 'btn-primary-override');
+            btnPublic.classList.remove('active', 'btn-primary-override');
+
+            // Apply to current
+            if(mode === 'friends') {
+                btnFriends.classList.add('active', 'btn-primary-override');
+            } else {
+                btnPublic.classList.add('active', 'btn-primary-override');
+            }
+            
+            const today = new Date(); today.setHours(0,0,0,0);
+            
+            let q;
+            if (mode === 'friends') {
+                const uids = [user.uid, ...CURRENT_FRIENDS].filter(uid => !BLOCKED_USERS.includes(uid));
+                const friends_or_self = uids.slice(0, 10);
+                
+                if (friends_or_self.length === 0) {
+                     renderFeed({ forEach: () => {} });
+                     return;
+                }
+
+                q = query(DAILY_COLLECTION, 
+                    where('status', '==', 'active'),
+                    where('creatorUid', 'in', friends_or_self), 
+                    where('createdAt', '>=', today), 
+                    orderBy('createdAt', 'desc')
+                );
+            } else if (mode === 'public') {
+                q = query(DAILY_COLLECTION, 
+                    where('status', '==', 'active'),
+                    where('isPublic', '==', true),
+                    where('createdAt', '>=', today),
+                    orderBy('createdAt', 'desc'), 
+                    limit(100)
+                );
+            } else {
+                 return setupFeed('friends', user);
+            }
+
+            UNSUBSCRIBE_POSTS = onSnapshot(q, renderFeed);
+        }
+        
+        // --- FRIENDS LIST ---
+        async function renderFriendsList() {
+            const fList = document.getElementById('friends-list-items');
+            fList.innerHTML = '';
+            const searchContainer = document.getElementById('friends-section-wrapper');
+
+            if (!document.getElementById('friend-search-input')) {
+                const searchDiv = document.createElement('div');
+                searchDiv.id = "friend-search-container";
+                searchDiv.className = "mb-4";
+                searchDiv.innerHTML = `
+                    <input type="text" id="friend-search-input" placeholder="Search by Username..." 
+                           class="w-full p-2 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-white thin-font"
+                           oninput="filterFriends(this.value)">
+                `;
+                searchContainer.insertBefore(searchDiv, searchContainer.querySelector('.compact-list-wrapper'));
+            }
+
+            const friends = CURRENT_FRIENDS;
+            const pending = (await getDoc(doc(db, USERS_COLLECTION, auth.currentUser.uid))).data()?.pending_requests || [];
+
+            if (pending.length > 0) {
+                 const pTitle = document.createElement('div');
+                 pTitle.className = "p-2 text-xs font-bold text-indigo-400 uppercase tracking-widest border-b border-[#1a1a1a] mb-2";
+                 pTitle.textContent = "REQUESTS";
+                 fList.appendChild(pTitle);
+
+                 const pendingSnaps = await Promise.all(pending.map(uid => getDoc(doc(db, USERS_COLLECTION, uid))));
+
+                 pendingSnaps.forEach(s => {
+                     const uid = s.id;
+                     const pName = s.data()?.username || 'Unknown';
+                     const el = document.createElement('div');
+                     el.className = "compact-list-item flex justify-between items-center bg-indigo-900/10 border border-indigo-900/30 mb-1";
+                     el.innerHTML = `
+                        <span class="text-indigo-200 text-sm truncate max-w-[100px]">${pName}</span>
+                        <div class="flex gap-1">
+                            <button class="w-6 h-6 flex items-center justify-center bg-green-900/50 text-green-400 rounded hover:bg-green-900" onclick="handleRequest('${uid}', 'accept')" title="Accept Request"><i class="fas fa-check text-xs"></i></button>
+                            <button class="w-6 h-6 flex items-center justify-center bg-red-900/50 text-red-400 rounded hover:bg-red-900" onclick="handleRequest('${uid}', 'deny')" title="Deny Request"><i class="fas fa-times text-xs"></i></button>
+                        </div>
+                     `;
+                     fList.appendChild(el);
+                 });
+            }
+            
+            if (friends.length === 0 && pending.length === 0) {
+                 fList.innerHTML = '<p class="text-gray-600 text-sm p-2">No friends yet.</p>';
+                 return;
+            } else if (friends.length > 0) {
+                if (pending.length > 0) {
+                    const fTitle = document.createElement('div');
+                    fTitle.id = "friends-list-title";
+                    fTitle.className = "p-2 text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-[#1a1a1a] mt-4 mb-2";
+                    fTitle.textContent = "FRIENDS";
+                    fList.appendChild(fTitle);
+                }
+
+                ALL_FRIEND_PROFILES.forEach(p => {
+                     const name = p.username || 'Unknown';
+                     const div = document.createElement('div');
+                     div.className = "compact-list-item friend-item flex justify-between";
+                     div.dataset.username = name.toLowerCase();
+                     div.innerHTML = `<span class="text-gray-300 truncate max-w-[150px]">${name}</span><button class="text-red-400 hover:text-red-500" onclick="removeFriend('${p.id}')" title="Unfriend"><i class="fas fa-minus-circle"></i></button>`;
+                     fList.appendChild(div);
+                });
+                
+                const existingQuery = document.getElementById('friend-search-input')?.value || '';
+                window.filterFriends(existingQuery);
+            }
+        }
+        
+        window.filterFriends = (query) => {
+             const fList = document.getElementById('friends-list-items');
+             const friendItems = fList.querySelectorAll('.friend-item');
+             const lowerQuery = query.toLowerCase().trim();
+             let foundCount = 0;
+
+             friendItems.forEach(item => {
+                 const name = item.dataset.username || '';
+                 if (name.includes(lowerQuery)) {
+                     item.style.display = 'flex';
+                     foundCount++;
+                 } else {
+                     item.style.display = 'none';
+                 }
+             });
+
+             const title = document.getElementById('friends-list-title');
+             if (title) title.style.display = foundCount > 0 ? 'block' : 'none';
+        };
+
+        // --- FEED TOGGLE HANDLERS (UPDATED for NEW MODAL) ---
+        const disclaimerModal = document.getElementById('disclaimer-modal');
+        
+        // Fade In helper
+        const showDisclaimer = () => {
+            disclaimerModal.classList.remove('hidden');
+            setTimeout(() => {
+                disclaimerModal.classList.remove('opacity-0');
+                disclaimerModal.classList.add('opacity-100');
+            }, 10);
+        };
+        
+        // Fade Out helper
+        const hideDisclaimer = () => {
+            disclaimerModal.classList.remove('opacity-100');
+            disclaimerModal.classList.add('opacity-0');
+            setTimeout(() => {
+                disclaimerModal.classList.add('hidden');
+            }, 300);
+        };
+
+        document.getElementById('feed-toggle-friends').onclick = () => {
+            CURRENT_FEED_MODE = 'friends';
+            setupFeed('friends', auth.currentUser);
+        };
+
+        document.getElementById('feed-toggle-public').onclick = () => {
+            if(localStorage.getItem('public_agreed')) {
+                CURRENT_FEED_MODE = 'public';
+                setupFeed('public', auth.currentUser);
+            } else {
+                showDisclaimer();
+            }
+        };
+
+        // Disclaimer Actions
+        document.getElementById('disclaimer-confirm-btn').onclick = () => {
+            localStorage.setItem('public_agreed', 'true');
+            hideDisclaimer();
+            CURRENT_FEED_MODE = 'public';
+            setupFeed('public', auth.currentUser);
+        };
+
+        document.getElementById('disclaimer-cancel-btn').onclick = () => {
+            hideDisclaimer();
+            // Ensure UI toggles back to friends if they cancel
+            document.getElementById('feed-toggle-friends').click(); 
+        };
+
+        // --- AUTH & INIT ---
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                await signInAnonymously(auth);
+                return;
+            }
+
+            try {
+                await handleFriendCodeLogic(user);
+                await cleanupOldPosts(user);
+            } catch (e) {
+                console.error("Initialization error:", e);
+            }
+
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('messenger-ui').style.display = 'block';
+
+            switchSidebar('posts');
+
+            // Load Profile
+            const userRef = doc(db, USERS_COLLECTION, user.uid);
+            
+            onSnapshot(userRef, async (snap) => {
+                const d = snap.data() || {};
+                CURRENT_USERNAME = d.username || 'User';
+                const friends = d.friends || [];
+                const pending = d.pending_requests || [];
+                BLOCKED_USERS = d.blocked_users || [];
+                
+                let friendsChanged = false;
+                if (friends.length !== CURRENT_FRIENDS.length || !friends.every((val, i) => val === CURRENT_FRIENDS[i])) { 
+                    CURRENT_FRIENDS = friends;
+                    friendsChanged = true;
+                }
+
+                if (friendsChanged || CURRENT_FEED_MODE === 'friends' || BLOCKED_USERS.length !== (d.blocked_users || []).length) { 
+                    setupFeed(CURRENT_FEED_MODE, user);
+                }
+
+                const friendSnaps = await Promise.all(friends.map(uid => getDoc(doc(db, USERS_COLLECTION, uid))));
+                ALL_FRIEND_PROFILES = friendSnaps.map(s => ({ id: s.id, ...s.data() }));
+
+                if (!document.getElementById('friends-section-wrapper').classList.contains('hidden')) {
+                    await renderFriendsList(); 
+                }
+                
+                // --- DAILY SLOTS ---
+                const slotsContainer = document.getElementById('daily-posts-container');
+                const used = d.dailySlotsUsed || [];
+                slotsContainer.innerHTML = '';
+
+                // 2. Render Slots
+                for(let i=0; i<5; i++) {
+                    const postId = used[i];
+                    const div = document.createElement('div');
+                    div.className = 'compact-list-item flex justify-between items-center border border-[#1a1a1a] mb-1 p-2 rounded bg-[#0a0a0a]';
+                    
+                    if(postId && postId !== 'DELETED') {
+                        // Check availability
+                        const postDoc = await getDoc(doc(DAILY_COLLECTION, postId));
+                        
+                        if(!postDoc.exists()) {
+                            // UNAVAILABLE (Broken)
+                            div.innerHTML = `
+                                <span class="text-gray-600 text-sm italic">Post Unavailable</span>
+                                <button class="text-xs bg-red-900/30 text-red-400 px-2 py-1 rounded border border-red-900/50 hover:bg-red-900/50" onclick="fixBrokenSlot(${i})" title="Clear broken slot">Fix</button>
+                            `;
+                        } else {
+                            // AVAILABLE
+                            const title = postDoc.data()?.title || `Photo ${i+1}`;
+                            div.innerHTML = `
+                                <span class="text-gray-300 text-sm truncate max-w-[150px] cursor-pointer hover:text-indigo-400" onclick="openPhotoModal('${postId}')" title="${title}">${title}</span>
+                                <div class="flex gap-1">
+                                    <button class="w-6 h-6 flex items-center justify-center text-indigo-400 rounded hover:text-indigo-600" onclick="window.openPhotoModal('${postId}')" title="View"><i class="fas fa-eye text-xs"></i></button>
+                                    <button class="w-6 h-6 flex items-center justify-center text-red-400 rounded hover:text-red-600" onclick="deletePost('${postId}')" title="Delete"><i class="fas fa-trash text-xs"></i></button>
+                                </div>
+                            `;
+                        }
+                    } else if (postId === 'DELETED') { 
+                        div.innerHTML = `<span class="text-gray-500 text-sm italic">Slot ${i+1}: Used</span>`;
+                    } else {
+                         div.innerHTML = `<span class="text-gray-500 text-sm italic">Slot ${i+1}: Empty</span> <button class="w-6 h-6 flex items-center justify-center bg-indigo-900/50 text-indigo-400 rounded hover:bg-indigo-900" onclick="window.openUpload(${i})" title="Post Photo"><i class="fas fa-plus text-xs"></i></button>`;
+                    }
+                    slotsContainer.appendChild(div);
+                }
+                
+                if (!document.getElementById('blocked-section').classList.contains('hidden')) {
+                    renderBlockedList();
+                }
+            });
+            
+            // Friend Code Display
+            // Logic handled in handleFriendCodeLogic now, but we need to ensure the element is updated if already loaded.
+            const codeQ = query(collection(db, 'friend_codes'), where('userId', '==', user.uid), limit(1));
+            const codeSnap = await getDocs(codeQ);
+             if(!codeSnap.empty) document.getElementById('friend-code-display').textContent = codeSnap.docs[0].id;
+             else if (document.getElementById('friend-code-display').textContent === 'LOADING') document.getElementById('friend-code-display').textContent = "GEN-ERR";
+            
+            document.getElementById('friend-code-display').onclick = () => {
+                 const code = document.getElementById('friend-code-display').textContent;
+                 if(code !== 'LOADING' && code !== 'GEN-ERR' && code !== 'Generating...') {
+                     navigator.clipboard.writeText(code);
+                     alert('Friend Code copied!');
+                 }
+            };
+        });
+
+        // --- SLOT MANAGEMENT HANDLERS ---
+        
+        // "Fix" Button for unavailable/broken slots
+        window.fixBrokenSlot = async (index) => {
+            const userRef = doc(db, USERS_COLLECTION, auth.currentUser.uid);
+            const data = (await getDoc(userRef)).data();
+            const slots = data.dailySlotsUsed || [];
+            
+            if(slots[index]) {
+                // If the post ID is at this index, remove it, freeing up the slot in the flow.
+                slots.splice(index, 1); 
+                
+                await updateDoc(userRef, { dailySlotsUsed: slots });
+            }
+        };
+
+        // Shortcut Delete Button
+        window.deletePost = async (postId) => {
+            if(!confirm("Delete this post?")) return;
+            const userRef = doc(db, USERS_COLLECTION, auth.currentUser.uid);
+            const slots = (await getDoc(userRef)).data()?.dailySlotsUsed || [];
+            const index = slots.indexOf(postId);
+            
+            const batch = writeBatch(db);
+            batch.delete(doc(DAILY_COLLECTION, postId));
+            
+            if(index > -1) {
+                slots[index] = 'DELETED'; // Mark as burned slot
+                batch.update(userRef, { dailySlotsUsed: slots });
+            }
+            await batch.commit();
+        };
+        
+        // --- Friend Logic Handlers ---
+        
+        async function sendFriendRequest(code) {
+            const msgEl = document.getElementById('add-friend-message');
+            msgEl.textContent = "Searching...";
+            msgEl.className = "text-xs mt-2 min-h-[16px] text-gray-500";
+            
+            try {
+                // 1. Check for the target user's code in 'friend_codes'
+                const codeDoc = await getDoc(getFriendCodeDocRef(code));
+                
+                if (!codeDoc.exists()) {
+                     msgEl.textContent = "Code not found.";
+                     msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                     return;
+                }
+                
+                const targetUid = codeDoc.data().userId;
+                
+                // 2. Crucial: Double check if the target user profile exists/is valid
+                const targetProfileSnap = await getDoc(getUserProfileDocRef(targetUid));
+                if (!targetProfileSnap.exists()) {
+                    msgEl.textContent = "Target user profile corrupted or missing.";
+                    msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                    return;
+                }
+
+                if (targetUid === auth.currentUser.uid) {
+                     msgEl.textContent = "You can't add yourself.";
+                     msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                     return;
+                }
+
+                if (CURRENT_FRIENDS.includes(targetUid)) {
+                     msgEl.textContent = "Already friends.";
+                     msgEl.className = "text-xs mt-2 min-h-[16px] text-yellow-500";
+                     return;
+                }
+                
+                if (BLOCKED_USERS.includes(targetUid)) {
+                     msgEl.textContent = "Cannot send request to a blocked user.";
+                     msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+                     return;
+                }
+                
+                const targetData = targetProfileSnap.data();
+                if ((targetData.pending_requests || []).includes(auth.currentUser.uid)) {
+                     msgEl.textContent = "Request already sent.";
+                     msgEl.className = "text-xs mt-2 min-h-[16px] text-yellow-500";
+                     return;
+                }
+                
+                // Ensure target hasn't blocked us (if we had a way to know, but we don't need a direct check on client)
+
+                await updateDoc(doc(db, USERS_COLLECTION, targetUid), {
+                    pending_requests: arrayUnion(auth.currentUser.uid)
+                });
+                
+                msgEl.textContent = "Request sent!";
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-green-500";
+                document.getElementById('friend-code-input').value = '';
+
+            } catch (e) {
+                console.error(e);
+                msgEl.textContent = "Error sending request.";
+                msgEl.className = "text-xs mt-2 min-h-[16px] text-red-500";
+            }
+        }
+
+        document.getElementById('add-friend-form').onsubmit = (e) => {
+            e.preventDefault();
+            const code = document.getElementById('friend-code-input').value.trim().toUpperCase(); // Ensure uppercase for consistency
+            if(code) sendFriendRequest(code);
+        };
+
+        window.handleRequest = async (targetUid, action) => {
+            const myUid = auth.currentUser.uid;
+            
+            const batch = writeBatch(db);
+            batch.update(doc(db, USERS_COLLECTION, myUid), { pending_requests: arrayRemove(targetUid) });
+
+            if (action === 'accept') {
+                batch.update(doc(db, USERS_COLLECTION, myUid), { friends: arrayUnion(targetUid) });
+                batch.update(doc(db, USERS_COLLECTION, targetUid), { friends: arrayUnion(myUid) });
+            } 
+            
+            await batch.commit();
+        };
+
+        window.removeFriend = async (targetUid) => {
+            if(!confirm("Are you sure you want to unfriend this user?")) return;
+            const myUid = auth.currentUser.uid;
+            const batch = writeBatch(db);
+            batch.update(doc(db, USERS_COLLECTION, myUid), { friends: arrayRemove(targetUid) });
+            batch.update(doc(db, USERS_COLLECTION, targetUid), { friends: arrayRemove(myUid) });
+            await batch.commit();
+        };
+
+        // --- Blocked List Logic ---
+        async function renderBlockedList() {
+            const list = document.getElementById('blocked-list-items');
+            list.innerHTML = '';
+            
+            if (BLOCKED_USERS.length === 0) {
+                 list.innerHTML = '<p class="text-gray-600 text-sm p-2">No users blocked.</p>';
+                 return; 
+            }
+            
+            const blockedUserSnaps = await Promise.all(BLOCKED_USERS.map(uid => getDoc(doc(db, USERS_COLLECTION, uid))));
+            
+            blockedUserSnaps.forEach(s => {
+                const name = s.data()?.username || `User ${s.id.substr(0,5)}...`;
+                const uid = s.id;
+                
+                const div = document.createElement('div');
+                div.className = "compact-list-item flex justify-between items-center";
+                div.innerHTML = `<span class="text-gray-400 text-sm truncate max-w-[150px]" title="${name}">${name}</span> <button onclick="unblock('${uid}')" class="text-indigo-400 text-xs border border-indigo-900 px-2 py-0.5 rounded" title="Unblock User"><i class="fas fa-unlock-alt"></i></button>`;
+                list.appendChild(div);
+            });
+        }
+        
+        window.unblock = async (uid) => {
+             await updateDoc(doc(db, USERS_COLLECTION, auth.currentUser.uid), { blocked_users: arrayRemove(uid) });
+        };
+    </script>
+</body>
+</html>
