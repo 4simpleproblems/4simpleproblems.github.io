@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4SP - DASHBOARD</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="../injector.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* --- FONT & BASE STYLING --- */
+        :root {
+            --bg-page: #040404;
+            --bg-container: #000000;
+            --border-color: #333;
+            --text-primary: #c0c0c0;
+            --text-light-grey: #d1d5db;
+            --accent-color: #6366f1;
+            --text-link: #888;
+            --spinner-color: #666666; /* UPDATED: Darker grey color for the loader */
+        }
+
+        body { 
+            font-family: 'Geist', sans-serif; 
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            font-weight: 300;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        h1, h2, h3, .font-bold, .font-semibold, strong, .tracking-widest {
+            font-weight: 400 !important;
+        }
+
+        /* --- LAYOUT UTILS --- */
+        #page-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* --- DASHBOARD WIDGET STYLES --- */
+        .dashboard-widget {
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-container);
+            padding: 2.5rem 4rem; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 32px; 
+            
+            /* Sizing & Layout */
+            width: fit-content;
+            max-width: 95vw;
+            box-sizing: border-box;
+
+            /* Flex Layout */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3.5rem; 
+            
+            /* Enable absolute positioning for spinner */
+            position: relative; 
+        }
+
+        .dashboard-widget:hover {
+            border-color: #505050;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- CLOCK STYLES --- */
+        .clock-section {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .time-display {
+            font-family: 'Geist', sans-serif;
+            font-weight: 300;
+            display: flex;
+            align-items: flex-end; 
+            line-height: 0.9;
+            color: var(--text-light-grey);
+            font-variant-numeric: tabular-nums;
+            font-size: 5.5rem; 
+            white-space: nowrap;
+        }
+        
+        .date-display {
+            font-weight: 300;
+            margin-top: 0.5rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-size: 1.1rem;
+            color: var(--text-light-grey); 
+            opacity: 0.8;
+        }
+        
+        .seconds-display {
+            font-weight: 300;
+            font-size: 3.5rem; 
+            margin-left: 0.2rem;
+            color: var(--text-light-grey);
+            opacity: 0.8;
+        }
+
+        /* --- VERTICAL DIVIDER --- */
+        .vertical-divider {
+            width: 1px;
+            height: 100px; 
+            background-color: #262626;
+        }
+
+        /* --- WEATHER STYLES --- */
+        .weather-section {
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .weather-main {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .weather-icon {
+            font-size: 2.8rem;
+            color: var(--text-light-grey);
+            width: 50px; 
+            text-align: center;
+        }
+
+        .weather-temp {
+            font-size: 3.5rem; 
+            line-height: 1;
+            color: #fff;
+            min-width: 80px; 
+        }
+
+        .weather-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-size: 1rem;
+            color: var(--text-link); /* Base grey color */
+            padding-left: 0.5rem; 
+        }
+
+        .weather-detail-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .wind-arrow {
+            display: inline-block;
+            transition: transform 0.5s ease;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+        }
+
+        #w-location-link {
+            font-size: 0.7rem;
+            color: var(--text-link);
+            cursor: pointer;
+            text-align: left;
+            margin-top: 0.5rem;
+            padding-left: 0.5rem;
+            transition: color 0.2s ease;
+        }
+
+        #w-location-link:hover {
+            color: var(--text-light-grey);
+        }
+
+        /* --- SPINNER STYLES --- */
+        #weather-loader {
+            position: absolute;
+            bottom: 20px; /* Position from bottom edge */
+            right: 20px; /* Position from right edge */
+            color: var(--spinner-color); 
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none; /* Allows clicks to pass through */
+        }
+        
+        #weather-loader.loading {
+            opacity: 1;
+        }
+        
+        .fa-spin-slow {
+            /* Customize spin speed */
+            animation: fa-spin 1.5s infinite linear; /* Slower spin */
+            font-size: 1.2rem;
+        }
+        
+        /* Font Awesome's base spin animation (needed for custom speed) */
+        @keyframes fa-spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="page-content">
+        <div id="dashboard-widget" class="dashboard-widget">
+            
+            <div class="clock-section">
+                <div id="clock-time" class="time-display">--:--<span class="seconds-display">--</span></div>
+                <div id="clock-date" class="date-display">--------</div>
+            </div>
+
+            <div class="vertical-divider"></div>
+
+            <div class="weather-section">
+                <div class="weather-main">
+                    <div id="w-icon" class="weather-icon"><i class="fa-solid fa-cloud"></i></div>
+                    <div id="w-temp" class="weather-temp">--°</div>
+                </div>
+                
+                <div class="weather-details">
+                    <div class="weather-detail-row">
+                        <span>H: <span id="w-high" class="text-gray-300">--°</span></span>
+                        <span class="mx-1 text-[#333]">|</span>
+                        <span>L: <span id="w-low" class="text-gray-300">--°</span></span>
+                    </div>
+                    <div class="weather-detail-row">
+                        <i id="w-wind-arrow" class="fa-solid fa-arrow-up wind-arrow"></i>
+                        <span id="w-wind-speed">-- mph</span>
+                    </div>
+                </div>
+                
+                <div id="w-location-link" onclick="getUserBrowserLocation()">
+                    Use Current Location
+                </div>
+            </div>
+            
+            <div id="weather-loader">
+                <i class="fa-solid fa-circle-notch fa-spin-slow"></i>
+            </div>
+            </div>
+    </div>
+
+    <script type="module">
+        import { firebaseConfig } from '../firebase-config.js';
+
+        // --- GLOBAL STATE ---
+        let CURRENT_LAT = null;
+        let CURRENT_LON = null;
+        const redirectPath = '../index.html';
+        const WEATHER_CACHE_KEY = 'weather_data_cache';
+        // 5 minutes in milliseconds
+        const REFRESH_INTERVAL_MS = 5 * 60 * 1000; 
+
+        // --- ELEMENTS ---
+        const clockTimeEl = document.getElementById('clock-time');
+        const clockDateEl = document.getElementById('clock-date');
+        const wTemp = document.getElementById('w-temp');
+        const wIcon = document.getElementById('w-icon');
+        const wHigh = document.getElementById('w-high');
+        const wLow = document.getElementById('w-low');
+        const wWindSpeed = document.getElementById('w-wind-speed');
+        const wWindArrow = document.getElementById('w-wind-arrow');
+        const wLocLink = document.getElementById('w-location-link');
+        const weatherLoader = document.getElementById('weather-loader'); 
+
+        // --- LOADER FUNCTIONS ---
+        function showLoader() {
+            weatherLoader.classList.add('loading');
+        }
+
+        function hideLoader() {
+            weatherLoader.classList.remove('loading');
+        }
+
+        // --- FIREBASE INIT WAITER ---
+        function waitForFirebase(callback) {
+            const check = setInterval(() => {
+                if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+                    clearInterval(check);
+                    window.auth = firebase.auth();
+                    window.db = firebase.firestore();
+                    callback();
+                }
+            }, 100);
+        }
+
+        // --- CLOCK LOGIC (Unchanged) ---
+        function updateDateTime() {
+            const now = new Date();
+            
+            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+            const timeString = now.toLocaleTimeString('en-US', timeOptions);
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            
+            const parts = timeString.split(' ');
+            const timeOnly = parts[0];
+            const amPm = parts[1] || '';
+
+            const dateOptions = { weekday: 'long', month: 'long', day: 'numeric' };
+            const dateString = now.toLocaleDateString('en-US', dateOptions);
+
+            if (clockTimeEl) {
+                clockTimeEl.innerHTML = `${timeOnly}<span class="seconds-display">:${seconds} ${amPm}</span>`;
+            }
+            if (clockDateEl) {
+                clockDateEl.innerText = dateString;
+            }
+        }
+
+        // Resets display to placeholders
+        function resetWeatherDisplay() {
+            wTemp.innerText = `--°`;
+            wHigh.innerText = `--°`;
+            wLow.innerText = `--°`;
+            wWindSpeed.innerText = `-- mph`;
+            wIcon.innerHTML = `<i class="fa-solid fa-cloud"></i>`;
+            wWindArrow.style.transform = `rotate(0deg)`;
+        }
+
+        // --- CACHE LOGIC (Unchanged) ---
+        function getWeatherCache() {
+            try {
+                const cached = localStorage.getItem(WEATHER_CACHE_KEY);
+                return cached ? JSON.parse(cached) : null;
+            } catch (e) {
+                console.error("Error reading weather cache:", e);
+                return null;
+            }
+        }
+
+        function setWeatherCache(data) {
+            try {
+                // Store data and a timestamp
+                const cacheData = {
+                    timestamp: Date.now(),
+                    weatherData: data
+                };
+                localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(cacheData));
+            } catch (e) {
+                console.error("Error writing weather cache:", e);
+            }
+        }
+
+        function loadWeatherIfNeeded(lat, lon) {
+            const cache = getWeatherCache();
+            const now = Date.now();
+
+            if (cache && (now - cache.timestamp < REFRESH_INTERVAL_MS)) {
+                // Cache is fresh, use it
+                console.log("Using cached weather data.");
+                updateWeatherUI(cache.weatherData);
+                hideLoader(); // FIX: Added hideLoader for cache hits
+            } else {
+                // Cache is stale or non-existent, fetch new data
+                console.log("Weather cache stale or missing. Fetching new data.");
+                resetWeatherDisplay();
+                loadWeatherWithFallback(lat, lon);
+            }
+        }
+
+        // --- LOCATION FETCH (IP Fallback) ---
+        async function initWeather() {
+            showLoader(); // Show loader at start of location determination
+            try {
+                // 1. Get Location using IP (Default)
+                const ipRes = await fetch('https://ipapi.co/json/');
+                const ipData = await ipRes.json();
+                
+                CURRENT_LAT = ipData.latitude;
+                CURRENT_LON = ipData.longitude;
+                
+                if(!CURRENT_LAT || !CURRENT_LON) {
+                    hideLoader();
+                    return; 
+                }
+
+                // 2. Load weather using cache-check function
+                loadWeatherIfNeeded(CURRENT_LAT, CURRENT_LON);
+
+            } catch (err) {
+                console.warn("Initial weather load (IP location) failed", err);
+                hideLoader(); // Hide on failure
+            }
+        }
+
+        // --- LOCATION FETCH (Browser Geolocation) ---
+        window.getUserBrowserLocation = async function() {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by this browser.");
+                return;
+            }
+            
+            showLoader(); // Show loader before geolocating
+            resetWeatherDisplay();
+
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { 
+                        timeout: 5000, 
+                        maximumAge: 60000 
+                    });
+                });
+                
+                CURRENT_LAT = pos.coords.latitude;
+                CURRENT_LON = pos.coords.longitude;
+                
+                // When explicitly asked for new location, bypass cache and force a fetch
+                loadWeatherWithFallback(CURRENT_LAT, CURRENT_LON);
+
+            } catch(e) {
+                console.error("Geolocation failed:", e);
+                // Fallback to IP data if browser location fails (which is checked via initWeather)
+                initWeather(); 
+            }
+        }
+
+        // --- FALLBACK LOGIC ---
+        async function loadWeatherWithFallback(lat, lon) {
+            // Loader is already shown by calling functions (initWeather or getUserBrowserLocation)
+            try {
+                // 1. Google Weather (using Firebase API Key) - PRIMARY
+                try {
+                    await fetchGoogleWeather(lat, lon);
+                    return;
+                } catch(e) {
+                    console.warn("Google Weather failed, attempting NWS:", e);
+                }
+
+                // 2. NWS - SECONDARY
+                try {
+                    await fetchNWS(lat, lon);
+                    return;
+                } catch(e) {
+                    console.warn("NWS failed, attempting Open-Meteo:", e);
+                }
+
+                // 3. Open-Meteo - TERTIARY
+                try {
+                    await fetchOpenMeteo(lat, lon);
+                } catch(e) {
+                    console.error("All weather sources failed", e);
+                    hideLoader(); // Hide on absolute failure
+                }
+            } catch (finalError) {
+                // Catches errors during the fallback chain setup
+                hideLoader();
+            }
+        }
+
+        // --- GOOGLE WEATHER FETCH ---
+        async function fetchGoogleWeather(lat, lon) {
+            const apiKey = firebaseConfig.apiKey;
+            const url = `https://weather.googleapis.com/v1/currentConditions:lookup?key=${apiKey}&location.latitude=${lat}&location.longitude=${lon}`;
+            
+            const res = await fetch(url);
+            if (!res.ok) {
+                const errText = await res.text();
+                console.error("Google Weather API Failed. Details:", errText);
+                throw new Error(`Google Weather Error: ${res.status} - ${errText}`);
+            }
+            
+            const data = await res.json();
+            if (!data.currentConditions) throw new Error("Invalid Google Weather Data");
+
+            const curr = data.currentConditions;
+            
+            let tempF = curr.temperature?.value;
+            if (curr.temperature?.unit?.toLowerCase() === 'celsius' || curr.temperature?.unit?.toLowerCase() === 'c') {
+                tempF = (tempF * 9/5) + 32;
+            }
+            
+            const weatherCode = curr.weatherCondition || "CLOUDY"; 
+
+            const weatherData = {
+                temp: Math.round(tempF || 0),
+                iconCode: weatherCode,
+                isDay: true, 
+                high: "--", 
+                low: "--",
+                windSpeed: (curr.windSpeed?.value || 0) + " mph",
+                windDir: curr.windDirection || 0,
+                isNWS: false,
+                isGoogle: true
+            };
+
+            setWeatherCache(weatherData);
+            updateWeatherUI(weatherData);
+            hideLoader(); // Hide loader on success
+        }
+
+        // --- NWS FETCH ---
+        async function fetchNWS(lat, lon) {
+            const pointsRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`);
+            if (!pointsRes.ok) throw new Error("NWS Point Fail");
+            const pointsData = await pointsRes.json();
+            
+            const [forecastRes, hourlyRes] = await Promise.all([
+                fetch(pointsData.properties.forecast),
+                fetch(pointsData.properties.forecastHourly)
+            ]);
+
+            const dailyData = await forecastRes.json();
+            const hourlyData = await hourlyRes.json();
+
+            const current = hourlyData.properties.periods[0];
+            
+            const first24 = hourlyData.properties.periods.slice(0, 24);
+            const temps = first24.map(p => p.temperature);
+            const high = Math.max(...temps);
+            const low = Math.min(...temps);
+
+            const weatherData = {
+                temp: current.temperature,
+                iconCode: current.shortForecast,
+                isDay: current.isDaytime,
+                high: high,
+                low: low,
+                windSpeed: current.windSpeed, 
+                windDir: current.windDirection,
+                isNWS: true
+            };
+
+            setWeatherCache(weatherData);
+            updateWeatherUI(weatherData);
+            hideLoader(); // Hide loader on success
+        }
+
+        // --- OPEN METEO FETCH ---
+        async function fetchOpenMeteo(lat, lon) {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            const weatherData = {
+                temp: Math.round(data.current.temperature_2m),
+                iconCode: data.current.weather_code,
+                isDay: data.current.is_day,
+                high: Math.round(data.daily.temperature_2m_max[0]),
+                low: Math.round(data.daily.temperature_2m_min[0]),
+                windSpeed: Math.round(data.current.wind_speed_10m) + " mph",
+                windDir: data.current.wind_direction_10m,
+                isNWS: false
+            };
+
+            setWeatherCache(weatherData);
+            updateWeatherUI(weatherData);
+            hideLoader(); // Hide loader on success
+        }
+
+        // --- UI UPDATE (Unchanged) ---
+        function updateWeatherUI(data) {
+            wTemp.innerText = `${data.temp}°`;
+            wHigh.innerText = `${data.high}°`;
+            wLow.innerText = `${data.low}°`;
+            wWindSpeed.innerText = data.windSpeed;
+
+            let iconClass = 'fa-cloud';
+            if(data.isGoogle) iconClass = getIconFromGoogle(data.iconCode);
+            else if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
+            else iconClass = getIconFromWMO(data.iconCode, data.isDay);
+            
+            wIcon.innerHTML = `<i class="${iconClass}"></i>`;
+
+            const rotation = getWindRotation(data.windDir);
+            wWindArrow.style.transform = `rotate(${rotation}deg)`;
+        }
+
+        // --- HELPERS (Wind & Icon - Unchanged) ---
+        function getWindRotation(dir) {
+            if (typeof dir === 'number') return dir; 
+            const map = {
+                'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
+                'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
+                'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
+                'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
+            };
+            return map[dir] || 0;
+        }
+
+        function getIconFromGoogle(condition) {
+             if (!condition) return 'fa-solid fa-cloud';
+             const c = condition.toLowerCase();
+             if (c.includes('clear') || c.includes('sunny')) return 'fa-solid fa-sun';
+             if (c.includes('cloud')) return 'fa-solid fa-cloud';
+             if (c.includes('rain')) return 'fa-solid fa-cloud-rain';
+             if (c.includes('snow')) return 'fa-solid fa-snowflake';
+             if (c.includes('storm') || c.includes('thunder')) return 'fa-solid fa-cloud-bolt';
+             if (c.includes('fog') || c.includes('mist')) return 'fa-solid fa-smog';
+             return 'fa-solid fa-cloud';
+        }
+
+        function getIconFromWMO(code, isDay) {
+            const day = isDay === 1;
+            const map = {
+                0: day ? 'fa-sun' : 'fa-moon', 1: day ? 'fa-cloud-sun' : 'fa-cloud-moon',
+                2: day ? 'fa-cloud-sun' : 'fa-cloud-moon', 3: 'fa-cloud', 45: 'fa-smog',
+                51: 'fa-cloud-rain', 61: 'fa-cloud-rain', 71: 'fa-snowflake', 95: 'fa-cloud-bolt'
+            };
+            return `fa-solid ${map[code] || 'fa-cloud'}`;
+        }
+
+        function getIconFromNWS(shortForecast, isDay) {
+            const lower = shortForecast.toLowerCase();
+            const prefix = 'fa-solid';
+            if (lower.includes('thunder')) return `${prefix} fa-cloud-bolt`;
+            if (lower.includes('snow') || lower.includes('flurries')) return `${prefix} fa-snowflake`;
+            if (lower.includes('rain') || lower.includes('shower')) return `${prefix} fa-cloud-showers-heavy`;
+            if (lower.includes('cloud')) return `${prefix} fa-cloud`;
+            if (lower.includes('sunny') || lower.includes('clear')) return isDay ? `${prefix} fa-sun` : `${prefix} fa-moon`;
+            return `${prefix} fa-cloud`;
+        }
+        
+        // --- REFRESH LOOP ---
+        function setupWeatherRefresh() {
+             // Set up a periodic check after the initial load
+             setInterval(() => {
+                 if (CURRENT_LAT && CURRENT_LON) {
+                     loadWeatherIfNeeded(CURRENT_LAT, CURRENT_LON);
+                 } else {
+                     // If location is somehow lost, re-init to get IP location
+                     initWeather();
+                 }
+             }, REFRESH_INTERVAL_MS);
+        }
+
+        // --- INIT ---
+        window.addEventListener('load', () => {
+            updateDateTime();
+            setInterval(updateDateTime, 500);
+            initWeather(); // Initial load (which checks cache)
+            setupWeatherRefresh(); // Start the periodic refresh
+
+            waitForFirebase(() => {
+                 if (firebase.auth) {
+                    firebase.auth().onAuthStateChanged((user) => {
+                        if (!user && !window._LOCAL_MODE) {
+                            window.location.replace(redirectPath);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
