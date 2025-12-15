@@ -3,668 +3,903 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4SP - DASHBOARD</title>
+    <title>4SP - TEST</title>
+    <meta name="description" content="Share your day with friends through three daily photos.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <script src="../injector.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../navigation.js"></script>
 
+    <script src="../injector.js"></script>
     <style>
-        /* --- FONT & BASE STYLING --- */
-        :root {
-            --bg-page: #040404;
-            --bg-container: #000000;
-            --border-color: #333;
-            --text-primary: #c0c0c0;
-            --text-light-grey: #d1d5db;
-            --accent-color: #6366f1;
-            --text-link: #888;
-            --spinner-color: #666666; /* UPDATED: Darker grey color for the loader */
+        /* BUBBLY ANIMATIONS */
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            80% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
         }
 
+        /* --- BASE STYLES --- */
         body { 
             font-family: 'Geist', sans-serif; 
-            background-color: var(--bg-page);
-            color: var(--text-primary);
-            font-weight: 300;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            background-color: #040404; 
+            color: #c0c0c0; 
+            font-weight: 300; 
+            overflow: hidden; /* Prevent body scroll */
+            height: 100vh;
         }
-
+        
         h1, h2, h3, .font-bold, .font-semibold, strong, .tracking-widest {
-            font-weight: 400 !important;
+            font-weight: 400 !important; 
         }
 
-        /* --- LAYOUT UTILS --- */
-        #page-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+        /* --- THEME BUTTONS --- */
+        .btn-toolbar-style {
+            background: #000000;
+            border: 1px solid #333;
+            border-radius: 0.75rem;
+            color: #d1d5db;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
             align-items: center;
-            padding: 2rem;
-            position: relative;
-        }
-
-        /* --- DASHBOARD WIDGET STYLES --- */
-        .dashboard-widget {
-            border: 1px solid var(--border-color);
-            background-color: var(--bg-container);
-            padding: 2.5rem 4rem; 
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            border-radius: 32px; 
-            
-            /* Sizing & Layout */
-            width: fit-content;
-            max-width: 95vw;
-            box-sizing: border-box;
-
-            /* Flex Layout */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 3.5rem; 
-            
-            /* Enable absolute positioning for spinner */
-            position: relative; 
-        }
-
-        .dashboard-widget:hover {
-            border-color: #505050;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
-        }
-
-        /* --- CLOCK STYLES --- */
-        .clock-section {
-            text-align: right;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .time-display {
-            font-family: 'Geist', sans-serif;
-            font-weight: 300;
-            display: flex;
-            align-items: flex-end; 
-            line-height: 0.9;
-            color: var(--text-light-grey);
-            font-variant-numeric: tabular-nums;
-            font-size: 5.5rem; 
-            white-space: nowrap;
-        }
-        
-        .date-display {
-            font-weight: 300;
-            margin-top: 0.5rem;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            font-size: 1.1rem;
-            color: var(--text-light-grey); 
-            opacity: 0.8;
-        }
-        
-        .seconds-display {
-            font-weight: 300;
-            font-size: 3.5rem; 
-            margin-left: 0.2rem;
-            color: var(--text-light-grey);
-            opacity: 0.8;
-        }
-
-        /* --- VERTICAL DIVIDER --- */
-        .vertical-divider {
-            width: 1px;
-            height: 100px; 
-            background-color: #262626;
-        }
-
-        /* --- WEATHER STYLES --- */
-        .weather-section {
-            text-align: left;
-            display: flex;
-            flex-direction: column;
             justify-content: center;
             gap: 0.5rem;
         }
+        .btn-toolbar-style:hover {
+            border-color: #fff;
+            color: #ffffff;
+        }
+        
+        .btn-toolbar-style.active, .btn-primary-override {
+            background-color: rgba(79, 70, 229, 0.1);
+            border: 1px solid #4f46e5;
+            color: #4f46e5;
+        }
+        .btn-toolbar-style.active:hover, .btn-primary-override:hover {
+            background-color: rgba(79, 70, 229, 0.15);
+            border-color: #6366f1;
+            color: #6366f1;
+        }
 
-        .weather-main {
-            display: flex;
+        .btn-icon {
+            display: inline-flex;
             align-items: center;
-            gap: 1.2rem;
+            justify-content: center;
+            width: 2.5rem; 
+            height: 2.5rem; 
+            border-radius: 0.5rem;
+            background-color: #000000;
+            border: 1px solid #333;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-
-        .weather-icon {
-            font-size: 2.8rem;
-            color: var(--text-light-grey);
-            width: 50px; 
-            text-align: center;
-        }
-
-        .weather-temp {
-            font-size: 3.5rem; 
-            line-height: 1;
+        .btn-icon:hover {
+            border-color: #fff;
             color: #fff;
-            min-width: 80px; 
+        }
+        
+        /* --- LAYOUT --- */
+        .messenger-container {
+            display: block; /* Changed from grid to block since sidebar is fixed */
+            width: 100vw;
+            height: calc(100vh - 4rem); 
+            margin-top: 4rem; 
         }
 
-        .weather-details {
+        /* --- SIDEBAR (Fixed Left) --- */
+        .left-panel {
+            position: fixed;
+            top: 4rem;
+            left: 0;
+            bottom: 0;
+            width: 350px;
+            background-color: #000000;
+            border-right: 1px solid #1a1a1a;
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
-            font-size: 1rem;
-            color: var(--text-link); /* Base grey color */
-            padding-left: 0.5rem; 
+            z-index: 50;
         }
 
-        .weather-detail-row {
+        .left-panel-scroll-content {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex-grow: 1;
+            mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+        }
+        .left-panel-scroll-content::-webkit-scrollbar { width: 6px; }
+        .left-panel-scroll-content::-webkit-scrollbar-thumb { background-color: #333; border-radius: 3px; }
+        .left-panel-scroll-content::-webkit-scrollbar-track { background-color: #000; }
+
+        /* Sidebar Tabs - Full Width, No Rounded Corners */
+        .sidebar-bottom-controls {
             display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            width: 100%;
+            border-top: 1px solid #1a1a1a;
+            background-color: #000000;
+            padding: 0; 
         }
-
-        .wind-arrow {
-            display: inline-block;
-            transition: transform 0.5s ease;
-            font-size: 0.9rem;
-            color: var(--accent-color);
-        }
-
-        #w-location-link {
-            font-size: 0.7rem;
-            color: var(--text-link);
+        .sidebar-control-btn {
+            flex: 1; 
+            color: #6b7280;
+            font-size: 1.25rem;
+            padding: 1rem 0;
+            background: transparent;
+            border: none;
             cursor: pointer;
-            text-align: left;
-            margin-top: 0.5rem;
-            padding-left: 0.5rem;
-            transition: color 0.2s ease;
+            transition: color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0; /* Not rounded */
+        }
+        .sidebar-control-btn:hover {
+            color: #d1d5db;
+            /* No bg change on hover */
+        }
+        .sidebar-control-btn.active {
+            color: #4f46e5; /* Highlight icon color only */
+            background-color: transparent;
         }
 
-        #w-location-link:hover {
-            color: var(--text-light-grey);
+        /* --- LISTS --- */
+        .compact-list-wrapper {
+             background-color: #000000;
+             border-radius: 0.75rem; 
+             border: 1px solid #1a1a1a; 
+             margin-top: 0.75rem;
+        }
+        .compact-list-items {
+            overflow-y: auto;
+            max-height: 250px; 
+            padding: 0.25rem; 
+        }
+        .compact-list-items::-webkit-scrollbar { width: 4px; }
+        .compact-list-items::-webkit-scrollbar-thumb { background-color: #4f46e5; }
+        
+        .compact-list-item {
+            border-radius: 0.5rem; 
+            margin-bottom: 2px;
+            padding: 0.5rem; 
+            transition: background-color 0.2s;
+        }
+        .compact-list-item:hover { background-color: #111; }
+
+        /* --- FEED PANEL --- */
+        .feed-panel { 
+            margin-left: 350px; /* Push to right of sidebar */
+            height: 100%;
+            background-color: #040404;
+            padding: 1.5rem; 
+            overflow-y: auto; /* Independent scroll */
+        }
+        
+        /* Inner container to mimic the "old" centered card look */
+        .feed-content-inner {
+            max-width: 1000px; /* Constrain width */
+            margin: 0 auto; /* Center */
+        }
+        
+        .feed-toggle {
+            display: flex;
+            gap: 0.5rem;
+            background: transparent;
+            padding: 0;
         }
 
-        /* --- SPINNER STYLES --- */
-        #weather-loader {
-            position: absolute;
-            bottom: 20px; /* Position from bottom edge */
-            right: 20px; /* Position from right edge */
-            color: var(--spinner-color); 
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            pointer-events: none; /* Allows clicks to pass through */
+        /* --- GRID & PHOTOS --- */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+            gap: 1rem; 
+        }
+        .photo-thumbnail {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            aspect-ratio: 1 / 1; 
+            background-color: #0a0a0a;
+            border: 1px solid #1a1a1a;
+        }
+        .photo-thumbnail img {
+            width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;
+        }
+        .photo-thumbnail:hover img { transform: scale(1.05); }
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            pointer-events: none; 
+        }
+        .title-overlay {
+            position: absolute; bottom: 0.5rem; left: 0.5rem; right: 0.5rem;
+            color: white; font-size: 0.85rem; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            z-index: 10;
         }
         
-        #weather-loader.loading {
-            opacity: 1;
+        /* --- MODAL STYLES --- */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 50; transition: opacity 0.3s ease;
         }
         
-        .fa-spin-slow {
-            /* Customize spin speed */
-            animation: fa-spin 1.5s infinite linear; /* Slower spin */
-            font-size: 1.2rem;
+        .modal-content {
+            background-color: #0d0d0d; 
+            border: 1px solid #1a1a1a;
+            border-radius: 1rem;
+            padding: 0; 
+            max-width: 90%; width: 1200px;
+            max-height: 90vh; 
+            aspect-ratio: 16 / 9; 
+            display: flex; overflow: hidden;
+            position: relative;
         }
         
-        /* Font Awesome's base spin animation (needed for custom speed) */
-        @keyframes fa-spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+        #photo-display-area {
+            flex: 2;
+            background-color: #000;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            overflow: hidden;
         }
+        .photo-modal-img {
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        #photo-info-panel {
+            flex: 1;
+            min-width: 350px;
+            max-width: 400px;
+            background-color: #0d0d0d;
+            border-left: 1px solid #1a1a1a;
+            display: flex; flex-direction: column;
+            padding: 1.5rem;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 0.5rem; gap: 1rem;
+        }
+        .modal-title-box { flex-grow: 1; overflow: hidden; }
+        
+        .modal-actions-box { 
+            display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center;
+        }
+
+        #comments-section {
+            flex-grow: 1;
+            background-color: #000000; 
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            overflow-y: auto;
+            border: 1px solid #1a1a1a;
+            mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+        }
+        
+        .comment-input-area {
+            display: flex; gap: 0.5rem; align-items: center;
+        }
+
+        /* Helpers */
+        .hidden { display: none !important; }
+        .opacity-0 { opacity: 0; }
+        .opacity-100 { opacity: 1; }
+        
+        input.thin-font { font-weight: 300 !important; }
+
+        /* Custom Tooltip */
+        #custom-tooltip {
+            position: fixed; background-color: #000; border: 1px solid #333; color: #fff;
+            padding: 0.4rem 0.8rem; border-radius: 0.5rem; font-size: 0.75rem;
+            pointer-events: none; z-index: 10000; opacity: 0; transition: opacity 0.15s ease;
+            white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        
     </style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1D4F692C1Q"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-1D4F692C1Q');
+</script>
 </head>
+<body class="pt-16">
 
-<body>
-    <div id="page-content">
-        <div id="dashboard-widget" class="dashboard-widget">
-            
-            <div class="clock-section">
-                <div id="clock-time" class="time-display">--:--<span class="seconds-display">--</span></div>
-                <div id="clock-date" class="date-display">--------</div>
+    <div id="custom-tooltip"></div>
+
+    <div id="disclaimer-modal" class="modal-backdrop hidden opacity-0">
+        <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl w-full max-w-md p-6">
+            <h3 class="text-xl mb-4 text-white">Public Feed Warning</h3>
+            <p class="mb-4 text-gray-400 text-sm">By entering the Public Feed, you acknowledge that:</p>
+            <ul class="list-disc list-inside text-gray-500 mb-6 space-y-2 text-sm">
+                <li>You may encounter explicit media.</li>
+                <li>You agree to report violations.</li>
+                <li>Your posts in Public Feed are visible to everyone.</li>
+            </ul>
+            <div class="flex items-center gap-3 mb-6 p-3 bg-black rounded-md border border-[#1a1a1a]">
+                <input type="checkbox" id="disclaimer-agree-checkbox" class="w-4 h-4 rounded bg-gray-800 border-gray-600">
+                <label for="disclaimer-agree-checkbox" class="text-sm text-gray-300 cursor-pointer">I agree to these terms.</label>
+            </div>
+            <div class="flex gap-4">
+                <button id="disclaimer-cancel-btn" class="btn-toolbar-style w-full">Cancel</button>
+                <button id="disclaimer-confirm-btn" class="btn-toolbar-style btn-primary-override w-full opacity-50 cursor-not-allowed" disabled>Enter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN PHOTO MODAL -->
+    <div id="photo-modal" class="modal-backdrop hidden">
+        <div id="modal-content-container" class="modal-content"></div>
+    </div>
+    
+    <!-- EDIT TITLE MODAL -->
+    <div id="title-modal" class="modal-backdrop hidden opacity-0">
+        <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl w-full max-w-sm p-6 text-center">
+            <h3 class="text-xl mb-4 text-white">Edit Title</h3>
+            <form id="edit-title-form" data-post-id="" class="flex flex-col gap-4">
+                <input type="text" id="title-edit-input" placeholder="Title (max 48 chars)" class="p-3 bg-black border border-[#333] rounded-md focus:border-indigo-500 outline-none text-white thin-font" maxlength="48" required>
+                <button type="submit" class="btn-toolbar-style btn-primary-override w-full">Save</button>
+            </form>
+            <button id="title-modal-close-btn" class="btn-toolbar-style mt-3 w-full">Cancel</button>
+        </div>
+    </div>
+    
+    <!-- UPLOAD SELECT MODAL -->
+    <div id="upload-menu-modal" class="modal-backdrop hidden opacity-0">
+        <div class="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl w-full max-w-sm p-6">
+            <h3 id="upload-menu-title" class="text-xl mb-4 text-white">Post Photo</h3>
+            <input type="file" id="upload-file-input" class="hidden" accept="image/*" data-slot-index="">
+            <div id="upload-select-options" class="flex flex-col gap-3 mb-6">
+                 <label for="upload-file-input" id="upload-drop-area" class="bg-black border-2 border-dashed border-[#333] rounded-lg p-8 text-center cursor-pointer hover:border-indigo-500 transition-colors">
+                    <i class="fas fa-cloud-upload-alt text-4xl mb-3 text-gray-500"></i>
+                    <span class="block font-semibold text-gray-400">Select Image</span>
+                 </label>
+            </div>
+            <button id="upload-menu-close-btn" class="btn-toolbar-style mt-4 w-full">Cancel</button>
+        </div>
+    </div>
+
+    <main id="messenger-ui" class="messenger-container" style="display: none;">
+        
+        <aside class="left-panel">
+            <div class="left-panel-scroll-content">
+                
+                <div class="mb-6 pb-4 border-b border-[#1a1a1a]">
+                    <h2 class="text-lg text-white mb-2">My Code</h2>
+                    <div id="friend-code-display" class="p-2 text-center bg-black border border-[#333] rounded-md font-mono text-indigo-400 tracking-widest select-all cursor-pointer" data-tooltip="Click to Copy">...</div>
+                </div>
+
+                <div class="mb-6 pb-4 border-b border-[#1a1a1a]">
+                    <h2 class="text-lg text-white mb-2">Add Friend</h2>
+                    <form id="add-friend-form" class="flex gap-2">
+                        <input type="text" id="friend-code-input" placeholder="CODE" maxlength="8" class="flex-grow p-2 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-center font-mono uppercase text-white thin-font">
+                        <button type="submit" class="btn-icon" data-tooltip="Send Request"><i class="fas fa-plus"></i></button>
+                    </form>
+                    <div id="add-friend-message" class="text-xs mt-2 min-h-[16px]"></div>
+                </div>
+
+                <div id="daily-posts-section">
+                    <h2 class="text-lg text-white mb-2">My Posts</h2>
+                    <p class="text-xs text-gray-500 mb-2">5 slots / day</p>
+                    <div id="daily-posts-wrapper" class="compact-list-wrapper">
+                        <div id="daily-posts-container" class="compact-list-items"></div>
+                    </div>
+                </div>
+
+                <div id="friends-section-wrapper" class="hidden">
+                    <h2 class="text-lg text-white mb-2">Friends</h2>
+                    <div id="friends-list-wrapper" class="compact-list-wrapper">
+                        <div id="friends-list-items" class="compact-list-items"></div>
+                    </div>
+                </div>
+
+                <div id="blocked-section" class="hidden">
+                    <h2 class="text-lg text-white mb-2">Blocked</h2>
+                    <div id="blocked-list-wrapper" class="compact-list-wrapper">
+                        <div id="blocked-list-items" class="compact-list-items"></div>
+                    </div>
+                </div>
+
             </div>
 
-            <div class="vertical-divider"></div>
+            <div class="sidebar-bottom-controls">
+                <button id="sidebar-nav-posts" class="sidebar-control-btn active" title="My Posts"><i class="fas fa-images"></i></button>
+                <button id="sidebar-nav-friends" class="sidebar-control-btn" title="Friends"><i class="fas fa-user-friends"></i></button>
+                <button id="sidebar-nav-blocked" class="sidebar-control-btn" title="Blocked Users"><i class="fas fa-user-shield"></i></button>
+            </div>
+        </aside>
 
-            <div class="weather-section">
-                <div class="weather-main">
-                    <div id="w-icon" class="weather-icon"><i class="fa-solid fa-cloud"></i></div>
-                    <div id="w-temp" class="weather-temp">--°</div>
+        <section class="feed-panel">
+            <div class="feed-content-inner">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl text-white">Today's Feed</h1>
+                    
+                    <div class="feed-toggle">
+                        <button id="feed-toggle-friends" class="btn-toolbar-style btn-primary-override active">
+                            <i class="fas fa-user-friends"></i> Friends
+                        </button>
+                        <button id="feed-toggle-public" class="btn-toolbar-style">
+                            <i class="fas fa-globe"></i> Public
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="weather-details">
-                    <div class="weather-detail-row">
-                        <span>H: <span id="w-high" class="text-gray-300">--°</span></span>
-                        <span class="mx-1 text-[#333]">|</span>
-                        <span>L: <span id="w-low" class="text-gray-300">--°</span></span>
-                    </div>
-                    <div class="weather-detail-row">
-                        <i id="w-wind-arrow" class="fa-solid fa-arrow-up wind-arrow"></i>
-                        <span id="w-wind-speed">-- mph</span>
-                    </div>
-                </div>
-                
-                <div id="w-location-link" onclick="getUserBrowserLocation()">
-                    Use Current Location
-                </div>
+                <div id="photo-feed" class="photo-grid"></div>
             </div>
-            
-            <div id="weather-loader">
-                <i class="fa-solid fa-circle-notch fa-spin-slow"></i>
-            </div>
-            </div>
+        </section>
+
+    </main>
+
+    <div id="loading-screen" class="fixed inset-0 bg-black flex justify-center items-center z-[100]">
+        <i class="fas fa-circle-notch fa-spin text-4xl text-indigo-600"></i>
     </div>
 
     <script type="module">
-        import { firebaseConfig } from '../firebase-config.js';
-
-        // --- GLOBAL STATE ---
-        let CURRENT_LAT = null;
-        let CURRENT_LON = null;
-        const redirectPath = '../index.html';
-        const WEATHER_CACHE_KEY = 'weather_data_cache';
-        // 5 minutes in milliseconds
-        const REFRESH_INTERVAL_MS = 5 * 60 * 1000; 
-
-        // --- ELEMENTS ---
-        const clockTimeEl = document.getElementById('clock-time');
-        const clockDateEl = document.getElementById('clock-date');
-        const wTemp = document.getElementById('w-temp');
-        const wIcon = document.getElementById('w-icon');
-        const wHigh = document.getElementById('w-high');
-        const wLow = document.getElementById('w-low');
-        const wWindSpeed = document.getElementById('w-wind-speed');
-        const wWindArrow = document.getElementById('w-wind-arrow');
-        const wLocLink = document.getElementById('w-location-link');
-        const weatherLoader = document.getElementById('weather-loader'); 
-
-        // --- LOADER FUNCTIONS ---
-        function showLoader() {
-            weatherLoader.classList.add('loading');
-        }
-
-        function hideLoader() {
-            weatherLoader.classList.remove('loading');
-        }
-
-        // --- FIREBASE INIT WAITER ---
-        function waitForFirebase(callback) {
-            const check = setInterval(() => {
-                if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-                    clearInterval(check);
-                    window.auth = firebase.auth();
-                    window.db = firebase.firestore();
-                    callback();
-                }
-            }, 100);
-        }
-
-        // --- CLOCK LOGIC (Unchanged) ---
-        function updateDateTime() {
-            const now = new Date();
-            
-            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
-            const timeString = now.toLocaleTimeString('en-US', timeOptions);
-            const seconds = now.getSeconds().toString().padStart(2, '0');
-            
-            const parts = timeString.split(' ');
-            const timeOnly = parts[0];
-            const amPm = parts[1] || '';
-
-            const dateOptions = { weekday: 'long', month: 'long', day: 'numeric' };
-            const dateString = now.toLocaleDateString('en-US', dateOptions);
-
-            if (clockTimeEl) {
-                clockTimeEl.innerHTML = `${timeOnly}<span class="seconds-display">:${seconds} ${amPm}</span>`;
-            }
-            if (clockDateEl) {
-                clockDateEl.innerText = dateString;
-            }
-        }
-
-        // Resets display to placeholders
-        function resetWeatherDisplay() {
-            wTemp.innerText = `--°`;
-            wHigh.innerText = `--°`;
-            wLow.innerText = `--°`;
-            wWindSpeed.innerText = `-- mph`;
-            wIcon.innerHTML = `<i class="fa-solid fa-cloud"></i>`;
-            wWindArrow.style.transform = `rotate(0deg)`;
-        }
-
-        // --- CACHE LOGIC (Unchanged) ---
-        function getWeatherCache() {
-            try {
-                const cached = localStorage.getItem(WEATHER_CACHE_KEY);
-                return cached ? JSON.parse(cached) : null;
-            } catch (e) {
-                console.error("Error reading weather cache:", e);
-                return null;
-            }
-        }
-
-        function setWeatherCache(data) {
-            try {
-                // Store data and a timestamp
-                const cacheData = {
-                    timestamp: Date.now(),
-                    weatherData: data
-                };
-                localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(cacheData));
-            } catch (e) {
-                console.error("Error writing weather cache:", e);
-            }
-        }
-
-        function loadWeatherIfNeeded(lat, lon) {
-            const cache = getWeatherCache();
-            const now = Date.now();
-
-            if (cache && (now - cache.timestamp < REFRESH_INTERVAL_MS)) {
-                // Cache is fresh, use it
-                console.log("Using cached weather data.");
-                updateWeatherUI(cache.weatherData);
-                hideLoader(); // FIX: Added hideLoader for cache hits
-            } else {
-                // Cache is stale or non-existent, fetch new data
-                console.log("Weather cache stale or missing. Fetching new data.");
-                resetWeatherDisplay();
-                loadWeatherWithFallback(lat, lon);
-            }
-        }
-
-        // --- LOCATION FETCH (IP Fallback) ---
-        async function initWeather() {
-            showLoader(); // Show loader at start of location determination
-            try {
-                // 1. Get Location using IP (Default)
-                const ipRes = await fetch('https://ipapi.co/json/');
-                const ipData = await ipRes.json();
-                
-                CURRENT_LAT = ipData.latitude;
-                CURRENT_LON = ipData.longitude;
-                
-                if(!CURRENT_LAT || !CURRENT_LON) {
-                    hideLoader();
-                    return; 
-                }
-
-                // 2. Load weather using cache-check function
-                loadWeatherIfNeeded(CURRENT_LAT, CURRENT_LON);
-
-            } catch (err) {
-                console.warn("Initial weather load (IP location) failed", err);
-                hideLoader(); // Hide on failure
-            }
-        }
-
-        // --- LOCATION FETCH (Browser Geolocation) ---
-        window.getUserBrowserLocation = async function() {
-            if (!navigator.geolocation) {
-                alert("Geolocation is not supported by this browser.");
-                return;
-            }
-            
-            showLoader(); // Show loader before geolocating
-            resetWeatherDisplay();
-
-            try {
-                const pos = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { 
-                        timeout: 5000, 
-                        maximumAge: 60000 
-                    });
-                });
-                
-                CURRENT_LAT = pos.coords.latitude;
-                CURRENT_LON = pos.coords.longitude;
-                
-                // When explicitly asked for new location, bypass cache and force a fetch
-                loadWeatherWithFallback(CURRENT_LAT, CURRENT_LON);
-
-            } catch(e) {
-                console.error("Geolocation failed:", e);
-                // Fallback to IP data if browser location fails (which is checked via initWeather)
-                initWeather(); 
-            }
-        }
-
-        // --- FALLBACK LOGIC ---
-        async function loadWeatherWithFallback(lat, lon) {
-            // Loader is already shown by calling functions (initWeather or getUserBrowserLocation)
-            try {
-                // 1. Google Weather (using Firebase API Key) - PRIMARY
-                try {
-                    await fetchGoogleWeather(lat, lon);
-                    return;
-                } catch(e) {
-                    console.warn("Google Weather failed, attempting NWS:", e);
-                }
-
-                // 2. NWS - SECONDARY
-                try {
-                    await fetchNWS(lat, lon);
-                    return;
-                } catch(e) {
-                    console.warn("NWS failed, attempting Open-Meteo:", e);
-                }
-
-                // 3. Open-Meteo - TERTIARY
-                try {
-                    await fetchOpenMeteo(lat, lon);
-                } catch(e) {
-                    console.error("All weather sources failed", e);
-                    hideLoader(); // Hide on absolute failure
-                }
-            } catch (finalError) {
-                // Catches errors during the fallback chain setup
-                hideLoader();
-            }
-        }
-
-        // --- GOOGLE WEATHER FETCH ---
-        async function fetchGoogleWeather(lat, lon) {
-            const apiKey = firebaseConfig.apiKey;
-            const url = `https://weather.googleapis.com/v1/currentConditions:lookup?key=${apiKey}&location.latitude=${lat}&location.longitude=${lon}`;
-            
-            const res = await fetch(url);
-            if (!res.ok) {
-                const errText = await res.text();
-                console.error("Google Weather API Failed. Details:", errText);
-                throw new Error(`Google Weather Error: ${res.status} - ${errText}`);
-            }
-            
-            const data = await res.json();
-            if (!data.currentConditions) throw new Error("Invalid Google Weather Data");
-
-            const curr = data.currentConditions;
-            
-            let tempF = curr.temperature?.value;
-            if (curr.temperature?.unit?.toLowerCase() === 'celsius' || curr.temperature?.unit?.toLowerCase() === 'c') {
-                tempF = (tempF * 9/5) + 32;
-            }
-            
-            const weatherCode = curr.weatherCondition || "CLOUDY"; 
-
-            const weatherData = {
-                temp: Math.round(tempF || 0),
-                iconCode: weatherCode,
-                isDay: true, 
-                high: "--", 
-                low: "--",
-                windSpeed: (curr.windSpeed?.value || 0) + " mph",
-                windDir: curr.windDirection || 0,
-                isNWS: false,
-                isGoogle: true
-            };
-
-            setWeatherCache(weatherData);
-            updateWeatherUI(weatherData);
-            hideLoader(); // Hide loader on success
-        }
-
-        // --- NWS FETCH ---
-        async function fetchNWS(lat, lon) {
-            const pointsRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`);
-            if (!pointsRes.ok) throw new Error("NWS Point Fail");
-            const pointsData = await pointsRes.json();
-            
-            const [forecastRes, hourlyRes] = await Promise.all([
-                fetch(pointsData.properties.forecast),
-                fetch(pointsData.properties.forecastHourly)
-            ]);
-
-            const dailyData = await forecastRes.json();
-            const hourlyData = await hourlyRes.json();
-
-            const current = hourlyData.properties.periods[0];
-            
-            const first24 = hourlyData.properties.periods.slice(0, 24);
-            const temps = first24.map(p => p.temperature);
-            const high = Math.max(...temps);
-            const low = Math.min(...temps);
-
-            const weatherData = {
-                temp: current.temperature,
-                iconCode: current.shortForecast,
-                isDay: current.isDaytime,
-                high: high,
-                low: low,
-                windSpeed: current.windSpeed, 
-                windDir: current.windDirection,
-                isNWS: true
-            };
-
-            setWeatherCache(weatherData);
-            updateWeatherUI(weatherData);
-            hideLoader(); // Hide loader on success
-        }
-
-        // --- OPEN METEO FETCH ---
-        async function fetchOpenMeteo(lat, lon) {
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
-            const res = await fetch(url);
-            const data = await res.json();
-            
-            const weatherData = {
-                temp: Math.round(data.current.temperature_2m),
-                iconCode: data.current.weather_code,
-                isDay: data.current.is_day,
-                high: Math.round(data.daily.temperature_2m_max[0]),
-                low: Math.round(data.daily.temperature_2m_min[0]),
-                windSpeed: Math.round(data.current.wind_speed_10m) + " mph",
-                windDir: data.current.wind_direction_10m,
-                isNWS: false
-            };
-
-            setWeatherCache(weatherData);
-            updateWeatherUI(weatherData);
-            hideLoader(); // Hide loader on success
-        }
-
-        // --- UI UPDATE (Unchanged) ---
-        function updateWeatherUI(data) {
-            wTemp.innerText = `${data.temp}°`;
-            wHigh.innerText = `${data.high}°`;
-            wLow.innerText = `${data.low}°`;
-            wWindSpeed.innerText = data.windSpeed;
-
-            let iconClass = 'fa-cloud';
-            if(data.isGoogle) iconClass = getIconFromGoogle(data.iconCode);
-            else if(data.isNWS) iconClass = getIconFromNWS(data.iconCode, data.isDay);
-            else iconClass = getIconFromWMO(data.iconCode, data.isDay);
-            
-            wIcon.innerHTML = `<i class="${iconClass}"></i>`;
-
-            const rotation = getWindRotation(data.windDir);
-            wWindArrow.style.transform = `rotate(${rotation}deg)`;
-        }
-
-        // --- HELPERS (Wind & Icon - Unchanged) ---
-        function getWindRotation(dir) {
-            if (typeof dir === 'number') return dir; 
-            const map = {
-                'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
-                'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
-                'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
-                'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
-            };
-            return map[dir] || 0;
-        }
-
-        function getIconFromGoogle(condition) {
-             if (!condition) return 'fa-solid fa-cloud';
-             const c = condition.toLowerCase();
-             if (c.includes('clear') || c.includes('sunny')) return 'fa-solid fa-sun';
-             if (c.includes('cloud')) return 'fa-solid fa-cloud';
-             if (c.includes('rain')) return 'fa-solid fa-cloud-rain';
-             if (c.includes('snow')) return 'fa-solid fa-snowflake';
-             if (c.includes('storm') || c.includes('thunder')) return 'fa-solid fa-cloud-bolt';
-             if (c.includes('fog') || c.includes('mist')) return 'fa-solid fa-smog';
-             return 'fa-solid fa-cloud';
-        }
-
-        function getIconFromWMO(code, isDay) {
-            const day = isDay === 1;
-            const map = {
-                0: day ? 'fa-sun' : 'fa-moon', 1: day ? 'fa-cloud-sun' : 'fa-cloud-moon',
-                2: day ? 'fa-cloud-sun' : 'fa-cloud-moon', 3: 'fa-cloud', 45: 'fa-smog',
-                51: 'fa-cloud-rain', 61: 'fa-cloud-rain', 71: 'fa-snowflake', 95: 'fa-cloud-bolt'
-            };
-            return `fa-solid ${map[code] || 'fa-cloud'}`;
-        }
-
-        function getIconFromNWS(shortForecast, isDay) {
-            const lower = shortForecast.toLowerCase();
-            const prefix = 'fa-solid';
-            if (lower.includes('thunder')) return `${prefix} fa-cloud-bolt`;
-            if (lower.includes('snow') || lower.includes('flurries')) return `${prefix} fa-snowflake`;
-            if (lower.includes('rain') || lower.includes('shower')) return `${prefix} fa-cloud-showers-heavy`;
-            if (lower.includes('cloud')) return `${prefix} fa-cloud`;
-            if (lower.includes('sunny') || lower.includes('clear')) return isDay ? `${prefix} fa-sun` : `${prefix} fa-moon`;
-            return `${prefix} fa-cloud`;
-        }
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs, serverTimestamp, orderBy, deleteDoc, onSnapshot, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { firebaseConfig } from "../firebase-config.js";
         
-        // --- REFRESH LOOP ---
-        function setupWeatherRefresh() {
-             // Set up a periodic check after the initial load
-             setInterval(() => {
-                 if (CURRENT_LAT && CURRENT_LON) {
-                     loadWeatherIfNeeded(CURRENT_LAT, CURRENT_LON);
-                 } else {
-                     // If location is somehow lost, re-init to get IP location
-                     initWeather();
-                 }
-             }, REFRESH_INTERVAL_MS);
+        if (!firebaseConfig || !firebaseConfig.apiKey) throw new Error("Missing Firebase Config.");
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let CURRENT_FRIENDS = [];
+        let CURRENT_USERNAME = 'User'; 
+        let UNSUBSCRIBE_POSTS = () => {};
+        let UNSUBSCRIBE_MODAL = () => {}; 
+        let BLOCKED_USERS = []; 
+        let CURRENT_FEED_MODE = 'friends';
+        let PENDING_FILE = null;
+        let PENDING_SLOT = 0;
+        
+        const DAILY_COLLECTION = collection(db, 'daily_photos');
+        const USERS_COLLECTION = 'users';
+
+        // --- TOOLTIP LOGIC (INTELLIGENT) ---
+        const tooltipEl = document.getElementById('custom-tooltip');
+        
+        document.body.addEventListener('mouseover', (e) => {
+            const target = e.target.closest('[title]'); 
+            if (!target) { tooltipEl.style.opacity = 0; return; }
+            
+            const text = target.getAttribute('title');
+            if (!text) return;
+            
+            target.dataset.originalTitle = text;
+            target.removeAttribute('title');
+            
+            tooltipEl.textContent = text;
+            tooltipEl.style.opacity = 1;
+            
+            const rect = target.getBoundingClientRect();
+            const tipRect = tooltipEl.getBoundingClientRect();
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const gap = 10;
+
+            let top, left;
+
+            // Strategy: Below -> Above -> Left/Right based on screen side
+            if (rect.bottom + tipRect.height + gap <= winH) {
+                // Space Below
+                top = rect.bottom + gap;
+                left = rect.left + (rect.width/2) - (tipRect.width/2);
+            } else if (rect.top - tipRect.height - gap >= 0) {
+                // Space Above
+                top = rect.top - tipRect.height - gap;
+                left = rect.left + (rect.width/2) - (tipRect.width/2);
+            } else {
+                // Fallback: Left or Right
+                top = rect.top + (rect.height/2) - (tipRect.height/2);
+                if (rect.left > winW / 2) {
+                    left = rect.left - tipRect.width - gap; // Left
+                } else {
+                    left = rect.right + gap; // Right
+                }
+            }
+            
+            // Constrain Width
+            if (left < gap) left = gap;
+            if (left + tipRect.width > winW - gap) left = winW - tipRect.width - gap;
+
+            tooltipEl.style.top = `${top}px`;
+            tooltipEl.style.left = `${left}px`;
+        });
+        
+        document.body.addEventListener('mouseout', (e) => {
+            const target = e.target.closest('[data-original-title]');
+            if(target) {
+                target.setAttribute('title', target.dataset.originalTitle);
+                tooltipEl.style.opacity = 0;
+            }
+        });
+
+        // --- HELPERS ---
+        function formatCount(num) {
+            if (!num) return '0';
+            if (num < 1000) return num;
+            return (num / 1000).toFixed(1) + 'k';
         }
 
-        // --- INIT ---
-        window.addEventListener('load', () => {
-            updateDateTime();
-            setInterval(updateDateTime, 500);
-            initWeather(); // Initial load (which checks cache)
-            setupWeatherRefresh(); // Start the periodic refresh
+        async function cleanText(text) {
+            if(!text) return "";
+            try {
+                const res = await fetch(`https://www.purgomalum.com/service/json?text=${encodeURIComponent(text)}`);
+                const data = await res.json();
+                return data.result || text;
+            } catch { return text; }
+        }
 
-            waitForFirebase(() => {
-                 if (firebase.auth) {
-                    firebase.auth().onAuthStateChanged((user) => {
-                        if (!user && !window._LOCAL_MODE) {
-                            window.location.replace(redirectPath);
-                        }
-                    });
+        function switchSidebar(view) {
+             document.querySelectorAll('.sidebar-control-btn').forEach(b => b.classList.remove('active'));
+             document.getElementById('daily-posts-section').classList.add('hidden');
+             document.getElementById('friends-section-wrapper').classList.add('hidden');
+             document.getElementById('blocked-section').classList.add('hidden');
+
+             if (view === 'posts') {
+                 document.getElementById('sidebar-nav-posts').classList.add('active');
+                 document.getElementById('daily-posts-section').classList.remove('hidden');
+             } else if (view === 'friends') {
+                 document.getElementById('sidebar-nav-friends').classList.add('active');
+                 document.getElementById('friends-section-wrapper').classList.remove('hidden');
+             } else if (view === 'blocked') {
+                 document.getElementById('sidebar-nav-blocked').classList.add('active');
+                 document.getElementById('blocked-section').classList.remove('hidden');
+                 renderBlockedList();
+             }
+        }
+        document.getElementById('sidebar-nav-posts').onclick = () => switchSidebar('posts');
+        document.getElementById('sidebar-nav-friends').onclick = () => switchSidebar('friends');
+        document.getElementById('sidebar-nav-blocked').onclick = () => switchSidebar('blocked');
+
+        // --- MODAL & UPLOAD LOGIC ---
+        window.openPhotoModal = (photoId) => {
+            const container = document.getElementById('modal-content-container');
+            const modal = document.getElementById('photo-modal');
+            modal.classList.remove('hidden');
+            container.innerHTML = `<div class="w-full h-full flex items-center justify-center"><i class="fas fa-spinner fa-spin text-white text-2xl"></i></div>`;
+            
+            UNSUBSCRIBE_MODAL(); 
+            
+            UNSUBSCRIBE_MODAL = onSnapshot(doc(DAILY_COLLECTION, photoId), (snap) => {
+                if (!snap.exists()) { modal.classList.add('hidden'); return; }
+                const data = snap.data();
+                if (data.status === 'hidden') { modal.classList.add('hidden'); return; }
+
+                const currentUser = auth.currentUser;
+                const hearts = data.hearts || [];
+                const comments = (data.comments || []).sort((a,b) => (a.timestamp?.toDate() || 0) - (b.timestamp?.toDate() || 0));
+                const isHearted = hearts.includes(currentUser.uid);
+                const isOwner = data.creatorUid === currentUser.uid;
+
+                // Render Modal Content
+                container.innerHTML = `
+                    <div id="photo-display-area">
+                         <img src="${data.imageBase64}" class="photo-modal-img">
+                         <button id="close-modal-btn" class="absolute top-4 left-4 btn-icon" style="width: 48px; height: 48px; border-color: #333; background: black; border-radius: 8px;" title="Close"><i class="fas fa-times text-xl text-gray-400"></i></button>
+                    </div>
+                    <div id="photo-info-panel">
+                        <div class="modal-header">
+                            <div class="modal-title-box">
+                                <h2 class="text-xl text-white font-normal truncate" title="${data.title}">${data.title || 'Untitled'}</h2>
+                                <p class="text-sm text-indigo-400 font-bold">${data.creatorUsername}</p>
+                            </div>
+                            <div class="modal-actions-box">
+                                <button id="heart-btn" class="text-2xl transition-colors ${isHearted ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}" title="${isHearted ? 'Unlike' : 'Like'}">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                                <span class="text-gray-400 text-sm font-mono">${formatCount(hearts.length)}</span>
+                                
+                                ${!isOwner ? `<button id="report-btn" class="text-gray-600 hover:text-red-400 text-lg ml-2" title="Report Post"><i class="fas fa-flag"></i></button>` : ''}
+                                ${isOwner ? `<button id="delete-btn" class="text-gray-600 hover:text-red-400 text-lg ml-2" title="Delete Post"><i class="fas fa-trash"></i></button>` : ''}
+                                ${!isOwner ? `<button id="block-btn" class="text-gray-600 hover:text-red-400 text-lg ml-2" title="Block User"><i class="fas fa-ban"></i></button>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="mb-4 pb-2 border-b border-[#1a1a1a]">
+                             <span class="text-xs text-gray-600">${new Date(data.createdAt?.toDate()).toLocaleString()}</span>
+                        </div>
+
+                        <div id="comments-section">
+                            ${comments.map(c => `
+                                <div class="mb-2 text-sm break-words">
+                                    <span class="text-indigo-300 font-bold">${c.username}</span>
+                                    <span class="text-gray-400">: ${c.text}</span>
+                                </div>
+                            `).join('') || '<p class="text-gray-600 text-sm italic">No comments yet.</p>'}
+                        </div>
+
+                        <form id="comment-form" class="comment-input-area mt-auto">
+                            <input type="text" id="comment-input" placeholder="Add a comment..." class="flex-grow p-3 bg-black border border-[#333] rounded-md outline-none focus:border-indigo-500 text-white thin-font text-sm" maxlength="140">
+                            <button type="submit" class="btn-icon" style="border-color: #333; width: 44px; height: 44px;" title="Post Comment">
+                                <i class="fas fa-paper-plane text-indigo-400"></i>
+                            </button>
+                        </form>
+                    </div>
+                `;
+
+                // Events
+                document.getElementById('close-modal-btn').onclick = () => { modal.classList.add('hidden'); UNSUBSCRIBE_MODAL(); };
+                document.getElementById('heart-btn').onclick = () => updateDoc(doc(DAILY_COLLECTION, photoId), { hearts: isHearted ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid) });
+                document.getElementById('comment-form').onsubmit = async (e) => {
+                    e.preventDefault();
+                    const input = document.getElementById('comment-input');
+                    const text = input.value.trim();
+                    if(!text) return;
+                    await updateDoc(doc(DAILY_COLLECTION, photoId), { comments: arrayUnion({ uid: currentUser.uid, username: CURRENT_USERNAME, text: await cleanText(text), timestamp: new Date() }) });
+                    input.value = '';
+                };
+                
+                // --- Report/Delete/Block Handlers ---
+                if(document.getElementById('report-btn')) {
+                    document.getElementById('report-btn').onclick = async () => { if(confirm("Report this post?")) { await updateDoc(doc(DAILY_COLLECTION, photoId), { reports: arrayUnion(currentUser.uid) }); alert("Reported."); }};
+                }
+                if(document.getElementById('delete-btn')) {
+                    document.getElementById('delete-btn').onclick = async () => { if(confirm("Delete permanently?")) { await deleteDoc(doc(DAILY_COLLECTION, photoId)); modal.classList.add('hidden'); }};
+                }
+                 if(document.getElementById('block-btn')) {
+                    document.getElementById('block-btn').onclick = async () => { if(confirm("Block user?")) { await updateDoc(doc(db, USERS_COLLECTION, currentUser.uid), { blocked_users: arrayUnion(data.creatorUid) }); modal.classList.add('hidden'); }};
                 }
             });
+        };
+
+        // --- UPLOAD FLOW (CREATION LOOKALIKE) ---
+        window.openUpload = (idx) => {
+            PENDING_SLOT = idx;
+            document.getElementById('upload-menu-modal').classList.remove('hidden', 'opacity-0');
+            document.getElementById('upload-select-options').classList.remove('hidden');
+            document.getElementById('upload-file-input').value = ''; 
+        };
+        document.getElementById('upload-menu-close-btn').onclick = () => document.getElementById('upload-menu-modal').classList.add('hidden');
+
+        document.getElementById('upload-file-input').onchange = (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            PENDING_FILE = file;
+            document.getElementById('upload-menu-modal').classList.add('hidden');
+
+            const container = document.getElementById('modal-content-container');
+            const modal = document.getElementById('photo-modal');
+            modal.classList.remove('hidden');
+            
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const imgData = ev.target.result;
+                container.innerHTML = `
+                    <div id="photo-display-area">
+                         <img src="${imgData}" class="photo-modal-img">
+                         <button id="cancel-create-btn" class="absolute top-4 left-4 btn-icon" style="width: 48px; height: 48px; border-color: #333; background: black; border-radius: 8px;" title="Cancel"><i class="fas fa-times text-xl text-gray-400"></i></button>
+                    </div>
+                    <div id="photo-info-panel">
+                        <div class="modal-header">
+                            <div class="modal-title-box">
+                                <label class="text-xs text-gray-500 mb-1 block">Username</label>
+                                <input type="text" id="create-username" class="w-full bg-transparent border-b border-[#333] text-indigo-400 font-bold outline-none mb-2" value="${CURRENT_USERNAME}" placeholder="Enter Username">
+                            </div>
+                            <div class="modal-actions-box opacity-50 cursor-not-allowed">
+                                <i class="fas fa-heart text-gray-600 text-2xl"></i>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="text-xs text-gray-500 mb-1 block">Caption (Title)</label>
+                            <textarea id="create-description" class="w-full bg-black border border-[#333] rounded p-2 text-white outline-none h-20 resize-none" maxlength="150" placeholder="Write a caption..."></textarea>
+                        </div>
+                        
+                        <div class="mt-4 flex gap-2 mb-4">
+                            <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-400">
+                                <input type="checkbox" id="create-public" class="rounded bg-black border-gray-700">
+                                Public Post?
+                            </label>
+                        </div>
+
+                        <button id="confirm-post-btn" class="btn-toolbar-style btn-primary-override w-full mt-auto" style="height: 50px;">
+                            <i class="fas fa-paper-plane"></i> Post
+                        </button>
+                    </div>
+                `;
+
+                document.getElementById('cancel-create-btn').onclick = () => { modal.classList.add('hidden'); PENDING_FILE = null; };
+                document.getElementById('confirm-post-btn').onclick = async () => {
+                    const btn = document.getElementById('confirm-post-btn');
+                    btn.disabled = true;
+                    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Posting...`;
+                    
+                    const user = auth.currentUser;
+                    const username = document.getElementById('create-username').value.trim() || CURRENT_USERNAME;
+                    const desc = document.getElementById('create-description').value.trim();
+                    const isPublic = document.getElementById('create-public').checked;
+
+                    const ref = doc(DAILY_COLLECTION);
+                    await setDoc(ref, {
+                        creatorUid: user.uid, 
+                        creatorUsername: await cleanText(username), 
+                        createdAt: serverTimestamp(),
+                        imageBase64: imgData, 
+                        title: await cleanText(desc) || "Daily Photo",
+                        hearts: [], comments: [], 
+                        isPublic: isPublic, 
+                        status: 'active'
+                    });
+                    
+                    await updateDoc(doc(db, USERS_COLLECTION, user.uid), { dailySlotsUsed: arrayUnion(ref.id) });
+                    modal.classList.add('hidden');
+                    PENDING_FILE = null;
+                };
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // --- FEED LOGIC ---
+        function renderFeed(snap) {
+            const feed = document.getElementById('photo-feed');
+            feed.innerHTML = '';
+            snap.forEach(d => {
+                const data = d.data();
+                if(BLOCKED_USERS.includes(data.creatorUid)) return;
+                
+                const el = document.createElement('div');
+                el.className = 'photo-thumbnail';
+                el.innerHTML = `
+                    <img src="${data.imageBase64}" loading="lazy">
+                    <div class="overlay"></div>
+                    <div class="absolute top-2 right-2 flex gap-2">
+                        <span class="text-white text-xs bg-black/50 px-2 py-1 rounded backdrop-blur-sm"><i class="fas fa-heart text-red-400"></i> ${formatCount(data.hearts?.length)}</span>
+                    </div>
+                    <div class="title-overlay">${data.title}</div>
+                `;
+                el.onclick = () => window.openPhotoModal(d.id);
+                feed.appendChild(el);
+            });
+            if(feed.children.length === 0) feed.innerHTML = `<p class="text-gray-600 col-span-3 text-center py-10">No photos in this feed.</p>`;
+        }
+
+        function setupFeed(mode, user) {
+            UNSUBSCRIBE_POSTS();
+            document.getElementById('feed-toggle-friends').classList.toggle('active', mode === 'friends');
+            document.getElementById('feed-toggle-friends').classList.toggle('btn-primary-override', mode === 'friends');
+            document.getElementById('feed-toggle-public').classList.toggle('active', mode === 'public');
+            document.getElementById('feed-toggle-public').classList.toggle('btn-primary-override', mode === 'public');
+
+            const today = new Date(); today.setHours(0,0,0,0);
+            
+            let q;
+            if(mode === 'friends') {
+                if(CURRENT_FRIENDS.length === 0) {
+                     document.getElementById('photo-feed').innerHTML = '<p class="text-gray-500 text-center col-span-3 mt-10">Add friends to see photos!</p>';
+                     return;
+                }
+                const uids = [user.uid, ...CURRENT_FRIENDS].slice(0, 10); 
+                q = query(DAILY_COLLECTION, where('creatorUid', 'in', uids), where('createdAt', '>=', today), orderBy('createdAt', 'desc'));
+            } else {
+                q = query(DAILY_COLLECTION, where('isPublic', '==', true), where('status', '!=', 'hidden'), where('createdAt', '>=', today), orderBy('createdAt', 'desc'), limit(50));
+            }
+            UNSUBSCRIBE_POSTS = onSnapshot(q, renderFeed);
+        }
+
+        document.getElementById('feed-toggle-friends').onclick = () => { CURRENT_FEED_MODE = 'friends'; setupFeed('friends', auth.currentUser); };
+        document.getElementById('feed-toggle-public').onclick = () => {
+            if(localStorage.getItem('public_agreed')) {
+                CURRENT_FEED_MODE = 'public'; setupFeed('public', auth.currentUser);
+            } else {
+                document.getElementById('disclaimer-modal').classList.remove('hidden', 'opacity-0');
+            }
+        };
+
+        // Disclaimer logic
+        document.getElementById('disclaimer-agree-checkbox').onchange = (e) => {
+            const btn = document.getElementById('disclaimer-confirm-btn');
+            btn.disabled = !e.target.checked;
+            btn.classList.toggle('opacity-50', !e.target.checked);
+            btn.classList.toggle('cursor-not-allowed', !e.target.checked);
+        };
+        document.getElementById('disclaimer-confirm-btn').onclick = () => {
+            localStorage.setItem('public_agreed', 'true');
+            document.getElementById('disclaimer-modal').classList.add('hidden');
+            CURRENT_FEED_MODE = 'public'; setupFeed('public', auth.currentUser);
+        };
+        document.getElementById('disclaimer-cancel-btn').onclick = () => document.getElementById('disclaimer-modal').classList.add('hidden');
+
+        // --- AUTH & INIT ---
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { await signInAnonymously(auth); return; }
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('messenger-ui').style.display = 'block'; 
+
+            // Initialize default Sidebar View
+            switchSidebar('posts');
+
+            // Load Profile
+            const userRef = doc(db, USERS_COLLECTION, user.uid);
+            onSnapshot(userRef, (snap) => {
+                const d = snap.data() || {};
+                CURRENT_USERNAME = d.username || 'User';
+                CURRENT_FRIENDS = d.friends || [];
+                BLOCKED_USERS = d.blocked_users || [];
+                
+                // Render Friends
+                const fList = document.getElementById('friends-list-items');
+                if(CURRENT_FRIENDS.length === 0) fList.innerHTML = '<p class="text-gray-600 text-sm p-2">No friends yet.</p>';
+                else {
+                    Promise.all(CURRENT_FRIENDS.map(uid => getDoc(doc(db, USERS_COLLECTION, uid)))).then(snaps => {
+                        fList.innerHTML = snaps.map(s => {
+                            const name = s.data()?.username || 'Unknown';
+                            return `<div class="compact-list-item flex justify-between"><span class="text-gray-300">${name}</span><button class="text-red-400 hover:text-red-500" onclick="removeFriend('${s.id}')"><i class="fas fa-minus-circle"></i></button></div>`;
+                        }).join('');
+                    });
+                }
+                
+                // Render Slots
+                const slots = document.getElementById('daily-posts-container');
+                const used = d.dailySlotsUsed || [];
+                slots.innerHTML = '';
+                for(let i=0; i<5; i++) {
+                    const postId = used[i];
+                    const div = document.createElement('div');
+                    div.className = 'compact-list-item flex justify-between items-center border border-[#1a1a1a] mb-1 p-2 rounded bg-[#0a0a0a]';
+                    if(postId) {
+                        div.innerHTML = `<span class="text-indigo-400 text-sm">Slot ${i+1}</span> <button class="text-gray-400 hover:text-white" onclick="window.openPhotoModal('${postId}')"><i class="fas fa-eye"></i></button>`;
+                    } else if(i === used.length) {
+                        div.innerHTML = `<span class="text-gray-400 text-sm">Slot ${i+1}</span> <button class="text-green-500 hover:text-green-400" onclick="openUpload(${i})"><i class="fas fa-plus"></i></button>`;
+                    } else {
+                        div.innerHTML = `<span class="text-gray-600 text-sm">Slot ${i+1}</span> <i class="fas fa-lock text-gray-700"></i>`;
+                    }
+                    slots.appendChild(div);
+                }
+
+                if(CURRENT_FEED_MODE === 'friends') setupFeed('friends', user);
+            });
+            
+            // Friend Code
+            const codeQ = query(collection(db, 'friend_codes'), where('userId', '==', user.uid), limit(1));
+            getDocs(codeQ).then(s => {
+                if(!s.empty) document.getElementById('friend-code-display').textContent = s.docs[0].id;
+                else document.getElementById('friend-code-display').textContent = "GEN-ERR"; 
+            });
         });
+
+        // Global Actions
+        window.removeFriend = async (fid) => {
+            if(!confirm("Remove friend?")) return;
+            const uid = auth.currentUser.uid;
+            const batch = writeBatch(db);
+            batch.update(doc(db, USERS_COLLECTION, uid), { friends: arrayRemove(fid) });
+            batch.update(doc(db, USERS_COLLECTION, fid), { friends: arrayRemove(uid) });
+            await batch.commit();
+        };
+
+        async function renderBlockedList() {
+            const list = document.getElementById('blocked-list-items');
+            list.innerHTML = '';
+            if(BLOCKED_USERS.length === 0) { list.innerHTML = '<p class="text-gray-600 p-2 text-sm">No blocked users.</p>'; return; }
+            BLOCKED_USERS.forEach(uid => {
+                list.innerHTML += `<div class="compact-list-item flex justify-between"><span class="text-gray-400 text-sm">User ${uid.substr(0,5)}...</span> <button onclick="unblock('${uid}')" class="text-indigo-400 text-xs border border-indigo-900 px-2 rounded">Unblock</button></div>`;
+            });
+        }
+        window.unblock = async (uid) => {
+             await updateDoc(doc(db, USERS_COLLECTION, auth.currentUser.uid), { blocked_users: arrayRemove(uid) });
+             renderBlockedList();
+        };
+
     </script>
 </body>
 </html>
