@@ -549,18 +549,46 @@
             return num.toString();
         }
 
-        async function cleanText(text) {
-            if(!text) return "";
-            try {
-                // Switched to profanity.dev API
-                const res = await fetch(`https://api.profanity.dev/api/v1/json?text=${encodeURIComponent(text)}`);
-                const data = await res.json();
-                // Assuming 'cleanText' is the key for the cleaned string
-                return data.cleanText || text; 
-            } catch {
-                return text;
-            }
+        /**
+ * Cleans text using the Purgomalum Profanity Filter API.
+ * Uses the plain JSON endpoint to get the filtered string.
+ * If the API fails for any reason, it returns the original text 
+ * to ensure that posts can still be created without disruption.
+ */
+async function cleanText(text) {
+    // 1. Check for empty input
+    if (!text || typeof text !== 'string' || text.trim() === '') {
+        return '';
+    }
+
+    // 2. Encode the text to be safe for a URL query parameter
+    const encodedText = encodeURIComponent(text);
+    
+    // 3. Construct the PurgoMalum API URL using the JSON service
+    const apiUrl = `https://www.purgomalum.com/service/json?text=${encodedText}`;
+
+    try {
+        const response = await fetch(apiUrl);
+        
+        // Check for HTTP errors (e.g., 404, 500)
+        if (!response.ok) {
+            console.error(`PurgoMalum API request failed with status: ${response.status}`);
+            // Fallback: Return original text if the API endpoint is unreachable or errors out
+            return text; 
         }
+        
+        const data = await response.json();
+        
+        // The PurgoMalum JSON response returns the cleaned text in the 'result' field.
+        return data.result || text;
+        
+    } catch (error) {
+        // Handle network errors (e.g., connection lost)
+        console.error('Error calling PurgoMalum API:', error);
+        // Fallback: Return original text if a network error occurs
+        return text; 
+    }
+}
         
         function compressImage(file) {
             return new Promise((resolve, reject) => {
