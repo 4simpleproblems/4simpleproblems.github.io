@@ -5,26 +5,12 @@
     The platform for everyone. Even you.
   </h1>
   <h1 style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-weight: 800; font-size: 3rem; margin-top: 0; color: #fff;">
-    The 4SP Organization.
+    The 4SP Organization has introduced Project Zirconium/
   </h1>
 
   <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 1.2rem; color: #9ca3af; max-width: 600px;">
     Official organizational home for <strong>4simpleproblems</strong>. Version 5 DV is built for unblockable access, full local security, and zero dependencies.
   </p>
-
-  <div style="margin: 20px 0;">
-    <a href="https://4sp-organization.github.io/connection.html" style="text-decoration: none;">
-      <span style="background-color: rgba(147, 51, 234, 0.1); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.5); padding: 12px 24px; border-radius: 12px; font-family: sans-serif; font-weight: 500; margin-right: 10px;">
-        Connect to 4SP →
-      </span>
-    </a>
-    <a href="https://4sp-organization.github.io/create_link.html" style="text-decoration: none;">
-      <span style="background-color: rgba(249, 115, 22, 0.1); color: #fb923c; border: 1px solid rgba(253, 186, 116, 0.5); padding: 12px 24px; border-radius: 12px; font-family: sans-serif; font-weight: 500;">
-        Create a Link →
-      </span>
-    </a>
-  </div>
-
   <div style="margin-top: 20px;">
     <a href="https://discord.gg/A798ZZUgca"><img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" /></a>
     <a href="https://linktr.ee/4simpleproblems"><img src="https://img.shields.io/badge/Linktree-39E09B?style=for-the-badge&logo=linktree&logoColor=white" /></a>
