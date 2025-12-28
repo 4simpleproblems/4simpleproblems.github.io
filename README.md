@@ -45,8 +45,6 @@
 <br />
 
 <div style="background-color: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 12px; padding: 30px; font-family: sans-serif;">
-  <h2 style="color: #fff; margin-top: 0;">Project Brief</h2>
-  <p style="color: #9ca3af; font-style: italic;">"The biggest, most complete summary of the 4simpleproblems project."</p>
   
   <p style="color: #c0c0c0;">4SP is a student-made web project built for bored school days. It mixes utilities, games, and tools that feel fast and local instead of corporate.</p>
   
