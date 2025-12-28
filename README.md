@@ -5,11 +5,11 @@
     The platform for everyone. Even you.
   </h1>
   <h1 style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-weight: 800; font-size: 3rem; margin-top: 0; color: #fff;">
-    The 4SP Organization has introduced Project Zirconium/
+    The 4SP Organization has introduced Project Zirconium.
   </h1>
 
   <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 1.2rem; color: #9ca3af; max-width: 600px;">
-    Official organizational home for <strong>4simpleproblems</strong>. Version 5 DV is built for unblockable access, full local security, and zero dependencies.
+       Version 5 is built for near unblockable access, full authenticated security
   </p>
   <div style="margin-top: 20px;">
     <a href="https://discord.gg/A798ZZUgca"><img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" /></a>
