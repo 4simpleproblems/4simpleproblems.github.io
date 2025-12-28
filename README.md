@@ -1,111 +1,88 @@
-# 4SP v5
-
-<div align="center" style="font-family:'Geist', sans-serif;">
-  <img src="https://raw.githubusercontent.com/4simpleproblems-v5/4simpleproblems-v5.github.io/main/images/logo.png" width="220">
-  <p>A fast, simple, web-first game hub.</p>
-</div>
-
-## What is 4SP?
-
-4SP (4 Simple Problems) is a browser-based game site built for speed and simplicity.
-
-Version 5 is a full rewrite.
-Cleaner structure.
-Better UI.
-Easier deployment.
-
-No installs.
-No downloads.
-Just the web.
-
-## Features
-
-<div align="center" style="font-family:'Geist', sans-serif;">
-
-|    Fast UI    |    Themes    |     Modular    |
-| :-----------: | :----------: | :------------: |
-|  Low latency  | Light / Dark | Easy to extend |
-| Simple layout |  Responsive  |  Clean routing |
-
-</div>
-
-## Tech Stack
-
-* HTML
-* CSS
-* JavaScript
-* Static-first design
-
-Works on any static host.
-
-## Deployment
-
-### One-click Deployment
-
 <div align="center">
+  <img src="https://raw.githubusercontent.com/4simpleproblems-v5/4simpleproblems-v5.github.io/main/images/logo.png" width="120" />
+  
+  <h1 style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-weight: 400; color: #888; margin-bottom: 0;">
+    The platform for everyone. Even you.
+  </h1>
+  <h1 style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-weight: 800; font-size: 3rem; margin-top: 0; color: #fff;">
+    The 4SP Organization.
+  </h1>
 
-<a target="_blank" href="https://vercel.com/new/import?framework=other&s=https%3A%2F%2Fgithub.com%2F4simpleproblems-v5%2F4simpleproblems-v5.github.io" style="text-decoration:none;">
-  <div style="display:inline-block;background:#000;color:#fff;padding:8px 16px;margin:4px;border-radius:6px;font-family:'Geist', sans-serif;">
-    Deploy with Vercel
+  <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 1.2rem; color: #9ca3af; max-width: 600px;">
+    Official organizational home for <strong>4simpleproblems</strong>. Version 5 DV is built for unblockable access, full local security, and zero dependencies.
+  </p>
+
+  <div style="margin: 20px 0;">
+    <a href="https://4sp-organization.github.io/connection.html" style="text-decoration: none;">
+      <span style="background-color: rgba(147, 51, 234, 0.1); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.5); padding: 12px 24px; border-radius: 12px; font-family: sans-serif; font-weight: 500; margin-right: 10px;">
+        Connect to 4SP →
+      </span>
+    </a>
+    <a href="https://4sp-organization.github.io/create_link.html" style="text-decoration: none;">
+      <span style="background-color: rgba(249, 115, 22, 0.1); color: #fb923c; border: 1px solid rgba(253, 186, 116, 0.5); padding: 12px 24px; border-radius: 12px; font-family: sans-serif; font-weight: 500;">
+        Create a Link →
+      </span>
+    </a>
   </div>
-</a>
 
-<a target="_blank" href="https://app.netlify.com/start/deploy?repository=https://github.com/4simpleproblems-v5/4simpleproblems-v5.github.io" style="text-decoration:none;">
-  <div style="display:inline-block;background:#00C7B7;color:#fff;padding:8px 16px;margin:4px;border-radius:6px;font-family:'Geist', sans-serif;">
-    Deploy to Netlify
+  <div style="margin-top: 20px;">
+    <a href="https://discord.gg/A798ZZUgca"><img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" /></a>
+    <a href="https://linktr.ee/4simpleproblems"><img src="https://img.shields.io/badge/Linktree-39E09B?style=for-the-badge&logo=linktree&logoColor=white" /></a>
   </div>
-</a>
-
-<a target="_blank" href="https://app.koyeb.com/deploy?type=git&repository=github.com/4simpleproblems-v5/4simpleproblems-v5.github.io" style="text-decoration:none;">
-  <div style="display:inline-block;background:#FF6C00;color:#fff;padding:8px 16px;margin:4px;border-radius:6px;font-family:'Geist', sans-serif;">
-    Deploy to Koyeb
-  </div>
-</a>
-
-<a target="_blank" href="https://4sp-organization.github.io" style="text-decoration:none;">
-  <div style="display:inline-block;background:#4A90E2;color:#fff;padding:8px 16px;margin:4px;border-radius:6px;font-family:'Geist', sans-serif;">
-    Download Local Version
-  </div>
-</a>
-
 </div>
 
-### Manual Deployment
+<hr style="border: 1px solid #1a1a1a; margin: 40px 0;" />
 
-1. Fork the repository
-2. Upload files to any static host
-3. Set the root directory
-4. Deploy
+<table style="width: 100%; border-collapse: collapse; border: none; font-family: sans-serif;">
+  <tr>
+    <td style="width: 33%; padding: 10px; border: none;">
+      <div style="background-color: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 12px; padding: 20px; min-height: 150px;">
+        <h3 style="color: #c084fc; margin-top: 0;">Creation</h3>
+        <p style="color: #9ca3af; font-size: 14px;">Founded March 13, 2025. Started as a basic student soundboard and utility tool.</p>
+      </div>
+    </td>
+    <td style="width: 33%; padding: 10px; border: none;">
+      <div style="background-color: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 12px; padding: 20px; min-height: 150px;">
+        <h3 style="color: #3b82f6; margin-top: 0;">The Shift (V4)</h3>
+        <p style="color: #9ca3af; font-size: 14px;">Introduced dashboard layouts, Tab Disguising, and the famous Panic Key system.</p>
+      </div>
+    </td>
+    <td style="width: 33%; padding: 10px; border: none;">
+      <div style="background-color: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 12px; padding: 20px; min-height: 150px;">
+        <h3 style="color: #22c55e; margin-top: 0;">Rebuild (V5)</h3>
+        <p style="color: #9ca3af; font-size: 14px;">A complete rewrite focusing on security, 1,600+ games, and student utility.</p>
+      </div>
+    </td>
+  </tr>
+</table>
 
-## Local Development
+<br />
 
-```bash
-python -m http.server
-```
+<div style="background-color: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 12px; padding: 30px; font-family: sans-serif;">
+  <h2 style="color: #fff; margin-top: 0;">Project Brief</h2>
+  <p style="color: #9ca3af; font-style: italic;">"The biggest, most complete summary of the 4simpleproblems project."</p>
+  
+  <p style="color: #c0c0c0;">4SP is a student-made web project built for bored school days. It mixes utilities, games, and tools that feel fast and local instead of corporate.</p>
+  
+  <div align="center" style="margin: 20px 0;">
+    <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white" />
+    <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white" />
+    <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" />
+    <img src="https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black" />
+  </div>
 
-or
+  <h3 style="color: #fff; border-left: 3px solid #333; padding-left: 10px;">Deployment</h3>
+  <p style="color: #9ca3af;">Deploy your own instance of 4SP v5 instantly:</p>
+  
+  <div align="center">
+    <a href="https://vercel.com/new/import?framework=other&s=https%3A%2F%2Fgithub.com%2F4simpleproblems-v5%2F4simpleproblems-v5.github.io"><img src="https://img.shields.io/badge/Deploy_to_Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" /></a>
+    <a href="https://app.netlify.com/start/deploy?repository=https://github.com/4simpleproblems-v5/4simpleproblems-v5.github.io"><img src="https://img.shields.io/badge/Deploy_to_Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white" /></a>
+  </div>
+</div>
 
-```bash
-npx serve
-```
+<br />
 
-Open `http://localhost:8000`.
-
-## Contributing
-
-* Fork the repo
-* Make changes
-* Open a pull request
-
-Keep it clean.
-No bloat.
-
-## Issues
-
-Found a bug?
-Open an issue on GitHub.
-Include details.
-
-## Credits
-
-Built by the **4SP** contributors.
+<div align="center" style="font-family: sans-serif; color: #606060; font-size: 12px;">
+  Developed and Maintained by the 4SP Organization <br />
+  &copy; 2025 4SP Organization. Built using modern web standards.
+</div>
