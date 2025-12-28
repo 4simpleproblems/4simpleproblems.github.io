@@ -1,9 +1,5 @@
-Here’s a **clean, public README** for **4SP Version 5**.
-No downloadable version. Web-only. Matches the style you showed.
 
----
-
-# 4SP v5
+# 4SP Version 5 (Project Zirconium)
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/4simpleproblems-v5/4simpleproblems-v5.github.io/main/assets/logo.png" alt="4SP Logo">
