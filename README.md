@@ -62,7 +62,7 @@ Works on any static host.
   </div>
 </a>
 
-<a target="_blank" href="https://github.com/4simpleproblems-v5/v5-4simpleproblems-dv" style="text-decoration:none;">
+<a target="_blank" href="https://4sp-organization.github.io" style="text-decoration:none;">
   <div style="display:inline-block;background:#4A90E2;color:#fff;padding:8px 16px;margin:4px;border-radius:6px;font-family:'Geist', sans-serif;">
     Download Local Version
   </div>
