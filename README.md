@@ -45,23 +45,18 @@ Works on any static host.
 
 #### Vercel
 
-```md
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/import?framework=other&s=https%3A%2F%2Fgithub.com%2F4simpleproblems-v5%2F4simpleproblems-v5.github.io)
-```
 
 #### Netlify
 
-```md
 [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/4simpleproblems-v5/4simpleproblems-v5.github.io)
-```
 
 #### Koyeb
 
-```html
 <a target="_blank" href="https://app.koyeb.com/deploy?type=git&repository=github.com/4simpleproblems-v5/4simpleproblems-v5.github.io">
   <img alt="Deploy to Koyeb" src="https://www.koyeb.com/static/images/deploy/button.svg">
 </a>
-```
+
 
 ### Manual Deployment
 
