@@ -1,4 +1,3 @@
-
 # 4SP v5
 
 <div align="center" style="font-family:'Geist', sans-serif;">
@@ -43,20 +42,33 @@ Works on any static host.
 
 ### One-click Deployment
 
-#### Vercel
+<div align="center">
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/import?framework=other&s=https%3A%2F%2Fgithub.com%2F4simpleproblems-v5%2F4simpleproblems-v5.github.io)
-
-#### Netlify
-
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/4simpleproblems-v5/4simpleproblems-v5.github.io)
-
-#### Koyeb
-
-<a target="_blank" href="https://app.koyeb.com/deploy?type=git&repository=github.com/4simpleproblems-v5/4simpleproblems-v5.github.io">
-  <img alt="Deploy to Koyeb" src="https://www.koyeb.com/static/images/deploy/button.svg">
+<a target="_blank" href="https://vercel.com/new/import?framework=other&s=https%3A%2F%2Fgithub.com%2F4simpleproblems-v5%2F4simpleproblems-v5.github.io" style="text-decoration:none;">
+  <div style="display:inline-block;background:#000;color:#fff;padding:8px 16px;margin:4px;border-radius:6px;font-family:'Geist', sans-serif;">
+    Deploy with Vercel
+  </div>
 </a>
 
+<a target="_blank" href="https://app.netlify.com/start/deploy?repository=https://github.com/4simpleproblems-v5/4simpleproblems-v5.github.io" style="text-decoration:none;">
+  <div style="display:inline-block;background:#00C7B7;color:#fff;padding:8px 16px;margin:4px;border-radius:6px;font-family:'Geist', sans-serif;">
+    Deploy to Netlify
+  </div>
+</a>
+
+<a target="_blank" href="https://app.koyeb.com/deploy?type=git&repository=github.com/4simpleproblems-v5/4simpleproblems-v5.github.io" style="text-decoration:none;">
+  <div style="display:inline-block;background:#FF6C00;color:#fff;padding:8px 16px;margin:4px;border-radius:6px;font-family:'Geist', sans-serif;">
+    Deploy to Koyeb
+  </div>
+</a>
+
+<a target="_blank" href="https://github.com/4simpleproblems-v5/v5-4simpleproblems-dv" style="text-decoration:none;">
+  <div style="display:inline-block;background:#4A90E2;color:#fff;padding:8px 16px;margin:4px;border-radius:6px;font-family:'Geist', sans-serif;">
+    Download Local Version
+  </div>
+</a>
+
+</div>
 
 ### Manual Deployment
 
