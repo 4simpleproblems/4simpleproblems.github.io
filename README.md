@@ -2,7 +2,7 @@
 # 4SP Version 5 (Project Zirconium)
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/4simpleproblems-v5/4simpleproblems-v5.github.io/main/assets/logo.png" alt="4SP Logo">
+  <img src="https://raw.githubusercontent.com/4simpleproblems-v5/4simpleproblems-v5.github.io/images/logo.png" alt="4SP Logo">
   <p>A fast, simple, web-first game hub.</p>
 </div>
 
